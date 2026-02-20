@@ -32,10 +32,10 @@ export const products = [
         id: 'coquetel-morango',
         name: 'Coquetel de Morango',
         category: 'Drinks',
-        price: '25,00',
+        price: '22,00',
         variations: {
-            'com álcool': '25,00',
-            'sem álcool': '22,00'
+            'com álcool': '22,00',
+            'sem álcool': '20,00'
         },
         size: 'Morango • Frutas • Mix refrescante',
         rating: 5,
@@ -48,10 +48,10 @@ export const products = [
         id: 'coquetel-kiwi',
         name: 'Coquetel de Kiwi',
         category: 'Drinks',
-        price: '25,00',
+        price: '22,00',
         variations: {
-            'com álcool': '25,00',
-            'sem álcool': '22,00'
+            'com álcool': '22,00',
+            'sem álcool': '20,00'
         },
         size: 'Kiwi • Frutas • Mix refrescante',
         rating: 5,
@@ -64,10 +64,10 @@ export const products = [
         id: 'coquetel-abacaxi',
         name: 'Coquetel de Abacaxi',
         category: 'Drinks',
-        price: '25,00',
+        price: '22,00',
         variations: {
-            'com álcool': '25,00',
-            'sem álcool': '22,00'
+            'com álcool': '22,00',
+            'sem álcool': '20,00'
         },
         size: 'Abacaxi • Frutas • Mix refrescante',
         rating: 5,
@@ -80,10 +80,10 @@ export const products = [
         id: 'coquetel-maracuja',
         name: 'Coquetel de Maracujá',
         category: 'Drinks',
-        price: '25,00',
+        price: '22,00',
         variations: {
-            'com álcool': '25,00',
-            'sem álcool': '22,00'
+            'com álcool': '22,00',
+            'sem álcool': '20,00'
         },
         size: 'Maracujá • Frutas • Mix refrescante',
         rating: 5,
