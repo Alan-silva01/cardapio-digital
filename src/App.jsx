@@ -156,7 +156,7 @@ const App = () => {
                         transition={{ duration: 0.5 }}
                         style={{ display: 'flex', flexDirection: 'column', flex: 1, paddingBottom: '70px' }}
                     >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <div className="rating" style={{ display: 'flex', gap: '2px' }}>
                                     {[1, 2, 3, 4, 5].map((star) => {
@@ -198,11 +198,11 @@ const App = () => {
                             </div>
                         </div>
 
-                        <div className="info-header" style={{ marginBottom: '16px', textAlign: 'center' }}>
+                        <div className="info-header" style={{ marginBottom: '10px', textAlign: 'center' }}>
                             <div className="product-name" style={{ fontSize: '26px' }}>{currentProduct.name}</div>
                         </div>
 
-                        <div className="specs-row" style={{ marginBottom: '16px' }}>
+                        <div className="specs-row" style={{ marginBottom: '10px' }}>
                             <div className="ingredients-line" style={{
                                 color: '#eee',
                                 fontSize: '11px',
@@ -217,7 +217,7 @@ const App = () => {
                             </div>
                         </div>
 
-                        <p className="description" style={{ marginBottom: '25px' }}>
+                        <p className="description" style={{ marginBottom: '15px' }}>
                             {currentProduct.description}
                         </p>
 
