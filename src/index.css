@@ -28,10 +28,13 @@ body,
   font-family: 'Inter', sans-serif;
 }
 
-/* Mockup Container - ALWAYS FIXED */
+/* Main App Container - Responsive for mobile, fixed mockup for desktop */
 .app-container {
-  width: 375px;
-  height: 812px;
+  width: 100%;
+  max-width: 450px;
+  /* Limits width on desktop */
+  height: 100dvh;
+  /* Use dynamic viewport height */
   background-image: url('https://res.cloudinary.com/ddhlqymvf/image/upload/v1771525899/App_Bar_1080x1920_2_afm0f1.png');
   background-size: cover;
   background-position: center;
@@ -39,8 +42,20 @@ body,
   display: flex;
   flex-direction: column;
   box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
-  border-radius: 40px;
-  overflow: hidden;
+  /* Rounded corners only on "mockup" desktop view */
+}
+
+@media (min-width: 450px) {
+  .app-container {
+    height: 812px;
+    border-radius: 40px;
+  }
+}
+
+@media (max-width: 450px) {
+  #root {
+    align-items: flex-start;
+  }
 }
 
 /* Background Tint Overlays */
@@ -84,14 +99,17 @@ body,
 /* Bottom Sheet */
 .bottom-sheet {
   background-color: var(--black);
-  border-top-left-radius: 40px;
-  border-top-right-radius: 40px;
-  padding: 12px 24px 24px;
+  border-top-left-radius: 35px;
+  border-top-right-radius: 35px;
+  padding: 12px 24px 20px;
   position: relative;
   z-index: 10;
-  height: 380px;
+  height: auto;
+  /* Allow content to define height or use flex */
+  min-height: 400px;
   display: flex;
   flex-direction: column;
+  margin-top: auto;
 }
 
 .drag-handle {
