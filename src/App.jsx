@@ -142,14 +142,26 @@ const App = () => {
                                         if (currentProduct.variations) {
                                             if (selectedVariation === 'nacional') effectiveRating = 4;
                                             else if (selectedVariation === 'importado') effectiveRating = 5;
-                                            else if (selectedVariation.includes('álcool')) effectiveRating = 5;
+                                            else if (selectedVariation === 'com álcool') effectiveRating = 5;
+                                            else if (selectedVariation === 'sem álcool') effectiveRating = 4.5;
                                         }
+
+                                        const isFull = star <= effectiveRating;
+                                        const isHalf = !isFull && star - 0.5 <= effectiveRating;
 
                                         return (
                                             <span
                                                 key={star}
-                                                className={`star ${star > effectiveRating ? 'inactive' : ''}`}
-                                                style={{ fontSize: '12px' }}
+                                                className={`star ${!isFull && !isHalf ? 'inactive' : ''}`}
+                                                style={{
+                                                    fontSize: '12px',
+                                                    position: 'relative',
+                                                    display: 'inline-block',
+                                                    color: isFull ? '#D4AF37' : (isHalf ? 'transparent' : '#333'),
+                                                    backgroundImage: isHalf ? 'linear-gradient(90deg, #D4AF37 50%, #333 50%)' : 'none',
+                                                    WebkitBackgroundClip: isHalf ? 'text' : 'none',
+                                                    MozBackgroundClip: isHalf ? 'text' : 'none',
+                                                }}
                                             >
                                                 ★
                                             </span>

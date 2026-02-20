@@ -105,7 +105,7 @@ body,
   position: relative;
   z-index: 10;
   height: auto;
-  min-height: 420px;
+  min-height: 445px;
   /* Balanced height */
   display: flex;
   flex-direction: column;
