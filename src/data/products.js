@@ -9,7 +9,7 @@ export const products = [
         rating: 5,
         description: 'Drink refrescante à base de gin com melancia, mix de limão e energético de melancia. Levemente adocicado, cítrico e equilibrado. Perfeito para quem busca um drink tropical e refrescante.',
         imageUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771585718/App_Bar_50Acorona_50kb_15_mpfjzn.png',
-        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771585581/App_Bar_50Acorona_50kb_14_kcel7i.png',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771586515/App_Bar_50Acorona_50kb_16_n14xkn.png',
         tint: 'neutral'
     },
     // GINS
