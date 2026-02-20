@@ -6,8 +6,14 @@ import { products } from './data/products';
 const App = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [direction, setDirection] = useState(0); // 1 = right, -1 = left
+    const [selectedVariation, setSelectedVariation] = useState('nacional');
 
     const currentProduct = products[currentIndex];
+
+    // Reset variation when product changes
+    useEffect(() => {
+        setSelectedVariation('nacional');
+    }, [currentIndex]);
 
     const paginate = (newDirection) => {
         setDirection(newDirection);
@@ -62,7 +68,7 @@ const App = () => {
             </div>
 
             {/* ANIMATED HERO SECTION */}
-            <div className="hero" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', paddingTop: '15px' }}>
+            <div className="hero" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', paddingTop: '10px' }}>
                 <AnimatePresence initial={false} custom={direction} mode="wait">
                     <motion.div
                         key={currentProduct.id}
@@ -81,7 +87,7 @@ const App = () => {
                             {currentProduct.name}
                         </h1>
 
-                        <div style={{ position: 'relative', width: '100%', height: '310px', display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '5px' }}>
+                        <div style={{ position: 'relative', width: '100%', height: '280px', display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '5px' }}>
                             {/* Back Glow */}
                             <div style={{
                                 position: 'absolute', width: '200px', height: '200px',
@@ -127,22 +133,32 @@ const App = () => {
                     >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
                             <div className="rating" style={{ display: 'flex', gap: '2px' }}>
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                    <span
-                                        key={star}
-                                        className={`star ${star > (currentProduct.rating || 5) ? 'inactive' : ''}`}
-                                        style={{ fontSize: '12px' }}
-                                    >
-                                        ★
-                                    </span>
-                                ))}
+                                {[1, 2, 3, 4, 5].map((star) => {
+                                    // Dynamic rating based on variation
+                                    let effectiveRating = currentProduct.rating || 5;
+                                    if (currentProduct.variations) {
+                                        effectiveRating = selectedVariation === 'nacional' ? 4 : 5;
+                                    }
+
+                                    return (
+                                        <span
+                                            key={star}
+                                            className={`star ${star > effectiveRating ? 'inactive' : ''}`}
+                                            style={{ fontSize: '12px' }}
+                                        >
+                                            ★
+                                        </span>
+                                    );
+                                })}
                             </div>
                             <div className="category-label" style={{ marginBottom: 0 }}>{currentProduct.category}</div>
                         </div>
 
                         <div className="info-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
                             <div className="product-name">{currentProduct.name}</div>
-                            <div className="price-tag">R$: {currentProduct.price}</div>
+                            <div className="price-tag">
+                                R$: {currentProduct.variations ? currentProduct.variations[selectedVariation] : currentProduct.price}
+                            </div>
                         </div>
 
                         <div className="specs-row" style={{ marginBottom: '10px' }}>
@@ -160,9 +176,55 @@ const App = () => {
                             </div>
                         </div>
 
-                        <p className="description" style={{ marginBottom: '10px' }}>
+                        <p className="description" style={{ marginBottom: '15px' }}>
                             {currentProduct.description}
                         </p>
+
+                        {/* VARIATION SELECTION (CHECKBOX STYLE) */}
+                        {currentProduct.variations && (
+                            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                                {['nacional', 'importado'].map((variant) => (
+                                    <button
+                                        key={variant}
+                                        onClick={() => setSelectedVariation(variant)}
+                                        style={{
+                                            flex: 1,
+                                            padding: '10px',
+                                            borderRadius: '12px',
+                                            border: `1.5px solid ${selectedVariation === variant ? '#D4AF37' : '#333'}`,
+                                            background: selectedVariation === variant ? 'rgba(212, 175, 55, 0.1)' : 'transparent',
+                                            color: selectedVariation === variant ? '#D4AF37' : '#888',
+                                            fontSize: '11px',
+                                            fontWeight: '800',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '1px',
+                                            transition: 'all 0.3s ease',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '8px'
+                                        }}
+                                    >
+                                        <div style={{
+                                            width: '14px',
+                                            height: '14px',
+                                            borderRadius: '4px',
+                                            border: `1px solid ${selectedVariation === variant ? '#D4AF37' : '#444'}`,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            background: selectedVariation === variant ? '#D4AF37' : 'transparent'
+                                        }}>
+                                            {selectedVariation === variant && (
+                                                <div style={{ width: '6px', height: '6px', backgroundColor: '#000', borderRadius: '1px' }} />
+                                            )}
+                                        </div>
+                                        {variant}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
                     </motion.div>
                 </AnimatePresence>
                 {/* ADD BUTTON - PINNED TO BOTTOM */}

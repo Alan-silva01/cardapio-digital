@@ -101,12 +101,12 @@ body,
   background-color: var(--black);
   border-top-left-radius: 35px;
   border-top-right-radius: 35px;
-  padding: 12px 24px 20px;
+  padding: 12px 24px 24px;
   position: relative;
   z-index: 10;
   height: auto;
-  /* Allow content to define height or use flex */
-  min-height: 400px;
+  min-height: 420px;
+  /* Balanced height */
   display: flex;
   flex-direction: column;
   margin-top: auto;
@@ -117,7 +117,7 @@ body,
   height: 4px;
   background-color: #222;
   border-radius: 2px;
-  margin: 0 auto 15px;
+  margin: 0 auto 10px;
 }
 
 .category-label {
@@ -181,8 +181,8 @@ body,
   font-size: 12.5px;
   line-height: 1.5;
   text-align: center;
-  margin-top: auto;
-  margin-bottom: 30px;
+  margin-top: 5px;
+  margin-bottom: 20px;
   padding: 0 10px;
   font-weight: 300;
 }

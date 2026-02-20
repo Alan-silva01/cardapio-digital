@@ -9,7 +9,23 @@ export const products = [
         rating: 5,
         description: 'Drink refrescante à base de gin com melancia, mix de limão e energético de melancia. Levemente adocicado, cítrico e equilibrado. Perfeito para quem busca um drink tropical e refrescante.',
         imageUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771585718/App_Bar_50Acorona_50kb_15_mpfjzn.png',
-        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771586515/App_Bar_50Acorona_50kb_16_n14xkn.png',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771597495/App_Bar_50Acorona_50kb_18_lydxgs.png',
+        tint: 'neutral'
+    },
+    {
+        id: 'tropical-blue',
+        name: 'Tropical Blue',
+        category: 'Drinks',
+        price: '26,00',
+        variations: {
+            nacional: '26,00',
+            importado: '29,00'
+        },
+        size: 'Gin • curaçau blue • mix de limão • gelo • soda • schweppes',
+        rating: 5,
+        description: 'Drink refrescante e visualmente impactante, combinando gin com o toque cítrico e adocicado do curaçau blue. Finalizado com soda e schweppes para uma refrescância máxima.',
+        imageUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771596795/App_Bar_50Acorona_50kb_17_wey6vr.png',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771597495/App_Bar_50Acorona_50kb_18_lydxgs.png',
         tint: 'neutral'
     },
     // GINS
