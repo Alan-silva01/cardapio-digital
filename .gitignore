@@ -1,0 +1,36 @@
+# node_modules
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# IDE and System Files
+.vscode/
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Antigravity / AI Agent Files
+.agent/
+.agents/
+agents/
+skills/
+.gemini/
+brain/
+implementation_plan.md
+task.md
+walkthrough.md
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS Files
+.DS_Store
+Thumbs.db

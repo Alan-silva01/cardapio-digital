@@ -1,0 +1,189 @@
+:root {
+  --cream: #F5F0E8;
+  --black: #000000;
+  --dark-gray: #1A1A1A;
+  --accent-gold: #D4AF37;
+  --text-white: #FFFFFF;
+  --text-muted: #8A8A8A;
+  --handle-color: #333333;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+}
+
+html,
+body,
+#root {
+  background-color: #000;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Mockup Container - ALWAYS FIXED */
+.app-container {
+  width: 375px;
+  height: 812px;
+  background-image: url('https://res.cloudinary.com/ddhlqymvf/image/upload/v1771525899/App_Bar_1080x1920_2_afm0f1.png');
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+  border-radius: 40px;
+  overflow: hidden;
+}
+
+/* Background Tint Overlays */
+.tint-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: rgba(0, 0, 0, 0.1);
+  /* Neutral slight dark tint for all */
+}
+
+/* Top Navigation */
+.top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 45px 24px 10px;
+  z-index: 10;
+}
+
+.page-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: #444;
+  text-transform: uppercase;
+}
+
+.icon {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: #333;
+  stroke-width: 2.5;
+}
+
+/* Bottom Sheet */
+.bottom-sheet {
+  background-color: var(--black);
+  border-top-left-radius: 40px;
+  border-top-right-radius: 40px;
+  padding: 12px 24px 24px;
+  position: relative;
+  z-index: 10;
+  height: 380px;
+  display: flex;
+  flex-direction: column;
+}
+
+.drag-handle {
+  width: 50px;
+  height: 4px;
+  background-color: #222;
+  border-radius: 2px;
+  margin: 0 auto 15px;
+}
+
+.category-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--text-white);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.product-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--text-white);
+  flex-shrink: 1;
+  padding-right: 10px;
+}
+
+.price-tag {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-white);
+  white-space: nowrap;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+.specs-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.star {
+  color: #EAB308;
+  font-size: 12px;
+}
+
+.star.inactive {
+  color: #333333;
+}
+
+.size-label {
+  color: var(--text-white);
+  font-size: 13px;
+  margin-left: 6px;
+  font-weight: 500;
+}
+
+.description {
+  color: #ccc;
+  font-size: 12.5px;
+  line-height: 1.5;
+  text-align: center;
+  margin-top: auto;
+  margin-bottom: 30px;
+  padding: 0 10px;
+  font-weight: 300;
+}
+
+.add-btn {
+  width: 100%;
+  min-height: 54px;
+  background-color: #444444;
+  color: var(--text-white);
+  border: none;
+  border-radius: 27px;
+  font-size: 17px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.add-btn:active {
+  transform: scale(0.98);
+}
