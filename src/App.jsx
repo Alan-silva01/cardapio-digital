@@ -71,7 +71,7 @@ const App = () => {
 
             {/* ANIMATED HERO SECTION */}
             <div className="hero" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', paddingTop: '10px' }}>
-                <AnimatePresence initial={false} custom={direction} mode="wait">
+                <AnimatePresence initial={false} custom={direction}>
                     <motion.div
                         key={currentProduct.id}
                         custom={direction}
@@ -81,18 +81,22 @@ const App = () => {
                         exit="exit"
                         drag="x"
                         dragConstraints={{ left: 0, right: 0 }}
-                        dragElastic={1}
+                        dragElastic={0.2}
                         onDragEnd={(e, { offset, velocity }) => {
-                            const swipe = Math.abs(offset.x) > 50 && Math.abs(velocity.x) > 500;
-                            if (offset.x < -100 || (offset.x < -20 && swipe)) {
+                            const swipeThreshold = 50;
+                            const swipeVelocity = 200;
+                            const distance = offset.x;
+                            const speed = Math.abs(velocity.x);
+
+                            if (distance < -swipeThreshold || (distance < -20 && speed > swipeVelocity)) {
                                 paginate(1);
-                            } else if (offset.x > 100 || (offset.x > 20 && swipe)) {
+                            } else if (distance > swipeThreshold || (distance > 20 && speed > swipeVelocity)) {
                                 paginate(-1);
                             }
                         }}
                         transition={{
-                            x: { type: "spring", stiffness: 300, damping: 30, duration: 0.8 },
-                            opacity: { duration: 0.6 }
+                            x: { type: "spring", stiffness: 300, damping: 30 },
+                            opacity: { duration: 0.3 }
                         }}
                         style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
                     >
