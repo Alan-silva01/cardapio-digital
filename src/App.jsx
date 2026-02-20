@@ -10,6 +10,22 @@ const App = () => {
 
     const currentProduct = products[currentIndex];
 
+    // PWA Detection for robust iOS support
+    useEffect(() => {
+        const checkMode = () => {
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+            if (isStandalone) {
+                document.body.classList.add('is-pwa');
+                document.body.classList.remove('is-browser');
+            } else {
+                document.body.classList.add('is-browser');
+                document.body.classList.remove('is-pwa');
+            }
+        };
+        checkMode();
+        window.matchMedia('(display-mode: standalone)').addEventListener('change', checkMode);
+    }, []);
+
     // Reset variation when product changes
     useEffect(() => {
         if (currentProduct.variations) {
