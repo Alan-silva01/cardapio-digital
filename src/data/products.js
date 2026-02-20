@@ -28,6 +28,70 @@ export const products = [
         backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771597495/App_Bar_50Acorona_50kb_18_lydxgs.png',
         tint: 'neutral'
     },
+    {
+        id: 'coquetel-morango',
+        name: 'Coquetel de Morango',
+        category: 'Drinks',
+        price: '25,00',
+        variations: {
+            'com álcool': '25,00',
+            'sem álcool': '22,00'
+        },
+        size: 'Morango • Frutas • Mix refrescante',
+        rating: 5,
+        description: 'Coquetel refrescante preparado com morangos selecionados e um toque especial de álcool. Sabor frutado e intenso.',
+        imageUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771599311/App_Bar_50Acorona_50kb_19_ey0jl0.png',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771597495/App_Bar_50Acorona_50kb_18_lydxgs.png',
+        tint: 'neutral'
+    },
+    {
+        id: 'coquetel-kiwi',
+        name: 'Coquetel de Kiwi',
+        category: 'Drinks',
+        price: '25,00',
+        variations: {
+            'com álcool': '25,00',
+            'sem álcool': '22,00'
+        },
+        size: 'Kiwi • Frutas • Mix refrescante',
+        rating: 5,
+        description: 'Coquetel refrescante preparado com kiwis selecionados e um toque especial de álcool. Sabor equilibrado e cítrico.',
+        imageUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771599309/App_Bar_50Acorona_50kb_20_izlhcm.png',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771597495/App_Bar_50Acorona_50kb_18_lydxgs.png',
+        tint: 'neutral'
+    },
+    {
+        id: 'coquetel-abacaxi',
+        name: 'Coquetel de Abacaxi',
+        category: 'Drinks',
+        price: '25,00',
+        variations: {
+            'com álcool': '25,00',
+            'sem álcool': '22,00'
+        },
+        size: 'Abacaxi • Frutas • Mix refrescante',
+        rating: 5,
+        description: 'Coquetel refrescante preparado com abacaxis selecionados e um toque especial de álcool. Sabor tropical e doce.',
+        imageUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771599310/App_Bar_50Acorona_50kb_21_lti1hn.png',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771597495/App_Bar_50Acorona_50kb_18_lydxgs.png',
+        tint: 'neutral'
+    },
+    {
+        id: 'coquetel-maracuja',
+        name: 'Coquetel de Maracujá',
+        category: 'Drinks',
+        price: '25,00',
+        variations: {
+            'com álcool': '25,00',
+            'sem álcool': '22,00'
+        },
+        size: 'Maracujá • Frutas • Mix refrescante',
+        rating: 5,
+        description: 'Coquetel refrescante preparado com maracujás selecionados e um toque especial de álcool. Sabor marcante e aromático.',
+        imageUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771599310/App_Bar_50Acorona_50kb_22_bhr896.png',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771597495/App_Bar_50Acorona_50kb_18_lydxgs.png',
+        tint: 'neutral'
+    },
     // GINS
     {
         id: 'tanqueray',

@@ -12,7 +12,9 @@ const App = () => {
 
     // Reset variation when product changes
     useEffect(() => {
-        setSelectedVariation('nacional');
+        if (currentProduct.variations) {
+            setSelectedVariation(Object.keys(currentProduct.variations)[0]);
+        }
     }, [currentIndex]);
 
     const paginate = (newDirection) => {
@@ -131,37 +133,41 @@ const App = () => {
                         transition={{ duration: 0.5 }}
                         style={{ display: 'flex', flexDirection: 'column', flex: 1, paddingBottom: '70px' }}
                     >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-                            <div className="rating" style={{ display: 'flex', gap: '2px' }}>
-                                {[1, 2, 3, 4, 5].map((star) => {
-                                    // Dynamic rating based on variation
-                                    let effectiveRating = currentProduct.rating || 5;
-                                    if (currentProduct.variations) {
-                                        effectiveRating = selectedVariation === 'nacional' ? 4 : 5;
-                                    }
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <div className="rating" style={{ display: 'flex', gap: '2px' }}>
+                                    {[1, 2, 3, 4, 5].map((star) => {
+                                        // Dynamic rating based on variation
+                                        let effectiveRating = currentProduct.rating || 5;
+                                        if (currentProduct.variations) {
+                                            if (selectedVariation === 'nacional') effectiveRating = 4;
+                                            else if (selectedVariation === 'importado') effectiveRating = 5;
+                                            else if (selectedVariation.includes('álcool')) effectiveRating = 5;
+                                        }
 
-                                    return (
-                                        <span
-                                            key={star}
-                                            className={`star ${star > effectiveRating ? 'inactive' : ''}`}
-                                            style={{ fontSize: '12px' }}
-                                        >
-                                            ★
-                                        </span>
-                                    );
-                                })}
+                                        return (
+                                            <span
+                                                key={star}
+                                                className={`star ${star > effectiveRating ? 'inactive' : ''}`}
+                                                style={{ fontSize: '12px' }}
+                                            >
+                                                ★
+                                            </span>
+                                        );
+                                    })}
+                                </div>
+                                <div className="category-label" style={{ marginBottom: 0 }}>{currentProduct.category}</div>
                             </div>
-                            <div className="category-label" style={{ marginBottom: 0 }}>{currentProduct.category}</div>
-                        </div>
-
-                        <div className="info-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
-                            <div className="product-name">{currentProduct.name}</div>
-                            <div className="price-tag">
+                            <div className="price-tag" style={{ border: '1px solid rgba(255,255,255,0.1)', padding: '4px 10px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)' }}>
                                 R$: {currentProduct.variations ? currentProduct.variations[selectedVariation] : currentProduct.price}
                             </div>
                         </div>
 
-                        <div className="specs-row" style={{ marginBottom: '10px' }}>
+                        <div className="info-header" style={{ marginBottom: '16px' }}>
+                            <div className="product-name" style={{ fontSize: '26px' }}>{currentProduct.name}</div>
+                        </div>
+
+                        <div className="specs-row" style={{ marginBottom: '16px' }}>
                             <div className="ingredients-line" style={{
                                 color: '#eee',
                                 fontSize: '11px',
@@ -176,14 +182,14 @@ const App = () => {
                             </div>
                         </div>
 
-                        <p className="description" style={{ marginBottom: '15px' }}>
+                        <p className="description" style={{ marginBottom: '25px' }}>
                             {currentProduct.description}
                         </p>
 
                         {/* VARIATION SELECTION (CHECKBOX STYLE) */}
                         {currentProduct.variations && (
                             <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-                                {['nacional', 'importado'].map((variant) => (
+                                {Object.keys(currentProduct.variations).map((variant) => (
                                     <button
                                         key={variant}
                                         onClick={() => setSelectedVariation(variant)}
