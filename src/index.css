@@ -105,7 +105,7 @@ body,
   position: relative;
   z-index: 10;
   height: auto;
-  min-height: 380px;
+  min-height: 340px;
   display: flex;
   flex-direction: column;
   margin-top: auto;
@@ -114,12 +114,12 @@ body,
 
 /* Browser Mode (Lower height for Safari/Chrome on mobile) */
 body.is-browser .bottom-sheet {
-  min-height: 320px;
+  min-height: 280px;
 }
 
 /* Standalone PWA Mode (Taller height for full screen) */
 body.is-pwa .bottom-sheet {
-  min-height: 480px;
+  min-height: 420px;
 }
 
 .drag-handle {
