@@ -98,7 +98,15 @@ const App = () => {
                             x: { type: "spring", stiffness: 300, damping: 30 },
                             opacity: { duration: 0.3 }
                         }}
-                        style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+                        style={{
+                            width: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            position: 'absolute',
+                            left: 0,
+                            right: 0
+                        }}
                     >
                         <h1 style={{ fontFamily: 'Playfair Display, serif', fontSize: '28px', fontWeight: 900, marginBottom: '5px', zIndex: 5 }}>
                             {currentProduct.name}
