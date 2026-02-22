@@ -243,14 +243,26 @@ export const products = [
         tint: 'neutral'
     },
     {
-        id: 'file-com-fritas',
-        name: 'Filé com Fritas',
+        id: 'picanha-fritas',
+        name: 'Picanha com Fritas',
         category: 'Petiscos',
-        price: '67,00', // Preço placeholder (mesmo da picanha, caso queira igual)
-        size: 'Filé mignon em tiras • Batata frita',
+        price: '67,00',
+        size: 'Picanha em tiras • Batata frita',
         rating: 5,
-        description: 'Suculentas tiras de filé mignon grelhadas no ponto certo, acompanhadas de uma generosa porção de batatas fritas crocantes por fora e macias por dentro.',
-        imageUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771718541/App_Bar_50Acorona_50kb_25_rxei6w.png',
+        description: 'Suculentas tiras de picanha grelhadas no ponto certo, acompanhadas de uma generosa porção de batatas fritas crocantes por fora e macias por dentro.',
+        imageUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771719059/App_Bar_50Acorona_50kb_26_hi5xnj.png',
+        backgroundColor: '#B5B5B5',
+        tint: 'neutral'
+    },
+    {
+        id: 'ancho-premium',
+        name: 'Ancho Premium da Casa',
+        category: 'Petiscos',
+        price: '59,00',
+        size: 'Corte Ancho premium • Batata rústica',
+        rating: 5,
+        description: 'Corte super nobre de Bife Ancho, extremamente macio e suculento. Acompanha batatas rústicas perfeitamente temperadas.',
+        imageUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771719230/App_Bar_50Acorona_50kb_27_mjlb4u.png',
         backgroundColor: '#B5B5B5',
         tint: 'neutral'
     }
