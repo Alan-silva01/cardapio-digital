@@ -7,7 +7,6 @@ const App = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [direction, setDirection] = useState(0); // 1 = right, -1 = left
     const [selectedVariation, setSelectedVariation] = useState('nacional');
-    const [currentView, setCurrentView] = useState('home'); // 'home' or 'products'
 
     const currentProduct = products[currentIndex];
 
@@ -75,97 +74,6 @@ const App = () => {
         }),
     };
 
-    const handleCategorySelect = (categoryName) => {
-        // Find the first index of the selected category
-        const firstIndex = products.findIndex(p => p.category === categoryName);
-        if (firstIndex !== -1) {
-            setCurrentIndex(firstIndex);
-            setCurrentView('products');
-        }
-    };
-
-    if (currentView === 'home') {
-        return (
-            <div className="home-container" style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden' }}>
-                <video
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        zIndex: 0
-                    }}
-                >
-                    <source src="https://res.cloudinary.com/ddhlqymvf/video/upload/v1771771696/Logo_Estu%CC%81dio_Pilates_Dourado_2_xcblli.mp4" type="video/mp4" />
-                </video>
-
-                {/* Dark overlay for better text readability */}
-                <div style={{
-                    position: 'absolute',
-                    top: 0, left: 0, right: 0, bottom: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.65)',
-                    zIndex: 1
-                }} />
-
-                <div style={{
-                    position: 'relative',
-                    zIndex: 2,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'flex-end',
-                    height: '100%',
-                    paddingBottom: '50px',
-                    padding: '0 20px 50px'
-                }}>
-                    <h1 style={{
-                        color: '#D4AF37',
-                        fontFamily: 'Playfair Display, serif',
-                        fontSize: '32px',
-                        marginBottom: '40px',
-                        fontWeight: '700',
-                        textShadow: '0 2px 10px rgba(0,0,0,0.5)',
-                        textAlign: 'center'
-                    }}>
-                        Nosso Menu
-                    </h1>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', width: '100%', maxWidth: '400px' }}>
-                        {['Cervejas', 'Drinks', 'Vinhos', 'Petiscos'].map((cat) => (
-                            <button
-                                key={cat}
-                                onClick={() => handleCategorySelect(cat)}
-                                style={{
-                                    background: 'rgba(212, 175, 55, 0.15)',
-                                    backdropFilter: 'blur(10px)',
-                                    border: '1px solid rgba(212, 175, 55, 0.4)',
-                                    borderRadius: '16px',
-                                    padding: '20px 15px',
-                                    color: '#FFF',
-                                    fontSize: '18px',
-                                    fontWeight: '600',
-                                    fontFamily: 'Playfair Display, serif',
-                                    letterSpacing: '1px',
-                                    boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
-                                    cursor: 'pointer',
-                                    transition: 'transform 0.2s, background 0.2s'
-                                }}
-                            >
-                                {cat}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className="app-container" style={{
             background: currentProduct.backgroundColor || `url(${currentProduct.backgroundUrl || 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771525899/App_Bar_1080x1920_2_afm0f1.png'}) center/cover no-repeat`,
@@ -176,7 +84,7 @@ const App = () => {
 
             {/* FIXED TOP NAV */}
             <div className="top-nav">
-                <ArrowLeft className="icon" style={{ cursor: 'pointer' }} onClick={() => setCurrentView('home')} />
+                <ArrowLeft className="icon" />
                 <div className="page-title">{currentProduct.category}</div>
                 <ShoppingCart className="icon" />
             </div>
