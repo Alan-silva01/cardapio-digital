@@ -135,6 +135,7 @@ erDiagram
 | `serves` | `SMALLINT` | Quantas pessoas serve (opcional) |
 | `is_active` | `BOOLEAN DEFAULT true` | Toggle específico |
 | `stock` | `INTEGER DEFAULT -1` | `-1` = ilimitado, `0` = esgotado |
+| `min_stock` | `INTEGER DEFAULT 5` | Limite para disparar alerta "Estoque Baixo" no Dashboard |
 | `sort_order` | `SMALLINT` | Para ordenar no app |
 
 **Indexes:** `(product_id)`, `(stock)`, `(is_active)`
@@ -153,6 +154,7 @@ erDiagram
 | `max_qty` | `SMALLINT DEFAULT 1` | Quantidade máxima pro cliente pedir |
 | `is_active` | `BOOLEAN DEFAULT true` | Toggle específico |
 | `stock` | `INTEGER DEFAULT -1` | `-1` = ilimitado |
+| `min_stock` | `INTEGER DEFAULT 5` | Limite para "Estoque Baixo" |
 
 **Indexes:** `(product_id)`, `(is_active)`
 **Realtime:** ✅ — toggle status e decremento de estoque.

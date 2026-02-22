@@ -34,7 +34,7 @@
   - 🪑 Mesas ocupadas / total (ex: 8/15)
   - 📋 Pedidos ativos (recebido + preparando)
   - 💰 Faturamento do dia
-  - 📦 Itens com estoque baixo (≤5)
+  - 📦 Itens com estoque baixo (`stock <= min_stock`)
 
 - **Lista rápida:**
   - Últimos 5 pedidos com status
@@ -140,13 +140,15 @@
 │ Tempo preparo: [ 25 ] min          │
 │                                    │
 │ ──────── SKUs / VARIANTES ──────── │
-│ ├─ Grande  R$ [175]  Estoque [2] ✅│
-│ ├─ Média   R$ [125]  Estoque [5] ✅│
+│ ├─ Grande  R$ [175]  Estoque [2]   │
+│ │  ↳ Alerta de baixo quando <= [1] │
+│ ├─ Média   R$ [125]  Estoque [5]   │
+│ │  ↳ Alerta de baixo quando <= [2] │
 │ └─ [+ Adicionar Variante]          │
 │                                    │
 │ ────── ADICIONAIS / EXTRAS ─────── │
-│ ├─ Arroz   R$ [7] Max [2] Est [∞]✅│
-│ ├─ Farofa  R$ [5] Max [1] Est [9]✅│
+│ ├─ Arroz   R$ [7] Max [2] Est [∞]  │
+│ ├─ Farofa  R$ [5] Max [1] Est [9]  │
 │ └─ [+ Adicionar Addon]             │
 │                                    │
 │ [Cancelar]           [💾 Salvar]   │
@@ -175,7 +177,7 @@
 - **Toggle Manual vs Automático:** 
   - O botão de "Status App" desliga o produto na marra (ex: acabou o tempo de promoção ou a fritadeira quebrou e não dá pra fazer pastel, mesmo tendo estoque = 100).
   - **Automação:** Se o número chegar a `0` usando o botão ou nas vendas pelas comandas, o toggle fica cinza (Esgotado) e **o produto some automaticamente do celular do cliente**. Se clicar em `[+]` para repor `1`, ele volta a ficar Disponível sozinho.
-- **Filtros Inteligentes:** Todos | 🟡 Baixo (≤5) | 🔴 Esgotados | ∞ Ilimitados.
+- **Filtros Inteligentes:** Todos | 🟡 Baixo (`<= min_stock` de cada item) | 🔴 Esgotados | ∞ Ilimitados.
 
 ---
 
