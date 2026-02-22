@@ -52,10 +52,10 @@ const App = () => {
     }, [currentIndex]);
 
     const variants = {
-        enter: (direction) => ({
-            x: direction > 0 ? 150 : -150,
-            y: 50,
-            rotate: direction > 0 ? 15 : -15,
+        enter: ({ direction, isFood }) => ({
+            x: direction > 0 ? (isFood ? 150 : 50) : (isFood ? -150 : -50),
+            y: isFood ? 50 : 0,
+            rotate: isFood ? (direction > 0 ? 15 : -15) : 0,
             opacity: 0,
         }),
         center: {
@@ -65,11 +65,11 @@ const App = () => {
             rotate: 0,
             opacity: 1,
         },
-        exit: (direction) => ({
+        exit: ({ direction, isFood }) => ({
             zIndex: 0,
-            x: direction < 0 ? 150 : -150,
-            y: 50,
-            rotate: direction < 0 ? 15 : -15,
+            x: direction < 0 ? (isFood ? 150 : 50) : (isFood ? -150 : -50),
+            y: isFood ? 50 : 0,
+            rotate: isFood ? (direction < 0 ? 15 : -15) : 0,
             opacity: 0,
         }),
     };
@@ -91,10 +91,10 @@ const App = () => {
 
             {/* ANIMATED HERO SECTION */}
             <div className="hero" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', paddingTop: '10px' }}>
-                <AnimatePresence initial={false} custom={direction}>
+                <AnimatePresence initial={false} custom={{ direction, isFood: currentProduct.category === 'Petiscos' }}>
                     <motion.div
                         key={currentProduct.id}
-                        custom={direction}
+                        custom={{ direction, isFood: currentProduct.category === 'Petiscos' }}
                         variants={variants}
                         initial="enter"
                         animate="center"
