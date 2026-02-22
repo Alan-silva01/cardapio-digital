@@ -229,6 +229,79 @@ export const products = [
         imageUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771532900/App_Bar_50Acorona_50kb_3_t8vqnc.png',
         tint: 'whiskey'
     },
+    // VINHOS
+    {
+        id: 'galliotto-seco',
+        name: 'Galliotto Seco',
+        category: 'Vinhos',
+        price: '45,00',
+        variations: {
+            'garrafa': '45,00',
+            'taça': '14,00'
+        },
+        size: '750ml',
+        rating: 4,
+        description: 'Vinho tinto de mesa seco. Elaborado com uvas selecionadas, possui coloração vermelho rubi, aroma frutado e paladar equilibrado.',
+        imageUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771766294/App_Bar_50Acorona_50kb_30_ndles2.png',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771597495/App_Bar_50Acorona_50kb_18_lydxgs.png',
+        tint: 'neutral'
+    },
+    {
+        id: 'galliotto-suave',
+        name: 'Galliotto Suave',
+        category: 'Vinhos',
+        price: '45,00',
+        variations: {
+            'garrafa': '45,00',
+            'taça': '14,00'
+        },
+        size: '750ml',
+        rating: 4,
+        description: 'Vinho tinto de mesa suave. De coloração vermelho rubi, aroma frutado agradável e paladar doce e equilibrado.',
+        imageUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771766294/App_Bar_50Acorona_50kb_29_xciwcg.png',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771597495/App_Bar_50Acorona_50kb_18_lydxgs.png',
+        tint: 'neutral'
+    },
+    {
+        id: 'quinta-morgado-suave',
+        name: 'Quinta do Morgado Suave',
+        category: 'Vinhos',
+        price: '47,00',
+        variations: {
+            'garrafa': '47,00',
+            'taça': '14,00'
+        },
+        size: '750ml',
+        rating: 5,
+        description: 'Vinho tinto de mesa suave. Elaborado com uvas de qualidade, apresenta aroma frutado intenso e sabor adocicado.',
+        imageUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771766294/App_Bar_50Acorona_500x600_2_py5erp.png',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771597495/App_Bar_50Acorona_50kb_18_lydxgs.png',
+        tint: 'neutral'
+    },
+    {
+        id: 'lambrusco',
+        name: 'Lambrusco',
+        category: 'Vinhos',
+        price: '120,00',
+        size: '750ml',
+        rating: 5,
+        description: 'Vinho italiano frisante, leve e refrescante. Apresenta notas frutadas marcantes e dodoçura equilibrada.',
+        imageUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771766294/App_Bar_50Acorona_50kb_28_fupjhn.png',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771597495/App_Bar_50Acorona_50kb_18_lydxgs.png',
+        tint: 'neutral'
+    },
+    {
+        id: 'casal-garcia-tinto',
+        name: 'Casal Garcia Tinto Seco',
+        category: 'Vinhos',
+        price: '130,00',
+        size: '750ml',
+        rating: 5,
+        description: 'Vinho tinto jovem e expressivo, com notas de frutos vermelhos e um toque de frescor. Perfeito para acompanhar diversos pratos.',
+        imageUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771766294/App_Bar_50Acorona_50kb_31_zw78rf.png',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771597495/App_Bar_50Acorona_50kb_18_lydxgs.png',
+        tint: 'neutral'
+    },
     // PETISCOS
     {
         id: 'picanha-trinchada',
