@@ -159,15 +159,23 @@
 
 **Layout: Tabela com filtros**
 
-| Produto | Categoria | Estoque | Status | Ação |
-|---------|-----------|---------|--------|------|
-| Pastel Carne | Pastéis | 12 | 🟢 | [Ajustar] |
-| Heineken 600 | Cerveja | 3 | 🟡 Baixo | [Ajustar] |
-| Pastel Queijo | Pastéis | 0 | 🔴 Esgotado | [Repor] |
+## 5. 📦 Estoque (Entradas e Saídas Rápidas)
 
-**Filtros:** Todos | 🟡 Baixo (≤5) | 🔴 Esgotado (0) | ∞ Ilimitado
-**Ajustar:** Modal rápido com input numérico
-**Badges visuais:** 🟢 ok (>5) | 🟡 baixo (1-5) | 🔴 esgotado (0)
+**Layout: Tabela otimizada para operação rápida**
+
+| Produto / Variante | Categoria | Estoque Atual | Status App | Ação Rápida |
+|--------------------|-----------|---------------|------------|-------------|
+| Pastel Carne       | Pastéis   | 12            | [✅ Ativo]  | `[ - ]` `12` `[ + ]` |
+| Heineken 600ml     | Cervejas  | 3             | [✅ Ativo]  | `[ - ]` ` 3` `[ + ]` |
+| Pastel Queijo      | Pastéis   | 0             | [❌ Esgotado]| `[ - ]` ` 0` `[ + ]` |
+| Drink Melancita    | Drinks    | ∞             | [✅ Ativo]  | `[ ∞ ]`              |
+
+**Funcionalidades Essenciais:**
+- **Entrada Rápida:** Botões `[+]` e `[-]` do lado do número permitem dar entrada na mercadoria em 1 clique (chegou 1 engradado? Clica `+` até somar 24, salva sozinho).
+- **Toggle Manual vs Automático:** 
+  - O botão de "Status App" desliga o produto na marra (ex: acabou o tempo de promoção ou a fritadeira quebrou e não dá pra fazer pastel, mesmo tendo estoque = 100).
+  - **Automação:** Se o número chegar a `0` usando o botão ou nas vendas pelas comandas, o toggle fica cinza (Esgotado) e **o produto some automaticamente do celular do cliente**. Se clicar em `[+]` para repor `1`, ele volta a ficar Disponível sozinho.
+- **Filtros Inteligentes:** Todos | 🟡 Baixo (≤5) | 🔴 Esgotados | ∞ Ilimitados.
 
 ---
 
