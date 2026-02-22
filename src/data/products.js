@@ -13,6 +13,18 @@ export const products = [
         tint: 'neutral'
     },
     {
+        id: 'caipirinha',
+        name: 'Caipirinha',
+        category: 'Drinks',
+        price: '15,00',
+        size: 'Limão • cachaça 51 • gelo',
+        rating: 5,
+        description: 'Clássica caipirinha brasileira preparada com limão fresco, cachaça 51 de alta qualidade e gelo. O equilíbrio perfeito entre o cítrico e o doce.',
+        imageUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771605684/App_Bar_50Acorona_50kb_23_z6gxst.png',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771597495/App_Bar_50Acorona_50kb_18_lydxgs.png',
+        tint: 'neutral'
+    },
+    {
         id: 'tropical-blue',
         name: 'Tropical Blue',
         category: 'Drinks',
@@ -216,5 +228,18 @@ export const products = [
         description: 'Conhecida pelo posicionamento sofisticado e pelo foco em leveza e estilo de vida ativo. Criada no fim do século XIX nos EUA.',
         imageUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771532900/App_Bar_50Acorona_50kb_3_t8vqnc.png',
         tint: 'whiskey'
+    },
+    // PETISCOS
+    {
+        id: 'picanha-trinchada',
+        name: 'Picanha Trinchada',
+        category: 'Petiscos',
+        price: '67,00',
+        size: 'Acompanha batatas fritas e molho especial',
+        rating: 5,
+        description: 'Deliciosa picanha premium trinchada, servida no ponto perfeito. Acompanha batatas fritas douradas e crocantes, molho especial da casa e salada confit.',
+        imageUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771718185/App_Bar_50Acorona_50kb_24_awiqbt.png',
+        backgroundColor: '#B5B5B5', // Fundo cinza conforme protótipo
+        tint: 'neutral'
     }
 ];

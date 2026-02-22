@@ -53,27 +53,31 @@ const App = () => {
 
     const variants = {
         enter: (direction) => ({
-            x: direction > 0 ? 50 : -50,
+            x: direction > 0 ? 150 : -150,
+            y: 50,
+            rotate: direction > 0 ? 15 : -15,
             opacity: 0,
         }),
         center: {
             zIndex: 1,
             x: 0,
+            y: 0,
+            rotate: 0,
             opacity: 1,
         },
         exit: (direction) => ({
             zIndex: 0,
-            x: direction < 0 ? 50 : -50,
+            x: direction < 0 ? 150 : -150,
+            y: 50,
+            rotate: direction < 0 ? 15 : -15,
             opacity: 0,
         }),
     };
 
     return (
         <div className="app-container" style={{
-            backgroundImage: `url(${currentProduct.backgroundUrl || 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771525899/App_Bar_1080x1920_2_afm0f1.png'})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            transition: 'background-image 0.5s ease-in-out'
+            background: currentProduct.backgroundColor || `url(${currentProduct.backgroundUrl || 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771525899/App_Bar_1080x1920_2_afm0f1.png'}) center/cover no-repeat`,
+            transition: 'background 0.5s ease-in-out'
         }}>
             {/* Background Tint Overlay */}
             <div className="tint-layer" />
@@ -153,10 +157,10 @@ const App = () => {
 
                 {/* NAVIGATION ARROWS */}
                 <div style={{ position: 'absolute', top: '50%', left: '15px', transform: 'translateY(-50%)', zIndex: 20, cursor: 'pointer' }} onClick={() => paginate(-1)}>
-                    <ChevronLeft size={32} color="#333" />
+                    <ChevronLeft size={36} color="#333" style={{ transform: 'rotate(-30deg)' }} />
                 </div>
                 <div style={{ position: 'absolute', top: '50%', right: '15px', transform: 'translateY(-50%)', zIndex: 20, cursor: 'pointer' }} onClick={() => paginate(1)}>
-                    <ChevronRight size={32} color="#333" />
+                    <ChevronRight size={36} color="#333" style={{ transform: 'rotate(30deg)' }} />
                 </div>
             </div>
 
