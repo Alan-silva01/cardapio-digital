@@ -241,5 +241,17 @@ export const products = [
         imageUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771718185/App_Bar_50Acorona_50kb_24_awiqbt.png',
         backgroundColor: '#B5B5B5', // Fundo cinza conforme protótipo
         tint: 'neutral'
+    },
+    {
+        id: 'file-com-fritas',
+        name: 'Filé com Fritas',
+        category: 'Petiscos',
+        price: '67,00', // Preço placeholder (mesmo da picanha, caso queira igual)
+        size: 'Filé mignon em tiras • Batata frita',
+        rating: 5,
+        description: 'Suculentas tiras de filé mignon grelhadas no ponto certo, acompanhadas de uma generosa porção de batatas fritas crocantes por fora e macias por dentro.',
+        imageUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771718541/App_Bar_50Acorona_50kb_25_rxei6w.png',
+        backgroundColor: '#B5B5B5',
+        tint: 'neutral'
     }
 ];
