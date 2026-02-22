@@ -121,13 +121,11 @@
 ```
 
 **Funcionalidades por produto:**
-- **Toggle on/off** → reflete em real-time no menu do cliente
-- **Editar:** Nome, descrição, preço, imagem (upload Cloudinary), variantes, addons
-- **Estoque:** Input numérico para ajustar (+/- ou valor absoluto)
-- **Variantes:** Editar cada variant (nome, preço, toggle on/off) → some/aparece no cliente
-- **Addons:** Editar cada addon (nome, preço, toggle on/off)
-- **Tags:** Adicionar/remover tags (destaque, popular, novo)
-- **Reordenar:** Drag das categorias e dos produtos dentro delas
+- **Toggle on/off** → reflete em real-time no menu do cliente (desativa o produto todo).
+- **Editar Produto Base:** Nome, descrição, imagem (upload Cloudinary), categoria, tags.
+- **Variantes (SKUs):** Tabela embutida no modal para gerenciar os SKUs do produto (ex: Taça, Garrafa). Cada um tem: Nome, Preço, Estoque próprio, Toggle on/off.
+- **Addons Extras:** Tabela embutida no modal para gerenciar complementos. Cada um tem: Nome, Preço, Qtd Máxima, Estoque próprio, Toggle on/off.
+- **Reordenar:** Drag das categorias e dos produtos dentro delas.
 
 **Modal de editar produto:**
 ```
@@ -138,20 +136,18 @@
 │ Descrição: [______________]        │
 │ Categoria: [Pratos à la Carte ▼]   │
 │ Imagem: [📷 Upload]  [Preview]     │
-│                                    │
-│ Variantes:                         │
-│ ├─ Grande  R$ [175]  Serve [4] ✅  │
-│ ├─ Média   R$ [125]  Serve [2] ✅  │
-│ └─ [+ Adicionar variante]          │
-│                                    │
-│ Addons:                            │
-│ ├─ Arroz   R$ [7]  Max [2] ✅      │
-│ ├─ Farofa  R$ [5]  Max [1] ✅      │
-│ └─ [+ Adicionar addon]             │
-│                                    │
-│ Estoque: [  15  ] [∞ Ilimitado]    │
 │ Tags: [destaque ×] [+ Tag]         │
 │ Tempo preparo: [ 25 ] min          │
+│                                    │
+│ ──────── SKUs / VARIANTES ──────── │
+│ ├─ Grande  R$ [175]  Estoque [2] ✅│
+│ ├─ Média   R$ [125]  Estoque [5] ✅│
+│ └─ [+ Adicionar Variante]          │
+│                                    │
+│ ────── ADICIONAIS / EXTRAS ─────── │
+│ ├─ Arroz   R$ [7] Max [2] Est [∞]✅│
+│ ├─ Farofa  R$ [5] Max [1] Est [9]✅│
+│ └─ [+ Adicionar Addon]             │
 │                                    │
 │ [Cancelar]           [💾 Salvar]   │
 └────────────────────────────────────┘

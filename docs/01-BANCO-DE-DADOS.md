@@ -5,8 +5,9 @@
 - **Timezone:** `America/Sao_Paulo` em TODAS as tabelas
 - **IDs:** `nanoid(12)` — curtos, URL-safe (ex: `ord_a7k2m9x3`)
 - **Tipo:** `TIMESTAMPTZ` em todo campo de data/hora
-- **JSONB:** Variantes e addons embutidos no produto (evita JOINs)
-- **Realtime:** Habilitado APENAS nas tabelas que precisam (orders, tabs, products, settings)
+- **JSONB:** Apenas propriedades visuais pontuais; variantes (SKUs) e extras (addons) são Tabelas Relacionais para controle real de estoque e métricas precisas.
+- **Índices Rápidos:** `stock` nas variantes e tabelas dimensionais otimizadas para carregamento veloz do frontend.
+- **Realtime:** Habilitado APENAS nas tabelas que precisam (orders, tabs, products, product_variants, settings)
 
 ```sql
 -- Migration 0: Timezone
@@ -22,7 +23,9 @@ erDiagram
     settings ||--|| settings : "singleton"
     staff }o--|| auth_users : "linked to"
     categories ||--o{ products : has
-    products ||--o{ order_items : "referenced by"
+    products ||--o{ product_variants : "has SKUs"
+    products ||--o{ product_addons : "has addons"
+    product_variants ||--o{ order_items : "referenced by"
     products ||--o{ favorites : "favorited"
     tables ||--o{ tabs : has
     tabs ||--o{ tab_guests : has
@@ -36,7 +39,7 @@ erDiagram
 
 ---
 
-## Tabelas (12)
+## Tabelas Principais (14)
 
 ### 1. `settings` — Configurações Globais (Singleton)
 
@@ -107,48 +110,64 @@ erDiagram
 | `slug` | `TEXT UNIQUE` | — |
 | `description` | `TEXT` | Ingredientes, acompanhamentos |
 | `image_url` | `TEXT` | Cloudinary URL |
-| `base_price` | `NUMERIC(10,2)` | Preço da menor variante |
-| `variants` | `JSONB` | Ver estrutura abaixo |
-| `addons` | `JSONB` | Ver estrutura abaixo |
 | `tags` | `TEXT[]` | `['destaque', 'novo']` |
 | `is_combo` | `BOOLEAN DEFAULT false` | — |
 | `prep_time_min` | `SMALLINT` | Tempo base em minutos |
-| `is_available` | `BOOLEAN DEFAULT true` | Toggle master |
-| `stock` | `INTEGER DEFAULT -1` | `-1` = ilimitado, `0` = esgotado |
+| `is_available` | `BOOLEAN DEFAULT true` | Toggle master (desativa tudo) |
 | `sort_order` | `SMALLINT` | — |
 | `created_at` | `TIMESTAMPTZ DEFAULT now()` | — |
 
-**Indexes:** `(category_id)`, `(slug)`, `(is_available)`, `(stock)`, `(tags)` GIN
-**Realtime:** ✅ — toggle disponibilidade + estoque em real-time
+**Indexes:** `(category_id)`, `(slug)`, `(is_available)`, `(tags)` GIN
+**Realtime:** ✅ — toggle disponibilidade master.
 
-**Estrutura do JSONB `variants`:**
-```json
-[
-  { "id": "v1", "name": "Pequena", "price": 125.00, "serves": 2, "is_active": true },
-  { "id": "v2", "name": "Grande", "price": 175.00, "serves": 4, "is_active": true }
-]
-```
+---
 
-**Estrutura do JSONB `addons`:**
-```json
-[
-  { "id": "a1", "name": "Arroz", "price": 7.00, "max_qty": 2, "is_active": true },
-  { "id": "a2", "name": "Farofa", "price": 5.00, "max_qty": 1, "is_active": true }
-]
-```
+### 5. `product_variants` — Variantes (SKUs / Tamanhos / Taças)
+
+> Representa o item real sendo vendido. O preço e estoque ficam **aqui**.
+
+| Coluna | Tipo | Descrição |
+|--------|------|-----------|
+| `id` | `TEXT PK` | nanoid(12) |
+| `product_id` | `TEXT FK → products.id` | Produto "Pai" |
+| `name` | `TEXT NOT NULL` | "Taça", "Garrafa (750ml)", "Grande" |
+| `price` | `NUMERIC(10,2) NOT NULL` | 130.00 |
+| `serves` | `SMALLINT` | Quantas pessoas serve (opcional) |
+| `is_active` | `BOOLEAN DEFAULT true` | Toggle específico |
+| `stock` | `INTEGER DEFAULT -1` | `-1` = ilimitado, `0` = esgotado |
+| `sort_order` | `SMALLINT` | Para ordenar no app |
+
+**Indexes:** `(product_id)`, `(stock)`, `(is_active)`
+**Realtime:** ✅ — toggle status e decremento de estoque instantâneo.
+
+---
+
+### 6. `product_addons` — Extras e Acompanhamentos
+
+| Coluna | Tipo | Descrição |
+|--------|------|-----------|
+| `id` | `TEXT PK` | nanoid(12) |
+| `product_id` | `TEXT FK → products.id` | Produto "Pai" |
+| `name` | `TEXT NOT NULL` | "Arroz", "Farofa", "Borda Recheada" |
+| `price` | `NUMERIC(10,2) NOT NULL` | 7.00 |
+| `max_qty` | `SMALLINT DEFAULT 1` | Quantidade máxima pro cliente pedir |
+| `is_active` | `BOOLEAN DEFAULT true` | Toggle específico |
+| `stock` | `INTEGER DEFAULT -1` | `-1` = ilimitado |
+
+**Indexes:** `(product_id)`, `(is_active)`
+**Realtime:** ✅ — toggle status e decremento de estoque.
 
 **Regras de UI:**
 | Situação | Comportamento Visual |
 |----------|---------------------|
-| `is_available = false` | Blur na imagem + tag "ESGOTADO" |
-| `stock = 0` | Mesmo acima (automático) |
-| `stock > 0 && stock < qty` | Modal: "Só temos X unidades!" |
-| Variante `is_active = false` | Some do seletor em realtime |
-| Addon `is_active = false` | Some da lista em realtime |
+| Produto `is_available = false` | Produto some do menu (ou Blur + "ESGOTADO") |
+| Variante `stock = 0` | A opção Variante fica cinza + "Esgotado" |
+| Variante `stock > 0 && stock < qty` | Modal: "Só temos X unidades desta variação!" |
+| Variante/Addon `is_active = false` | Some do seletor em realtime |
 
 ---
 
-### 5. `tables` — Mesas
+### 7. `tables` — Mesas
 
 | Coluna | Tipo | Descrição |
 |--------|------|-----------|
@@ -162,7 +181,7 @@ erDiagram
 
 ---
 
-### 6. `tabs` — Comandas (sessão por mesa)
+### 8. `tabs` — Comandas (sessão por mesa)
 
 | Coluna | Tipo | Descrição |
 |--------|------|-----------|
@@ -183,7 +202,7 @@ erDiagram
 
 ---
 
-### 7. `tab_guests` — Pessoas na Comanda
+### 9. `tab_guests` — Pessoas na Comanda
 
 | Coluna | Tipo | Descrição |
 |--------|------|-----------|
@@ -197,7 +216,7 @@ erDiagram
 
 ---
 
-### 8. `orders` — Pedidos
+### 10. `orders` — Pedidos
 
 | Coluna | Tipo | Descrição |
 |--------|------|-----------|
@@ -217,16 +236,16 @@ erDiagram
 
 ---
 
-### 9. `order_items` — Itens do Pedido
+### 11. `order_items` — Itens do Pedido
 
 | Coluna | Tipo | Descrição |
 |--------|------|-----------|
 | `id` | `TEXT PK` | nanoid(8) |
 | `order_id` | `TEXT FK → orders.id` | — |
-| `product_id` | `TEXT FK → products.id` | — |
-| `product_name` | `TEXT` | Denormalizado para impressão |
-| `variant_id` | `TEXT` | Ref ao JSONB do product |
-| `variant_name` | `TEXT` | "Grande", "Importado" |
+| `product_id` | `TEXT FK → products.id` | Identificador base |
+| `variant_id` | `TEXT FK → product_variants.id` | SKU real vendido (obriga saber o tamanho/taça/etc) |
+| `product_name` | `TEXT` | Denorm para histórico |
+| `variant_name` | `TEXT` | "Grande", "Taça" (denorm) |
 | `addons` | `JSONB` | `[{name, price, qty}]` |
 | `quantity` | `SMALLINT DEFAULT 1` | — |
 | `unit_price` | `NUMERIC(10,2)` | — |
@@ -237,7 +256,7 @@ erDiagram
 
 ---
 
-### 10. `payments` — Pagamentos
+### 12. `payments` — Pagamentos
 
 | Coluna | Tipo | Descrição |
 |--------|------|-----------|
@@ -254,7 +273,7 @@ erDiagram
 
 ---
 
-### 11. `favorites` — Curtidas/Favoritos
+### 13. `favorites` — Curtidas/Favoritos
 
 | Coluna | Tipo | Descrição |
 |--------|------|-----------|
@@ -275,6 +294,8 @@ erDiagram
 | `staff` | ✅ authenticated | ✅ owner only | ✅ owner only | ✅ owner only |
 | `categories` | ✅ Público | ✅ staff | ✅ staff | ✅ owner only |
 | `products` | ✅ Público | ✅ staff | ✅ staff | ✅ owner only |
+| `product_variants` | ✅ Público | ✅ staff | ✅ staff | ✅ owner only |
+| `product_addons` | ✅ Público | ✅ staff | ✅ staff | ✅ owner only |
 | `tables` | ✅ Público | ✅ staff | ✅ staff | ✅ owner only |
 | `tabs` | ✅ Público | ✅ Público | ✅ Público* | ❌ |
 | `tab_guests` | ✅ Público | ✅ Público | ✅ staff | ❌ |
@@ -302,11 +323,11 @@ $$ LANGUAGE sql SECURITY DEFINER;
 
 ```
 Ao criar order_item:
-  1. Verificar products.stock >= quantity
+  1. Verificar product_variants.stock >= quantity (usando variant_id)
   2. Se stock == -1 → ilimitado, pular
   3. Se stock < quantity → REJEITAR + retornar stock atual pro cliente
-  4. UPDATE products SET stock = stock - quantity
-  5. Se stock resultante = 0 → SET is_available = false automaticamente
+  4. UPDATE product_variants SET stock = stock - quantity
+  5. UPDATE product_addons decrementando seus estoques (itens de addon no JSON de request)
 ```
 
 ---
@@ -332,6 +353,6 @@ get_daily_revenue(p_from, p_to) → day, total
 |-------|--------|---------|-------------|
 | `admin-orders` | `orders` | INSERT, UPDATE | Admin Kanban |
 | `admin-tabs` | `tabs` | UPDATE | Admin (alerta fechar) |
-| `product-availability` | `products` | UPDATE | Clientes (blur/esgotado) |
+| `sku-availability` | `product_variants` | UPDATE | Clientes (blur/esgotado SKU específico) |
 | `settings-changes` | `settings` | UPDATE | Clientes (couvert) |
 | `customer-orders:{tab_id}` | `orders` | UPDATE | Cliente específico |
