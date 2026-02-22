@@ -157,10 +157,10 @@ const App = () => {
 
                 {/* NAVIGATION ARROWS */}
                 <div style={{ position: 'absolute', top: '50%', left: '15px', transform: 'translateY(-50%)', zIndex: 20, cursor: 'pointer' }} onClick={() => paginate(-1)}>
-                    <ChevronLeft size={36} color="#333" style={{ transform: 'rotate(-30deg)' }} />
+                    <ChevronLeft size={36} color="#333" style={{ transform: currentProduct.category === 'Petiscos' ? 'rotate(-30deg)' : 'none' }} />
                 </div>
                 <div style={{ position: 'absolute', top: '50%', right: '15px', transform: 'translateY(-50%)', zIndex: 20, cursor: 'pointer' }} onClick={() => paginate(1)}>
-                    <ChevronRight size={36} color="#333" style={{ transform: 'rotate(30deg)' }} />
+                    <ChevronRight size={36} color="#333" style={{ transform: currentProduct.category === 'Petiscos' ? 'rotate(30deg)' : 'none' }} />
                 </div>
             </div>
 
