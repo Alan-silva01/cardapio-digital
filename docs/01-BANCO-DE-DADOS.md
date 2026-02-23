@@ -3,11 +3,11 @@
 ## Regras Globais
 
 - **Timezone:** `America/Sao_Paulo` em TODAS as tabelas
-- **IDs:** `nanoid(12)` — curtos, URL-safe (ex: `ord_a7k2m9x3`)
+- **IDs:** `nanoid(12)` — curtos, URL-safe (ex: `pd_a7k2m9x3`)
 - **Tipo:** `TIMESTAMPTZ` em todo campo de data/hora
-- **JSONB:** Apenas propriedades visuais pontuais; variantes (SKUs) e extras (addons) são Tabelas Relacionais para controle real de estoque e métricas precisas.
-- **Índices Rápidos:** `stock` nas variantes e tabelas dimensionais otimizadas para carregamento veloz do frontend.
-- **Realtime:** Habilitado APENAS nas tabelas que precisam (orders, tabs, products, product_variants, settings)
+- **JSONB:** Apenas propriedades visuais pontuais; variantes (SKUs) e extras (adicionais) são Tabelas Relacionais para controle real de estoque e métricas precisas.
+- **Índices Rápidos:** `estoque` nas variações e tabelas dimensionais otimizadas para carregamento veloz do frontend.
+- **Realtime:** Habilitado APENAS nas tabelas que precisam.
 
 ```sql
 -- Migration 0: Timezone
@@ -20,271 +20,261 @@ ALTER DATABASE postgres SET timezone TO 'America/Sao_Paulo';
 
 ```mermaid
 erDiagram
-    settings ||--|| settings : "singleton"
-    staff }o--|| auth_users : "linked to"
-    categories ||--o{ products : has
-    products ||--o{ product_variants : "has SKUs"
-    products ||--o{ product_addons : "has addons"
-    product_variants ||--o{ order_items : "referenced by"
-    products ||--o{ favorites : "favorited"
-    tables ||--o{ tabs : has
-    tabs ||--o{ tab_guests : has
-    tabs ||--o{ orders : has
-    tabs ||--o{ payments : has
-    tab_guests ||--o{ orders : places
-    tab_guests ||--o{ favorites : likes
-    orders ||--o{ order_items : contains
-    tab_guests ||--o{ payments : makes
+    configuracoes ||--|| configuracoes : "singleton"
+    funcionarios }o--|| auth_users : "linked to"
+    categorias ||--o{ produtos : has
+    produtos ||--o{ variacoes_produto : "has SKUs"
+    produtos ||--o{ adicionais_produto : "has addons"
+    variacoes_produto ||--o{ itens_pedido : "referenced by"
+    produtos ||--o{ curtidas : "favorited"
+    mesas ||--o{ comandas : has
+    comandas ||--o{ pessoas_comanda : has
+    comandas ||--o{ pedidos : has
+    comandas ||--o{ pagamentos : has
+    pessoas_comanda ||--o{ pedidos : places
+    pessoas_comanda ||--o{ curtidas : likes
+    pedidos ||--o{ itens_pedido : contains
+    pessoas_comanda ||--o{ pagamentos : makes
 ```
 
 ---
 
 ## Tabelas Principais (14)
 
-### 1. `settings` — Configurações Globais (Singleton)
+### 1. `configuracoes` — Configurações Globais (Singleton)
 
 > Sempre 1 registro com `id = 'global'`
 
 | Coluna | Tipo | Descrição |
 |--------|------|-----------|
 | `id` | `TEXT PK` | Sempre `'global'` |
-| `couvert_enabled` | `BOOLEAN` | Couvert obrigatório? |
-| `couvert_value` | `NUMERIC(10,2)` | Valor por pessoa (ex: 10.00) |
-| `establishment_name` | `TEXT` | "Seu Manel Bar" |
-| `updated_at` | `TIMESTAMPTZ DEFAULT now()` | — |
+| `couvert_ativo` | `BOOLEAN` | Couvert obrigatório? |
+| `valor_couvert` | `NUMERIC(10,2)` | Valor por pessoa (ex: 10.00) |
+| `nome_estabelecimento` | `TEXT` | "Seu Manel Bar" |
+| `atualizado_em` | `TIMESTAMPTZ DEFAULT now()` | — |
 
 **Indexes:** nenhum (1 registro)
 **Realtime:** ✅ — mudança de couvert reflete em todos os clientes instantaneamente
 
 ---
 
-### 2. `staff` — Funcionários / Admins
+### 2. `funcionarios` — Funcionários / Admins
 
 | Coluna | Tipo | Descrição |
 |--------|------|-----------|
 | `id` | `TEXT PK` | nanoid(12) |
 | `auth_id` | `UUID UNIQUE` | → `auth.users.id` (Supabase Auth) |
-| `name` | `TEXT NOT NULL` | Nome completo |
+| `nome` | `TEXT NOT NULL` | Nome completo |
 | `email` | `TEXT UNIQUE` | Email de login |
-| `role` | `TEXT NOT NULL` | `'owner'` ou `'admin'` |
-| `avatar_url` | `TEXT` | Foto (opcional) |
-| `is_active` | `BOOLEAN DEFAULT true` | Desativar sem deletar |
-| `created_at` | `TIMESTAMPTZ DEFAULT now()` | — |
-| `created_by` | `TEXT FK → staff.id` | Quem cadastrou |
+| `cargo` | `TEXT NOT NULL` | `'dono'` ou `'admin'` |
+| `foto_url` | `TEXT` | Foto (opcional) |
+| `ativo` | `BOOLEAN DEFAULT true` | Desativar sem deletar |
+| `criado_em` | `TIMESTAMPTZ DEFAULT now()` | — |
+| `criado_por` | `TEXT FK → funcionarios.id` | Quem cadastrou |
 
-**Indexes:** `(auth_id)`, `(role)`, `(is_active)`
-
-**Fluxo:**
-1. Owner clica "Adicionar Funcionário" no admin
-2. Edge Function cria user no Supabase Auth + insere em `staff`
-3. Funcionário recebe email com credenciais
-4. Login → frontend consulta `staff` para obter `role`
-5. `is_active = false` → login bloqueado
+**Indexes:** `(auth_id)`, `(cargo)`, `(ativo)`
 
 ---
 
-### 3. `categories` — Categorias do Menu
+### 3. `categorias` — Categorias do Menu
 
 | Coluna | Tipo | Descrição |
 |--------|------|-----------|
 | `id` | `TEXT PK` | nanoid(12) |
-| `name` | `TEXT NOT NULL` | "Pastéis", "Drinks" |
+| `nome` | `TEXT NOT NULL` | "Pastéis", "Drinks" |
 | `slug` | `TEXT UNIQUE` | URL-friendly |
-| `icon` | `TEXT` | Emoji ou URL do ícone |
-| `sort_order` | `SMALLINT` | Ordem de exibição (1, 2, 3...) |
-| `is_active` | `BOOLEAN DEFAULT true` | Toggle visibilidade |
-| `created_at` | `TIMESTAMPTZ DEFAULT now()` | — |
+| `icone` | `TEXT` | Emoji ou URL do ícone |
+| `ordem` | `SMALLINT` | Ordem de exibição (1, 2, 3...) |
+| `ativo` | `BOOLEAN DEFAULT true` | Toggle visibilidade |
+| `criado_em` | `TIMESTAMPTZ DEFAULT now()` | — |
 
-**Indexes:** `(slug)`, `(sort_order)`, `(is_active)`
+**Indexes:** `(slug)`, `(ordem)`, `(ativo)`
 **Realtime:** ✅ — toggle ativa/desativa categoria inteira no menu
 
 ---
 
-### 4. `products` — Produtos
+### 4. `produtos` — Produtos
 
 | Coluna | Tipo | Descrição |
 |--------|------|-----------|
 | `id` | `TEXT PK` | nanoid(12) |
-| `category_id` | `TEXT FK → categories.id` | — |
-| `name` | `TEXT NOT NULL` | "Picanha na Chapa" |
+| `categoria_id` | `TEXT FK → categorias.id` | — |
+| `nome` | `TEXT NOT NULL` | "Picanha na Chapa" |
 | `slug` | `TEXT UNIQUE` | — |
-| `description` | `TEXT` | Ingredientes, acompanhamentos |
-| `image_url` | `TEXT` | Cloudinary URL |
-| `tags` | `TEXT[]` | `['destaque', 'novo']` |
-| `is_combo` | `BOOLEAN DEFAULT false` | — |
-| `prep_time_min` | `SMALLINT` | Tempo base em minutos |
-| `is_available` | `BOOLEAN DEFAULT true` | Toggle master (desativa tudo) |
-| `sort_order` | `SMALLINT` | — |
-| `created_at` | `TIMESTAMPTZ DEFAULT now()` | — |
+| `descricao` | `TEXT` | Ingredientes, acompanhamentos |
+| `imagem_url` | `TEXT` | Cloudinary URL |
+| `eh_combo` | `BOOLEAN DEFAULT false` | — |
+| `tempo_preparo_min` | `SMALLINT` | Tempo base em minutos |
+| `disponivel` | `BOOLEAN DEFAULT true` | Toggle master (desativa tudo) |
+| `ordem` | `SMALLINT` | — |
+| `criado_em` | `TIMESTAMPTZ DEFAULT now()` | — |
 
-**Indexes:** `(category_id)`, `(slug)`, `(is_available)`, `(tags)` GIN
+**Indexes:** `(categoria_id)`, `(slug)`, `(disponivel)`
 **Realtime:** ✅ — toggle disponibilidade master.
 
 ---
 
-### 5. `product_variants` — Variantes (SKUs / Tamanhos / Taças)
-
-> Representa o item real sendo vendido. O preço e estoque ficam **aqui**.
+### 5. `variacoes_produto` — Variantes (SKUs / Tamanhos / Taças)
 
 | Coluna | Tipo | Descrição |
 |--------|------|-----------|
 | `id` | `TEXT PK` | nanoid(12) |
-| `product_id` | `TEXT FK → products.id` | Produto "Pai" |
-| `name` | `TEXT NOT NULL` | "Taça", "Garrafa (750ml)", "Grande" |
-| `price` | `NUMERIC(10,2) NOT NULL` | 130.00 |
-| `serves` | `SMALLINT` | Quantas pessoas serve (opcional) |
-| `is_active` | `BOOLEAN DEFAULT true` | Toggle específico |
-| `stock` | `INTEGER DEFAULT -1` | `-1` = ilimitado, `0` = esgotado |
-| `min_stock` | `INTEGER DEFAULT 5` | Limite para disparar alerta "Estoque Baixo" no Dashboard |
-| `sort_order` | `SMALLINT` | Para ordenar no app |
+| `produto_id` | `TEXT FK → produtos.id` | Produto "Pai" |
+| `nome` | `TEXT NOT NULL` | "Taça", "Garrafa (750ml)", "Grande" |
+| `preco` | `NUMERIC(10,2) NOT NULL` | 130.00 |
+| `serve_pessoas` | `SMALLINT` | Quantas pessoas serve (opcional) |
+| `ativo` | `BOOLEAN DEFAULT true` | Toggle específico |
+| `estoque` | `INTEGER DEFAULT -1` | `-1` = ilimitado, `0` = esgotado |
+| `estoque_minimo` | `INTEGER DEFAULT 5` | Limite para disparar alerta "Estoque Baixo" no Dashboard |
+| `ordem` | `SMALLINT` | Para ordenar no app |
 
-**Indexes:** `(product_id)`, `(stock)`, `(is_active)`
+**Indexes:** `(produto_id)`, `(estoque)`, `(ativo)`
 **Realtime:** ✅ — toggle status e decremento de estoque instantâneo.
 
 ---
 
-### 6. `product_addons` — Extras e Acompanhamentos
+### 6. `adicionais_produto` — Extras e Acompanhamentos
 
 | Coluna | Tipo | Descrição |
 |--------|------|-----------|
 | `id` | `TEXT PK` | nanoid(12) |
-| `product_id` | `TEXT FK → products.id` | Produto "Pai" |
-| `name` | `TEXT NOT NULL` | "Arroz", "Farofa", "Borda Recheada" |
-| `price` | `NUMERIC(10,2) NOT NULL` | 7.00 |
-| `max_qty` | `SMALLINT DEFAULT 1` | Quantidade máxima pro cliente pedir |
-| `is_active` | `BOOLEAN DEFAULT true` | Toggle específico |
-| `stock` | `INTEGER DEFAULT -1` | `-1` = ilimitado |
-| `min_stock` | `INTEGER DEFAULT 5` | Limite para "Estoque Baixo" |
+| `produto_id` | `TEXT FK → produtos.id` | Produto "Pai" |
+| `nome` | `TEXT NOT NULL` | "Arroz", "Farofa", "Borda Recheada" |
+| `preco` | `NUMERIC(10,2) NOT NULL` | 7.00 |
+| `qtd_maxima` | `SMALLINT DEFAULT 1` | Quantidade máxima pro cliente pedir |
+| `ativo` | `BOOLEAN DEFAULT true` | Toggle específico |
+| `estoque` | `INTEGER DEFAULT -1` | `-1` = ilimitado |
+| `estoque_minimo` | `INTEGER DEFAULT 5` | Limite para "Estoque Baixo" |
 
-**Indexes:** `(product_id)`, `(is_active)`
+**Indexes:** `(produto_id)`, `(ativo)`
 **Realtime:** ✅ — toggle status e decremento de estoque.
 
 **Regras de UI:**
 | Situação | Comportamento Visual |
 |----------|---------------------|
-| Produto `is_available = false` | Produto some do menu (ou Blur + "ESGOTADO") |
-| Variante `stock = 0` | A opção Variante fica cinza + "Esgotado" |
-| Variante `stock > 0 && stock < qty` | Modal: "Só temos X unidades desta variação!" |
-| Variante/Addon `is_active = false` | Some do seletor em realtime |
+| Produto `disponivel = false` | Produto some do menu (ou Blur + "ESGOTADO") |
+| Variante `estoque = 0` | A opção Variante fica cinza + "Esgotado" |
+| Variante `estoque > 0 && estoque < qty` | Modal: "Só temos X unidades desta variação!" |
+| Variante/Addon `ativo = false` | Some do seletor em realtime |
 
 ---
 
-### 7. `tables` — Mesas
+### 7. `mesas` — Mesas
 
 | Coluna | Tipo | Descrição |
 |--------|------|-----------|
 | `id` | `TEXT PK` | ex: `"mesa_01"` |
-| `number` | `SMALLINT UNIQUE` | 1, 2, 3... |
+| `numero` | `SMALLINT UNIQUE` | 1, 2, 3... |
 | `qr_code_url` | `TEXT` | URL do QR |
-| `capacity` | `SMALLINT` | 4, 6, 8... |
-| `status` | `TEXT` | `'available'`, `'occupied'` |
+| `capacidade` | `SMALLINT` | 4, 6, 8... |
+| `status` | `TEXT` | `'disponivel'`, `'ocupada'` |
 
-**Indexes:** `(number)`, `(status)`
+**Indexes:** `(numero)`, `(status)`
 
 ---
 
-### 8. `tabs` — Comandas (sessão por mesa)
+### 8. `comandas` — Comandas (sessão por mesa)
 
 | Coluna | Tipo | Descrição |
 |--------|------|-----------|
 | `id` | `TEXT PK` | nanoid(12) |
-| `table_id` | `TEXT FK → tables.id` | — |
-| `status` | `TEXT` | `'open'`, `'requesting_close'`, `'closed'` |
-| `couvert_pp` | `NUMERIC(10,2)` | Snapshot do valor couvert |
-| `couvert_enabled` | `BOOLEAN` | Snapshot se estava ativo |
-| `num_guests` | `SMALLINT DEFAULT 1` | — |
+| `mesa_id` | `TEXT FK → mesas.id` | — |
+| `status` | `TEXT` | `'aberta'`, `'solicitando_fechamento'`, `'fechada'` |
+| `valor_couvert` | `NUMERIC(10,2)` | Snapshot do valor couvert |
+| `couvert_ativo` | `BOOLEAN` | Snapshot se estava ativo |
+| `qtd_pessoas` | `SMALLINT DEFAULT 1` | — |
 | `subtotal` | `NUMERIC(10,2) DEFAULT 0` | — |
 | `total` | `NUMERIC(10,2) DEFAULT 0` | — |
-| `opened_at` | `TIMESTAMPTZ DEFAULT now()` | — |
-| `closed_at` | `TIMESTAMPTZ` | — |
-| `opened_by` | `TEXT` | `'customer'` ou `staff.id` |
+| `aberta_em` | `TIMESTAMPTZ DEFAULT now()` | — |
+| `fechada_em` | `TIMESTAMPTZ` | — |
+| `aberta_por` | `TEXT` | `'cliente'` ou `funcionarios.id` |
 
-**Indexes:** `(table_id)`, `(status)`, `(opened_at DESC)`
+**Indexes:** `(mesa_id)`, `(status)`, `(aberta_em DESC)`
 **Realtime:** ✅ — escuta mudanças de status (fechar comanda, etc.)
 
 ---
 
-### 9. `tab_guests` — Pessoas na Comanda
+### 9. `pessoas_comanda` — Pessoas na Comanda
 
 | Coluna | Tipo | Descrição |
 |--------|------|-----------|
 | `id` | `TEXT PK` | nanoid(8) |
-| `tab_id` | `TEXT FK → tabs.id` | — |
-| `name` | `TEXT NOT NULL` | "Alan", "Helena" |
+| `comanda_id` | `TEXT FK → comandas.id` | — |
+| `nome` | `TEXT NOT NULL` | "Alan", "Helena" |
 | `subtotal` | `NUMERIC(10,2) DEFAULT 0` | — |
-| `created_at` | `TIMESTAMPTZ DEFAULT now()` | — |
+| `criado_em` | `TIMESTAMPTZ DEFAULT now()` | — |
 
-**Indexes:** `(tab_id)`
+**Indexes:** `(comanda_id)`
 
 ---
 
-### 10. `orders` — Pedidos
+### 10. `pedidos` — Pedidos
 
 | Coluna | Tipo | Descrição |
 |--------|------|-----------|
 | `id` | `TEXT PK` | nanoid(12) |
-| `tab_id` | `TEXT FK → tabs.id` | — |
-| `guest_id` | `TEXT FK → tab_guests.id` | Quem pediu |
-| `table_num` | `SMALLINT` | Denormalizado para kanban rápido |
-| `guest_name` | `TEXT` | Denormalizado para kanban rápido |
-| `status` | `TEXT` | `'received'`, `'preparing'`, `'served'` |
+| `comanda_id` | `TEXT FK → comandas.id` | — |
+| `pessoa_id` | `TEXT FK → pessoas_comanda.id` | Quem pediu |
+| `numero_mesa` | `SMALLINT` | Denormalizado para kanban rápido |
+| `nome_pessoa` | `TEXT` | Denormalizado para kanban rápido |
+| `status` | `TEXT` | `'recebido'`, `'preparando'`, `'entregue'` |
 | `total` | `NUMERIC(10,2) DEFAULT 0` | — |
-| `notes` | `TEXT` | — |
-| `created_at` | `TIMESTAMPTZ DEFAULT now()` | — |
-| `updated_at` | `TIMESTAMPTZ DEFAULT now()` | — |
+| `observacoes` | `TEXT` | — |
+| `criado_em` | `TIMESTAMPTZ DEFAULT now()` | — |
+| `atualizado_em` | `TIMESTAMPTZ DEFAULT now()` | — |
 
-**Indexes:** `(tab_id)`, `(status)`, `(created_at DESC)`, `(table_num)`
+**Indexes:** `(comanda_id)`, `(status)`, `(criado_em DESC)`, `(numero_mesa)`
 **Realtime:** ✅ — kanban admin + acompanhamento do cliente
 
 ---
 
-### 11. `order_items` — Itens do Pedido
+### 11. `itens_pedido` — Itens do Pedido
 
 | Coluna | Tipo | Descrição |
 |--------|------|-----------|
 | `id` | `TEXT PK` | nanoid(8) |
-| `order_id` | `TEXT FK → orders.id` | — |
-| `product_id` | `TEXT FK → products.id` | Identificador base |
-| `variant_id` | `TEXT FK → product_variants.id` | SKU real vendido (obriga saber o tamanho/taça/etc) |
-| `product_name` | `TEXT` | Denorm para histórico |
-| `variant_name` | `TEXT` | "Grande", "Taça" (denorm) |
-| `addons` | `JSONB` | `[{name, price, qty}]` |
-| `quantity` | `SMALLINT DEFAULT 1` | — |
-| `unit_price` | `NUMERIC(10,2)` | — |
-| `total_price` | `NUMERIC(10,2)` | — |
-| `notes` | `TEXT` | — |
+| `pedido_id` | `TEXT FK → pedidos.id` | — |
+| `produto_id` | `TEXT FK → produtos.id` | Identificador base |
+| `variacao_id` | `TEXT FK → variacoes_produto.id` | SKU real vendido (obriga saber o tamanho/taça) |
+| `nome_produto` | `TEXT` | Denorm para histórico |
+| `nome_variacao` | `TEXT` | "Grande", "Taça" (denorm) |
+| `adicionais` | `JSONB` | `[{name, price, qty}]` |
+| `quantidade` | `SMALLINT DEFAULT 1` | — |
+| `preco_unitario` | `NUMERIC(10,2)` | — |
+| `preco_total` | `NUMERIC(10,2)` | — |
+| `observacoes` | `TEXT` | — |
 
-**Indexes:** `(order_id)`, `(product_id)`
+**Indexes:** `(pedido_id)`, `(produto_id)`
 
 ---
 
-### 12. `payments` — Pagamentos
+### 12. `pagamentos` — Pagamentos
 
 | Coluna | Tipo | Descrição |
 |--------|------|-----------|
 | `id` | `TEXT PK` | nanoid(12) |
-| `tab_id` | `TEXT FK → tabs.id` | — |
-| `guest_id` | `TEXT FK → tab_guests.id NULLABLE` | NULL = pagou tudo |
-| `method` | `TEXT` | `'cash'`, `'credit'`, `'debit'`, `'pix'` |
-| `amount` | `NUMERIC(10,2)` | — |
-| `type` | `TEXT` | `'full'`, `'partial'`, `'individual'`, `'split_equal'` |
-| `created_by` | `TEXT FK → staff.id` | Garçom que registrou |
-| `created_at` | `TIMESTAMPTZ DEFAULT now()` | — |
+| `comanda_id` | `TEXT FK → comandas.id` | — |
+| `pessoa_id` | `TEXT FK → pessoas_comanda.id NULLABLE` | NULL = pagou tudo |
+| `metodo` | `TEXT` | `'dinheiro'`, `'credito'`, `'debito'`, `'pix'` |
+| `valor` | `NUMERIC(10,2)` | — |
+| `tipo` | `TEXT` | `'total'`, `'parcial'`, `'individual'`, `'divisao_igual'` |
+| `criado_por` | `TEXT FK → funcionarios.id` | Garçom que registrou |
+| `criado_em` | `TIMESTAMPTZ DEFAULT now()` | — |
 
-**Indexes:** `(tab_id)`, `(guest_id)`, `(created_at DESC)`
+**Indexes:** `(comanda_id)`, `(pessoa_id)`, `(criado_em DESC)`
 
 ---
 
-### 13. `favorites` — Curtidas/Favoritos
+### 13. `curtidas` — Curtidas/Favoritos
 
 | Coluna | Tipo | Descrição |
 |--------|------|-----------|
 | `id` | `TEXT PK` | nanoid(8) |
-| `product_id` | `TEXT FK → products.id` | — |
-| `guest_id` | `TEXT FK → tab_guests.id` | — |
-| `created_at` | `TIMESTAMPTZ DEFAULT now()` | — |
+| `produto_id` | `TEXT FK → produtos.id` | — |
+| `pessoa_id` | `TEXT FK → pessoas_comanda.id` | — |
+| `criado_em` | `TIMESTAMPTZ DEFAULT now()` | — |
 
-**Indexes:** `(product_id)`, `(guest_id)`, UNIQUE `(product_id, guest_id)`
+**Indexes:** `(produto_id)`, `(pessoa_id)`, UNIQUE `(produto_id, pessoa_id)`
 
 ---
 
@@ -292,30 +282,30 @@ erDiagram
 
 | Tabela | SELECT | INSERT | UPDATE | DELETE |
 |--------|--------|--------|--------|--------|
-| `settings` | ✅ Público | ❌ | ✅ owner only | ❌ |
-| `staff` | ✅ authenticated | ✅ owner only | ✅ owner only | ✅ owner only |
-| `categories` | ✅ Público | ✅ staff | ✅ staff | ✅ owner only |
-| `products` | ✅ Público | ✅ staff | ✅ staff | ✅ owner only |
-| `product_variants` | ✅ Público | ✅ staff | ✅ staff | ✅ owner only |
-| `product_addons` | ✅ Público | ✅ staff | ✅ staff | ✅ owner only |
-| `tables` | ✅ Público | ✅ staff | ✅ staff | ✅ owner only |
-| `tabs` | ✅ Público | ✅ Público | ✅ Público* | ❌ |
-| `tab_guests` | ✅ Público | ✅ Público | ✅ staff | ❌ |
-| `orders` | ✅ Público | ✅ Público | ✅ staff | ❌ |
-| `order_items` | ✅ Público | ✅ Público | ❌ | ❌ |
-| `payments` | ✅ staff | ✅ staff | ❌ | ❌ |
-| `favorites` | ✅ Público | ✅ Público | ❌ | ✅ Público** |
+| `configuracoes` | ✅ Público | ❌ | ✅ owner only | ❌ |
+| `funcionarios` | ✅ authenticated | ✅ owner only | ✅ owner only | ✅ owner only |
+| `categorias` | ✅ Público | ✅ staff | ✅ staff | ✅ owner only |
+| `produtos` | ✅ Público | ✅ staff | ✅ staff | ✅ owner only |
+| `variacoes_produto` | ✅ Público | ✅ staff | ✅ staff | ✅ owner only |
+| `adicionais_produto` | ✅ Público | ✅ staff | ✅ staff | ✅ owner only |
+| `mesas` | ✅ Público | ✅ staff | ✅ staff | ✅ owner only |
+| `comandas` | ✅ Público | ✅ Público | ✅ Público* | ❌ |
+| `pessoas_comanda` | ✅ Público | ✅ Público | ✅ staff | ❌ |
+| `pedidos` | ✅ Público | ✅ Público | ✅ staff | ❌ |
+| `itens_pedido` | ✅ Público | ✅ Público | ❌ | ❌ |
+| `pagamentos` | ✅ staff | ✅ staff | ❌ | ❌ |
+| `curtidas` | ✅ Público | ✅ Público | ❌ | ✅ Público** |
 
-> \* UPDATE tabs anon: apenas `status → 'requesting_close'` (validado via Edge Function)
-> \*\* DELETE favorites: guest pode remover seu próprio favorito
+> \* UPDATE comandas anon: apenas `status → 'solicitando_fechamento'` (validado via Edge Function)
+> \*\* DELETE curtidas: guest pode remover seu próprio favorito
 
 ### Função Helper para RLS:
 ```sql
-CREATE FUNCTION get_staff_role()
+CREATE FUNCTION obter_cargo_funcionario()
 RETURNS TEXT AS $$
-  SELECT role FROM staff
+  SELECT cargo FROM funcionarios
   WHERE auth_id = auth.uid()
-  AND is_active = true
+  AND ativo = true
 $$ LANGUAGE sql SECURITY DEFINER;
 ```
 
@@ -324,27 +314,12 @@ $$ LANGUAGE sql SECURITY DEFINER;
 ## Estoque — Regras de Negócio
 
 ```
-Ao criar order_item:
-  1. Verificar product_variants.stock >= quantity (usando variant_id)
-  2. Se stock == -1 → ilimitado, pular
-  3. Se stock < quantity → REJEITAR + retornar stock atual pro cliente
-  4. UPDATE product_variants SET stock = stock - quantity
-  5. UPDATE product_addons decrementando seus estoques (itens de addon no JSON de request)
-```
-
----
-
-## Funções RPC para Métricas
-
-```sql
--- Top 10 mais vendidos (período)
-get_top_selling(p_from, p_to) → product_id, product_name, total_qty, total_revenue
-
--- Top 10 mais curtidos
-get_top_favorites() → product_id, product_name, like_count
-
--- Faturamento por dia
-get_daily_revenue(p_from, p_to) → day, total
+Ao criar itens_pedido:
+  1. Verificar variacoes_produto.estoque >= quantidade (usando variacao_id)
+  2. Se estoque == -1 → ilimitado, pular
+  3. Se estoque < quantidade → REJEITAR + retornar estoque atual pro cliente
+  4. UPDATE variacoes_produto SET estoque = estoque - quantidade
+  5. UPDATE adicionais_produto decrementando seus estoques (itens de addon no JSON de request)
 ```
 
 ---
@@ -353,8 +328,8 @@ get_daily_revenue(p_from, p_to) → day, total
 
 | Canal | Tabela | Eventos | Quem Escuta |
 |-------|--------|---------|-------------|
-| `admin-orders` | `orders` | INSERT, UPDATE | Admin Kanban |
-| `admin-tabs` | `tabs` | UPDATE | Admin (alerta fechar) |
-| `sku-availability` | `product_variants` | UPDATE | Clientes (blur/esgotado SKU específico) |
-| `settings-changes` | `settings` | UPDATE | Clientes (couvert) |
-| `customer-orders:{tab_id}` | `orders` | UPDATE | Cliente específico |
+| `admin-vendas` | `pedidos` | INSERT, UPDATE | Admin Kanban |
+| `admin-comandas` | `comandas` | UPDATE | Admin (alerta fechar) |
+| `sku-disponibilidade` | `variacoes_produto` | UPDATE | Clientes (blur/esgotado SKU específico) |
+| `configuracoes-gerais` | `configuracoes` | UPDATE | Clientes (couvert) |
+| `cliente-pedidos:{comanda_id}` | `pedidos` | UPDATE | Cliente específico |

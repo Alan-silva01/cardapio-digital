@@ -1,0 +1,121 @@
+export const productVisuals = {
+    'melancita': {
+        size: 'Melancia • Gin • Mix de limão • Ener. Melancia • Xarope • Schweppes',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771597495/App_Bar_50Acorona_50kb_18_lydxgs.png',
+        tint: 'neutral'
+    },
+    'caipirinha': {
+        size: 'Limão • cachaça 51 • gelo',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771597495/App_Bar_50Acorona_50kb_18_lydxgs.png',
+        tint: 'neutral'
+    },
+    'tropical-blue': {
+        size: 'Gin • curaçau blue • mix de limão • gelo • soda • schweppes',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771597495/App_Bar_50Acorona_50kb_18_lydxgs.png',
+        tint: 'neutral'
+    },
+    'coquetel-morango': {
+        size: 'Morango • Frutas • Mix refrescante',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771597495/App_Bar_50Acorona_50kb_18_lydxgs.png',
+        tint: 'neutral'
+    },
+    'coquetel-kiwi': {
+        size: 'Kiwi • Frutas • Mix refrescante',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771597495/App_Bar_50Acorona_50kb_18_lydxgs.png',
+        tint: 'neutral'
+    },
+    'coquetel-abacaxi': {
+        size: 'Abacaxi • Frutas • Mix refrescante',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771597495/App_Bar_50Acorona_50kb_18_lydxgs.png',
+        tint: 'neutral'
+    },
+    'coquetel-maracuja': {
+        size: 'Maracujá • Frutas • Mix refrescante',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771597495/App_Bar_50Acorona_50kb_18_lydxgs.png',
+        tint: 'neutral'
+    },
+    'tanqueray': {
+        size: '750ml',
+        tint: 'whiskey'
+    },
+    'absolut': {
+        size: '1L',
+        tint: 'whiskey'
+    },
+    'grey-goose': {
+        size: '1L',
+        tint: 'whiskey'
+    },
+    'royal-salute': {
+        size: '700ml',
+        tint: 'whiskey'
+    },
+    'gold-label': {
+        size: '1L',
+        tint: 'whiskey'
+    },
+    'old-parr': {
+        size: '1L',
+        tint: 'whiskey'
+    },
+    'heineken': {
+        size: '330ml',
+        tint: 'whiskey'
+    },
+    'corona': {
+        size: '330ml',
+        tint: 'whiskey'
+    },
+    'budweiser': {
+        size: '330ml',
+        tint: 'whiskey'
+    },
+    'imperio-ultra': {
+        size: '210ml',
+        tint: 'whiskey'
+    },
+    'michelob-ultra': {
+        size: '330ml',
+        tint: 'whiskey'
+    },
+    'galliotto-seco': {
+        size: '750ml',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
+        tint: 'neutral'
+    },
+    'galliotto-suave': {
+        size: '750ml',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
+        tint: 'neutral'
+    },
+    'quinta-morgado-suave': {
+        size: '750ml',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
+        tint: 'neutral'
+    },
+    'lambrusco': {
+        size: '750ml',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
+        tint: 'neutral'
+    },
+    'casal-garcia-tinto': {
+        size: '750ml',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
+        tint: 'neutral'
+    },
+    'picanha-trinchada': {
+        size: 'Acompanha batatas fritas e molho especial',
+        backgroundColor: '#B5B5B5',
+        tint: 'neutral'
+    },
+    'picanha-fritas': {
+        size: 'Picanha em tiras • Batata frita',
+        backgroundColor: '#B5B5B5',
+        tint: 'neutral'
+    },
+    'ancho-premium': {
+        size: 'Corte Ancho premium • Batata rústica',
+        backgroundColor: '#B5B5B5',
+        tint: 'neutral'
+    }
+};

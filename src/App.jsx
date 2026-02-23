@@ -1,16 +1,104 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, ShoppingCart, ArrowLeft } from 'lucide-react';
-import { products } from './data/products';
+import { ChevronLeft, ChevronRight, ShoppingCart, ArrowLeft, Loader2 } from 'lucide-react';
+import { supabase } from './lib/supabase';
+import { productVisuals } from './data/visuals';
 
 const App = () => {
+    const [products, setProducts] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [direction, setDirection] = useState(0); // 1 = right, -1 = left
-    const [selectedVariation, setSelectedVariation] = useState('nacional');
+    const [selectedVariation, setSelectedVariation] = useState(null);
 
-    const currentProduct = products[currentIndex];
+    const currentProduct = products.length > 0 ? products[currentIndex] : null;
 
-    // PWA Detection for robust iOS support
+    // Fetch Products and their Variants from Supabase
+    useEffect(() => {
+        const fetchMenu = async () => {
+            try {
+                // Fetch categories to map names to products
+                const { data: catData, error: catError } = await supabase
+                    .from('categorias')
+                    .select('id, nome, icone')
+                    .eq('ativo', true);
+
+                if (catError) throw catError;
+
+                const catMap = catData.reduce((acc, cat) => {
+                    acc[cat.id] = cat.nome;
+                    return acc;
+                }, {});
+
+                // Fetch products that are available
+                const { data: prodData, error: prodError } = await supabase
+                    .from('produtos')
+                    .select('*')
+                    .eq('disponivel', true)
+                    .order('ordem', { ascending: true });
+
+                if (prodError) throw prodError;
+
+                // Fetch active variants
+                const { data: varData, error: varError } = await supabase
+                    .from('variacoes_produto')
+                    .select('*')
+                    .eq('ativo', true)
+                    .order('ordem', { ascending: true });
+
+                if (varError) throw varError;
+
+                // Reconstruct the data shape expected by the frontend
+                const enrichedProducts = prodData.map(p => {
+                    const myVariants = varData.filter(v => v.produto_id === p.id);
+
+                    // Organize variants dict
+                    let varsDict = null;
+                    let defaultPrice = 0;
+
+                    if (myVariants.length > 0) {
+                        varsDict = {};
+                        myVariants.forEach(v => {
+                            varsDict[v.nome] = {
+                                id: v.id,
+                                price: v.preco,
+                                stock: v.estoque
+                            };
+                        });
+                        defaultPrice = myVariants[0].preco;
+                    }
+
+                    // Visual properties linked by slug
+                    const categoryName = catMap[p.categoria_id] || 'Outros';
+                    const visuals = productVisuals[p.slug] || {};
+
+                    return {
+                        id: p.id,
+                        slug: p.slug,
+                        name: p.nome,
+                        categoryId: p.categoria_id,
+                        category: categoryName,
+                        description: p.descricao,
+                        imageUrl: p.imagem_url,
+                        price: defaultPrice,
+                        variations: varsDict,
+                        backgroundColor: visuals.backgroundColor || null,
+                        backgroundUrl: visuals.backgroundUrl || null,
+                        size: visuals.size || '',
+                        tint: visuals.tint || 'neutral'
+                    };
+                });
+
+                setProducts(enrichedProducts);
+            } catch (error) {
+                console.error('Error fetching menu from Supabase:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchMenu();
+    }, []);
     useEffect(() => {
         const checkMode = () => {
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
@@ -28,10 +116,10 @@ const App = () => {
 
     // Reset variation when product changes
     useEffect(() => {
-        if (currentProduct.variations) {
+        if (currentProduct && currentProduct.variations) {
             setSelectedVariation(Object.keys(currentProduct.variations)[0]);
         }
-    }, [currentIndex]);
+    }, [currentIndex, currentProduct]);
 
     const paginate = (newDirection) => {
         setDirection(newDirection);
@@ -74,6 +162,29 @@ const App = () => {
         }),
     };
 
+    if (loading) {
+        return (
+            <div className="app-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#111' }}>
+                <Loader2 className="animate-spin text-white" size={48} />
+            </div>
+        );
+    }
+
+    if (!currentProduct) {
+        return (
+            <div className="app-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#111', color: '#fff' }}>
+                <p>Nenhum produto disponível no momento.</p>
+            </div>
+        );
+    }
+
+    // Format current price
+    let displayPrice = currentProduct.price;
+    if (currentProduct.variations && selectedVariation && currentProduct.variations[selectedVariation]) {
+        displayPrice = currentProduct.variations[selectedVariation].price;
+    }
+    const formattedPrice = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(displayPrice);
+
     return (
         <div className="app-container" style={{
             background: currentProduct.backgroundColor || `url(${currentProduct.backgroundUrl || 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771525899/App_Bar_1080x1920_2_afm0f1.png'}) center/cover no-repeat`,
@@ -91,10 +202,10 @@ const App = () => {
 
             {/* ANIMATED HERO SECTION */}
             <div className="hero" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', paddingTop: '10px' }}>
-                <AnimatePresence initial={false} custom={{ direction, isFood: currentProduct.category === 'Petiscos' }}>
+                <AnimatePresence initial={false} custom={{ direction, isFood: currentProduct?.category === 'Petiscos' }}>
                     <motion.div
                         key={currentProduct.id}
-                        custom={{ direction, isFood: currentProduct.category === 'Petiscos' }}
+                        custom={{ direction, isFood: currentProduct?.category === 'Petiscos' }}
                         variants={variants}
                         initial="enter"
                         animate="center"
@@ -128,7 +239,7 @@ const App = () => {
                             right: 0
                         }}
                     >
-                        <h1 style={{ fontFamily: 'Playfair Display, serif', fontSize: '28px', fontWeight: 900, marginBottom: '5px', zIndex: 5 }}>
+                        <h1 style={{ fontFamily: 'Playfair Display, serif', fontSize: '28px', fontWeight: 900, marginBottom: '5px', zIndex: 5, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
                             {currentProduct.name}
                         </h1>
 
@@ -165,7 +276,7 @@ const App = () => {
             </div>
 
             {/* BOTTOM SHEET */}
-            <div className="bottom-sheet">
+            <div className="bottom-sheet" style={{ height: '415px', display: 'flex', flexDirection: 'column' }}>
                 <div className="drag-handle" />
                 <AnimatePresence mode="wait">
                     <motion.div
@@ -174,7 +285,7 @@ const App = () => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
                         transition={{ duration: 0.5 }}
-                        style={{ display: 'flex', flexDirection: 'column', flex: 1, paddingBottom: '70px' }}
+                        style={{ display: 'flex', flexDirection: 'column', flex: 1, paddingBottom: '70px', height: '100%' }}
                     >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -214,7 +325,7 @@ const App = () => {
                                 <div className="category-label" style={{ marginBottom: 0 }}>{currentProduct.category}</div>
                             </div>
                             <div className="price-tag" style={{ border: '1px solid rgba(255,255,255,0.1)', padding: '4px 10px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)' }}>
-                                R$: {currentProduct.variations ? currentProduct.variations[selectedVariation] : currentProduct.price}
+                                {formattedPrice}
                             </div>
                         </div>
 
