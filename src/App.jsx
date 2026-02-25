@@ -276,7 +276,7 @@ const App = () => {
             </div>
 
             {/* BOTTOM SHEET */}
-            <div className="bottom-sheet" style={{ height: '415px', display: 'flex', flexDirection: 'column' }}>
+            <div className="bottom-sheet" style={{ display: 'flex', flexDirection: 'column' }}>
                 <div className="drag-handle" />
                 <AnimatePresence mode="wait">
                     <motion.div
