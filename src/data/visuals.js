@@ -48,45 +48,60 @@ export const productVisuals = {
     },
     'royal-salute': {
         size: '700ml',
-        tint: 'whiskey'
+        tint: 'whiskey',
+        flagUrl: '/flags/escocia.png'
     },
     'gold-label': {
         size: '1L',
-        tint: 'whiskey'
+        tint: 'whiskey',
+        flagUrl: '/flags/escocia.png'
     },
     'old-parr': {
         size: '1L',
-        tint: 'whiskey'
+        tint: 'whiskey',
+        flagUrl: '/flags/escocia.png'
     },
     'heineken': {
         size: '330ml',
-        tint: 'whiskey'
+        tint: 'whiskey',
+        flagUrl: '/flags/holanda.png'
     },
     'corona': {
         size: '330ml',
-        tint: 'whiskey'
+        tint: 'whiskey',
+        flagUrl: '/flags/mexico.png'
     },
     'budweiser': {
         size: '330ml',
-        tint: 'whiskey'
+        tint: 'whiskey',
+        flagUrl: '/flags/eua.png'
     },
     'imperio-ultra': {
         size: '210ml',
-        tint: 'whiskey'
+        tint: 'whiskey',
+        flagUrl: '/flags/brasil.png'
     },
     'michelob-ultra': {
         size: '330ml',
-        tint: 'whiskey'
+        tint: 'whiskey',
+        flagUrl: '/flags/eua.png'
+    },
+    'jack-daniels': {
+        size: '1L',
+        tint: 'whiskey',
+        flagUrl: '/flags/eua.png'
     },
     'galliotto-seco': {
         size: '750ml',
         backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
-        tint: 'neutral'
+        tint: 'neutral',
+        flagUrl: '/flags/franca.png'
     },
     'galliotto-suave': {
         size: '750ml',
         backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
-        tint: 'neutral'
+        tint: 'neutral',
+        flagUrl: '/flags/franca.png'
     },
     'quinta-morgado-suave': {
         size: '750ml',

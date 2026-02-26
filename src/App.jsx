@@ -84,6 +84,7 @@ const App = () => {
                         variations: varsDict,
                         backgroundColor: visuals.backgroundColor || null,
                         backgroundUrl: visuals.backgroundUrl || null,
+                        flagUrl: visuals.flagUrl || null,
                         size: visuals.size || '',
                         tint: visuals.tint || 'neutral'
                     };
@@ -239,6 +240,26 @@ const App = () => {
                             right: 0
                         }}
                     >
+                        {/* FLAG OVERLAY */}
+                        {currentProduct.flagUrl && (
+                            <div style={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                marginBottom: '2px',
+                                zIndex: 10
+                            }}>
+                                <img
+                                    src={currentProduct.flagUrl}
+                                    alt="Origin Flag"
+                                    style={{
+                                        width: '24px', /* Menor conforme pedido */
+                                        height: 'auto',
+                                        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
+                                    }}
+                                />
+                            </div>
+                        )}
+
                         <h1 style={{ fontFamily: 'Playfair Display, serif', fontSize: '28px', fontWeight: 900, marginBottom: '5px', zIndex: 5, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
                             {currentProduct.name}
                         </h1>
