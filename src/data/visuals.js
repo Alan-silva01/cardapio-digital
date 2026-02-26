@@ -205,6 +205,11 @@ export const productVisuals = {
         backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
         tint: 'neutral'
     },
+    'skol-beats-green-mix': {
+        size: '269ml',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
+        tint: 'neutral'
+    },
     'skol-beats-red-mix': {
         size: '269ml',
         backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',

@@ -174,8 +174,8 @@ const App = () => {
     }, [currentIndex]);
 
     const variants = {
-        enter: ({ direction, isFood, isIce }) => {
-            const isCircular = isFood || isIce;
+        enter: ({ direction, isFood, isIce, isSkolBeats }) => {
+            const isCircular = isFood || isIce || isSkolBeats;
             return {
                 x: direction > 0 ? (isCircular ? 150 : 50) : (isCircular ? -150 : -50),
                 y: isCircular ? 50 : 0,
@@ -190,8 +190,8 @@ const App = () => {
             rotate: 0,
             opacity: 1,
         },
-        exit: ({ direction, isFood, isIce }) => {
-            const isCircular = isFood || isIce;
+        exit: ({ direction, isFood, isIce, isSkolBeats }) => {
+            const isCircular = isFood || isIce || isSkolBeats;
             return {
                 zIndex: 0,
                 x: direction < 0 ? (isCircular ? 150 : 50) : (isCircular ? -150 : -50),
@@ -242,10 +242,10 @@ const App = () => {
 
             {/* ANIMATED HERO SECTION */}
             <div className="hero" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', paddingTop: '10px' }}>
-                <AnimatePresence initial={false} custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-') }}>
+                <AnimatePresence initial={false} custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-'), isSkolBeats: currentProduct?.slug?.startsWith('skol-beats-') }}>
                     <motion.div
                         key={currentProduct.id}
-                        custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-') }}
+                        custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-'), isSkolBeats: currentProduct?.slug?.startsWith('skol-beats-') }}
                         variants={variants}
                         initial="enter"
                         animate="center"
@@ -439,10 +439,17 @@ const App = () => {
                                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
                                     {(currentProduct.slug.startsWith('ice-')
                                         ? ['Balada', 'Fruit Mix', 'Kiwi', 'Limão', 'Maracujá', 'Tangerina']
-                                        : ['Senses', 'Red Mix', 'Gin e Tônica', 'Tropical']
+                                        : ['Senses', 'Green Mix', 'Red Mix', 'Gin e Tônica', 'Tropical']
                                     ).map((flavor) => {
                                         const baseSlug = currentProduct.slug.startsWith('ice-') ? 'ice' : 'skol-beats';
-                                        const flavorSlug = `${baseSlug}-${flavor.toLowerCase().replace('ã', 'a').replace('á', 'a').replace('ô', 'o').replace(' ', '-')}`;
+
+                                        // Specific handling for difficult accents/spaces
+                                        let cleanFlavor = flavor.toLowerCase().replace(/ã/g, 'a').replace(/á/g, 'a').replace(/ô/g, 'o').replace(/ /g, '-');
+                                        if (flavor === 'Gin e Tônica') {
+                                            cleanFlavor = 'gin-tonica'; // Hard override to match DB
+                                        }
+
+                                        const flavorSlug = `${baseSlug}-${cleanFlavor}`;
                                         const isSelected = currentProduct.slug === flavorSlug;
                                         return (
                                             <button
