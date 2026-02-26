@@ -36,6 +36,7 @@ const App = () => {
     const [direction, setDirection] = useState(0); // 1 = right, -1 = left
     const [isInternalSpin, setIsInternalSpin] = useState(false); // true when clicking a flavor button
     const [selectedVariation, setSelectedVariation] = useState(null);
+    const [cart, setCart] = useState({}); // { productId: quantity }
 
     const currentProduct = products.length > 0 ? products[currentIndex] : null;
 
@@ -455,7 +456,7 @@ const App = () => {
                         {/* FLAVOR SELECTION (CUSTOM FOR ICE & SKOL BEATS) */}
                         {(currentProduct.slug && (currentProduct.slug.startsWith('ice-') || currentProduct.slug.startsWith('skol-beats-'))) ? (
                             <div style={{ marginBottom: '20px' }}>
-                                <div style={{ fontSize: '11px', fontWeight: '800', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px', textAlign: 'left' }}>
+                                <div style={{ fontSize: '11px', fontWeight: '800', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px', textAlign: 'center' }}>
                                     ESCOLHA O SABOR
                                 </div>
                                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -567,8 +568,86 @@ const App = () => {
                         )}
                     </motion.div>
                 </AnimatePresence>
-                {/* ADD BUTTON - PINNED TO BOTTOM */}
-                <button className="add-btn" style={{ position: 'absolute', bottom: '24px', left: '24px', right: '24px', width: 'auto' }}>Adicionar</button>
+                {/* QUANTITY SELECTOR / ADD BUTTON - PINNED TO BOTTOM */}
+                {(() => {
+                    const qty = cart[currentProduct.id] || 0;
+                    const updateQty = (delta) => {
+                        setCart(prev => {
+                            const newQty = Math.max(0, (prev[currentProduct.id] || 0) + delta);
+                            if (newQty === 0) {
+                                const { [currentProduct.id]: _, ...rest } = prev;
+                                return rest;
+                            }
+                            return { ...prev, [currentProduct.id]: newQty };
+                        });
+                    };
+
+                    return qty === 0 ? (
+                        <button
+                            className="add-btn"
+                            onClick={() => updateQty(1)}
+                            style={{ position: 'absolute', bottom: '24px', left: '24px', right: '24px', width: 'auto' }}
+                        >
+                            Adicionar
+                        </button>
+                    ) : (
+                        <div style={{
+                            position: 'absolute', bottom: '24px', left: '24px', right: '24px',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0'
+                        }}>
+                            <button
+                                onClick={() => updateQty(-1)}
+                                style={{
+                                    width: '48px', height: '48px',
+                                    borderRadius: '14px 0 0 14px',
+                                    border: '1.5px solid #D4AF37',
+                                    borderRight: 'none',
+                                    background: 'rgba(212, 175, 55, 0.08)',
+                                    color: '#D4AF37',
+                                    fontSize: '22px',
+                                    fontWeight: '700',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                }}
+                            >
+                                −
+                            </button>
+                            <div style={{
+                                flex: 1,
+                                height: '48px',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                background: 'linear-gradient(135deg, #D4AF37, #B8962E)',
+                                color: '#000',
+                                fontSize: '18px',
+                                fontWeight: '800',
+                                letterSpacing: '1px',
+                                borderTop: '1.5px solid #D4AF37',
+                                borderBottom: '1.5px solid #D4AF37'
+                            }}>
+                                {qty}
+                            </div>
+                            <button
+                                onClick={() => updateQty(1)}
+                                style={{
+                                    width: '48px', height: '48px',
+                                    borderRadius: '0 14px 14px 0',
+                                    border: '1.5px solid #D4AF37',
+                                    borderLeft: 'none',
+                                    background: 'rgba(212, 175, 55, 0.08)',
+                                    color: '#D4AF37',
+                                    fontSize: '22px',
+                                    fontWeight: '700',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s ease',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                }}
+                            >
+                                +
+                            </button>
+                        </div>
+                    );
+                })()}
             </div>
         </div>
     );
