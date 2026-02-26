@@ -159,8 +159,28 @@ const App = () => {
         setDirection(newDirection);
         // Circular navigation
         let nextIndex = currentIndex + newDirection;
-        if (nextIndex < 0) nextIndex = products.length - 1;
-        if (nextIndex >= products.length) nextIndex = 0;
+
+        // Helper to check if a product is a "master" or standalone
+        const isValidMaster = (prod) => {
+            if (!prod) return false;
+            // It's a flavor but NOT the master flavor -> Skip it
+            if (prod.slug?.startsWith('ice-') && prod.slug !== 'ice-limao') return false;
+            if (prod.slug?.startsWith('skol-beats-') && prod.slug !== 'skol-beats-senses') return false;
+
+            return true;
+        };
+
+        // Advance until we find a master product or normal product
+        while (true) {
+            if (nextIndex < 0) nextIndex = products.length - 1;
+            if (nextIndex >= products.length) nextIndex = 0;
+
+            if (isValidMaster(products[nextIndex])) {
+                break;
+            }
+            nextIndex += newDirection;
+        }
+
         setCurrentIndex(nextIndex);
     };
 
@@ -438,8 +458,8 @@ const App = () => {
                                 </div>
                                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
                                     {(currentProduct.slug.startsWith('ice-')
-                                        ? ['Balada', 'Fruit Mix', 'Kiwi', 'Limão', 'Maracujá', 'Tangerina']
-                                        : ['Senses', 'Green Mix', 'Red Mix', 'Gin e Tônica', 'Tropical']
+                                        ? ['Limão', 'Balada', 'Fruit Mix', 'Kiwi', 'Maracujá', 'Tangerina']
+                                        : ['Senses', 'Gin e Tônica', 'Tropical', 'Red Mix', 'Green Mix']
                                     ).map((flavor) => {
                                         const baseSlug = currentProduct.slug.startsWith('ice-') ? 'ice' : 'skol-beats';
 
