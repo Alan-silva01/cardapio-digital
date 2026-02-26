@@ -582,9 +582,9 @@ const App = () => {
                     return (
                         <div style={{
                             position: 'absolute', bottom: '24px', left: '24px', right: '24px',
-                            display: 'flex', alignItems: 'center', gap: '12px'
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px'
                         }}>
-                            {/* Quantity Selector Pill */}
+                            {/* Quantity Selector Pill - Centered */}
                             <div style={{
                                 display: 'flex', alignItems: 'center',
                                 background: 'rgba(255,255,255,0.06)',
@@ -636,7 +636,7 @@ const App = () => {
                                 </button>
                             </div>
 
-                            {/* Add to Cart Button */}
+                            {/* Add to Cart Button - Full Width Below */}
                             <button
                                 className="add-btn"
                                 onClick={() => {
@@ -646,8 +646,8 @@ const App = () => {
                                     // TODO: integrate with real cart/order system
                                 }}
                                 style={{
-                                    flex: 1, height: '44px',
-                                    margin: 0, width: 'auto',
+                                    width: '100%', height: '44px',
+                                    margin: 0,
                                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                                     padding: '0 16px',
                                     fontSize: '13px'
