@@ -462,8 +462,11 @@ const App = () => {
                                     {(currentProduct.slug.startsWith('ice-')
                                         ? ['Limão', 'Balada', 'Fruit Mix', 'Kiwi', 'Maracujá', 'Tangerina']
                                         : ['Senses', 'Gin e Tônica', 'Tropical', 'Red Mix', 'Green Mix']
-                                    ).map((flavor) => {
+                                    ).map((flavor, flavorIdx) => {
                                         const baseSlug = currentProduct.slug.startsWith('ice-') ? 'ice' : 'skol-beats';
+                                        const flavorsArray = currentProduct.slug.startsWith('ice-')
+                                            ? ['Limão', 'Balada', 'Fruit Mix', 'Kiwi', 'Maracujá', 'Tangerina']
+                                            : ['Senses', 'Gin e Tônica', 'Tropical', 'Red Mix', 'Green Mix'];
 
                                         // Specific handling for difficult accents/spaces
                                         let cleanFlavor = flavor.toLowerCase().replace(/ã/g, 'a').replace(/á/g, 'a').replace(/ô/g, 'o').replace(/ /g, '-');
@@ -473,16 +476,25 @@ const App = () => {
 
                                         const flavorSlug = `${baseSlug}-${cleanFlavor}`;
                                         const isSelected = currentProduct.slug === flavorSlug;
+
+                                        // Determine which flavor is currently active (by button index)
+                                        const currentFlavorSlugClean = currentProduct.slug;
+                                        const currentFlavorIdx = flavorsArray.findIndex(f => {
+                                            let cf = f.toLowerCase().replace(/ã/g, 'a').replace(/á/g, 'a').replace(/ô/g, 'o').replace(/ /g, '-');
+                                            if (f === 'Gin e Tônica') cf = 'gin-tonica';
+                                            return `${baseSlug}-${cf}` === currentFlavorSlugClean;
+                                        });
+
                                         return (
                                             <button
                                                 key={flavor}
                                                 onClick={() => {
                                                     const targetIndex = products.findIndex(p => p.slug === flavorSlug);
                                                     if (targetIndex !== -1 && targetIndex !== currentIndex) {
-                                                        const spinDirection = targetIndex > currentIndex ? 1 : -1;
+                                                        // Direction based on BUTTON position, not DB position
+                                                        const spinDirection = flavorIdx > currentFlavorIdx ? 1 : -1;
                                                         setDirection(spinDirection);
-                                                        setIsInternalSpin(true); // Clicked flavor button means internal spin
-                                                        // Adding a tiny timeout allows direction state to commit before unmounting
+                                                        setIsInternalSpin(true);
                                                         setTimeout(() => setCurrentIndex(targetIndex), 0);
                                                     }
                                                 }}
