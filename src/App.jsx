@@ -568,82 +568,93 @@ const App = () => {
                         )}
                     </motion.div>
                 </AnimatePresence>
-                {/* QUANTITY SELECTOR / ADD BUTTON - PINNED TO BOTTOM */}
+                {/* QUANTITY + ADD TO CART - PINNED TO BOTTOM */}
                 {(() => {
                     const qty = cart[currentProduct.id] || 0;
                     const updateQty = (delta) => {
                         setCart(prev => {
-                            const newQty = Math.max(0, (prev[currentProduct.id] || 0) + delta);
-                            if (newQty === 0) {
-                                const { [currentProduct.id]: _, ...rest } = prev;
-                                return rest;
-                            }
+                            const newQty = Math.max(1, (prev[currentProduct.id] || 1) + delta);
                             return { ...prev, [currentProduct.id]: newQty };
                         });
                     };
+                    const itemTotal = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(displayPrice * (qty || 1));
 
-                    return qty === 0 ? (
-                        <button
-                            className="add-btn"
-                            onClick={() => updateQty(1)}
-                            style={{ position: 'absolute', bottom: '24px', left: '24px', right: '24px', width: 'auto' }}
-                        >
-                            Adicionar
-                        </button>
-                    ) : (
+                    return (
                         <div style={{
                             position: 'absolute', bottom: '24px', left: '24px', right: '24px',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0'
+                            display: 'flex', alignItems: 'center', gap: '12px'
                         }}>
-                            <button
-                                onClick={() => updateQty(-1)}
-                                style={{
-                                    width: '48px', height: '48px',
-                                    borderRadius: '14px 0 0 14px',
-                                    border: '1.5px solid #D4AF37',
-                                    borderRight: 'none',
-                                    background: 'rgba(212, 175, 55, 0.08)',
-                                    color: '#D4AF37',
-                                    fontSize: '22px',
-                                    fontWeight: '700',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s ease',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                }}
-                            >
-                                −
-                            </button>
+                            {/* Quantity Selector Pill */}
                             <div style={{
-                                flex: 1,
-                                height: '48px',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                background: 'linear-gradient(135deg, #D4AF37, #B8962E)',
-                                color: '#000',
-                                fontSize: '18px',
-                                fontWeight: '800',
-                                letterSpacing: '1px',
-                                borderTop: '1.5px solid #D4AF37',
-                                borderBottom: '1.5px solid #D4AF37'
+                                display: 'flex', alignItems: 'center',
+                                background: 'rgba(255,255,255,0.06)',
+                                borderRadius: '14px',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                overflow: 'hidden'
                             }}>
-                                {qty}
+                                <button
+                                    onClick={() => updateQty(-1)}
+                                    style={{
+                                        width: '40px', height: '44px',
+                                        border: 'none',
+                                        background: 'transparent',
+                                        color: qty <= 1 ? '#555' : '#D4AF37',
+                                        fontSize: '20px',
+                                        fontWeight: '700',
+                                        cursor: qty <= 1 ? 'default' : 'pointer',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        transition: 'color 0.2s ease'
+                                    }}
+                                    disabled={qty <= 1}
+                                >
+                                    −
+                                </button>
+                                <span style={{
+                                    width: '32px',
+                                    textAlign: 'center',
+                                    fontSize: '16px',
+                                    fontWeight: '800',
+                                    color: '#fff'
+                                }}>
+                                    {qty || 1}
+                                </span>
+                                <button
+                                    onClick={() => updateQty(1)}
+                                    style={{
+                                        width: '40px', height: '44px',
+                                        border: 'none',
+                                        background: 'transparent',
+                                        color: '#D4AF37',
+                                        fontSize: '20px',
+                                        fontWeight: '700',
+                                        cursor: 'pointer',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        transition: 'color 0.2s ease'
+                                    }}
+                                >
+                                    +
+                                </button>
                             </div>
+
+                            {/* Add to Cart Button */}
                             <button
-                                onClick={() => updateQty(1)}
+                                className="add-btn"
+                                onClick={() => {
+                                    if (!cart[currentProduct.id]) {
+                                        setCart(prev => ({ ...prev, [currentProduct.id]: 1 }));
+                                    }
+                                    // TODO: integrate with real cart/order system
+                                }}
                                 style={{
-                                    width: '48px', height: '48px',
-                                    borderRadius: '0 14px 14px 0',
-                                    border: '1.5px solid #D4AF37',
-                                    borderLeft: 'none',
-                                    background: 'rgba(212, 175, 55, 0.08)',
-                                    color: '#D4AF37',
-                                    fontSize: '22px',
-                                    fontWeight: '700',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s ease',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                    flex: 1, height: '44px',
+                                    margin: 0, width: 'auto',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                    padding: '0 16px',
+                                    fontSize: '13px'
                                 }}
                             >
-                                +
+                                <span>Adicionar</span>
+                                <span style={{ fontWeight: '800' }}>{itemTotal}</span>
                             </button>
                         </div>
                     );
