@@ -104,22 +104,13 @@ body,
   padding: 12px 24px 24px;
   position: relative;
   z-index: 10;
-  height: auto;
-  min-height: 360px;
+  flex: 1;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  margin-top: auto;
+  margin-top: 15px;
+  /* Stay fixed exactly below the shadow on all screens! */
   padding-bottom: calc(24px + env(safe-area-inset-bottom));
-}
-
-/* Browser Mode (Lower height for Safari/Chrome on mobile) */
-body.is-browser .bottom-sheet {
-  min-height: 300px;
-}
-
-/* Standalone PWA Mode (Taller height for full screen) */
-body.is-pwa .bottom-sheet {
-  min-height: 440px;
 }
 
 .drag-handle {
