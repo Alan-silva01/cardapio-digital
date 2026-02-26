@@ -129,6 +129,85 @@ export const productVisuals = {
     'ancho-premium': {
         size: 'Corte Ancho premium • Batata rústica',
         backgroundColor: '#B5B5B5',
+    },
+    'heineken-ln': {
+        size: '330ml',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
+        tint: 'neutral'
+    },
+    'budweiser-ln': {
+        size: '330ml',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
+        tint: 'neutral'
+    },
+    'stella-ln': {
+        size: '330ml',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
+        tint: 'neutral'
+    },
+    'corona-ln': {
+        size: '330ml',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
+        tint: 'neutral'
+    },
+    'michelob-ultra-ln': {
+        size: '330ml',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
+        tint: 'neutral'
+    },
+    'imperio-ultra-ln': {
+        size: '210ml',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
+        tint: 'neutral'
+    },
+    'coronita-ln': {
+        size: '210ml',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
+        tint: 'neutral'
+    },
+    'spaten-ln': {
+        size: '355ml',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
+        tint: 'neutral'
+    },
+    'heineken-0-ln': {
+        size: '330ml • Zero Álcool',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
+        tint: 'neutral'
+    },
+    'budweiser-0-ln': {
+        size: '330ml • Zero Álcool',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
+        tint: 'neutral'
+    },
+    'corona-0-ln': {
+        size: '330ml • Zero Álcool',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
+        tint: 'neutral'
+    },
+    'stella-gold-ln': {
+        size: '330ml • Sem Glúten',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
+        tint: 'neutral'
+    },
+    'brahma-ln': {
+        size: 'Long Neck + 600ml',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
+        tint: 'neutral'
+    },
+    'skol-ln': {
+        size: 'Long Neck + 600ml',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
+        tint: 'neutral'
+    },
+    'skol-beats-ln': {
+        size: '269ml',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
+        tint: 'neutral'
+    },
+    'ice-ln': {
+        size: '275ml',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
         tint: 'neutral'
     }
 };

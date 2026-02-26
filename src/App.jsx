@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, ShoppingCart, ArrowLeft, Loader2 } from 'lucide-react';
 import { supabase } from './lib/supabase';
-import { productVisuals } from './data/visuals';
 
 const countryFlags = {
     'Brasil': '/flags/brasil.png',
@@ -26,7 +25,8 @@ const countryFlags = {
     'Cuba': '/flags/Cuba 100x60.png',
     'Áustria': '/flags/Austria 100x60.png',
     'África do Sul': '/flags/África do Sul 100x60.png',
-    'Bélgica': '/flags/belgica.png'
+    'Bélgica': '/flags/belgica.png',
+    'Suíça': '/flags/Suica 100x60.png'
 };
 
 const App = () => {
@@ -95,7 +95,6 @@ const App = () => {
 
                     // Visual properties linked by slug
                     const categoryName = catMap[p.categoria_id] || 'Outros';
-                    const visuals = productVisuals[p.slug] || {};
 
                     return {
                         id: p.id,
@@ -107,13 +106,21 @@ const App = () => {
                         imageUrl: p.imagem_url,
                         price: defaultPrice,
                         variations: varsDict,
-                        backgroundColor: visuals.backgroundColor || null,
-                        backgroundUrl: visuals.backgroundUrl || null,
-                        flagUrl: visuals.flagUrl || (p.pais_origem ? countryFlags[p.pais_origem] : null),
+                        flagUrl: p.pais_origem ? countryFlags[p.pais_origem] : null,
                         paisOrigem: p.pais_origem || null,
-                        size: visuals.size || '',
-                        tint: visuals.tint || 'neutral'
                     };
+                });
+
+                // Preload all images (backgrounds and flags) in the background
+                const imagesToPreload = new Set();
+                enrichedProducts.forEach(p => {
+                    if (p.imageUrl) imagesToPreload.add(p.imageUrl);
+                    if (p.flagUrl) imagesToPreload.add(p.flagUrl);
+                });
+
+                imagesToPreload.forEach(url => {
+                    const img = new Image();
+                    img.src = url;
                 });
 
                 setProducts(enrichedProducts);
@@ -214,7 +221,7 @@ const App = () => {
 
     return (
         <div className="app-container" style={{
-            background: currentProduct.backgroundColor || `url(${currentProduct.backgroundUrl || 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771525899/App_Bar_1080x1920_2_afm0f1.png'}) center/cover no-repeat`,
+            background: `url('https://res.cloudinary.com/ddhlqymvf/image/upload/v1771525899/App_Bar_1080x1920_2_afm0f1.png') center/cover no-repeat`,
             transition: 'background 0.5s ease-in-out'
         }}>
             {/* Background Tint Overlay */}
@@ -396,20 +403,22 @@ const App = () => {
                             <div className="product-name" style={{ fontSize: '26px' }}>{currentProduct.name}</div>
                         </div>
 
-                        <div className="specs-row" style={{ marginBottom: '10px' }}>
-                            <div className="ingredients-line" style={{
-                                color: '#eee',
-                                fontSize: '11px',
-                                fontWeight: 500,
-                                background: 'rgba(255,255,255,0.05)',
-                                padding: '4px 8px',
-                                borderRadius: '4px',
-                                width: '100%',
-                                textAlign: 'center'
-                            }}>
-                                {currentProduct.size}
+                        {currentProduct.size && (
+                            <div className="specs-row" style={{ marginBottom: '10px' }}>
+                                <div className="ingredients-line" style={{
+                                    color: '#eee',
+                                    fontSize: '11px',
+                                    fontWeight: 500,
+                                    background: 'rgba(255,255,255,0.05)',
+                                    padding: '4px 8px',
+                                    borderRadius: '4px',
+                                    width: '100%',
+                                    textAlign: 'center'
+                                }}>
+                                    {currentProduct.size}
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         <p className="description" style={{ marginBottom: '15px' }}>
                             {currentProduct.description}
