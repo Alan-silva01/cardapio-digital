@@ -34,6 +34,7 @@ const App = () => {
     const [loading, setLoading] = useState(true);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [direction, setDirection] = useState(0); // 1 = right, -1 = left
+    const [isInternalSpin, setIsInternalSpin] = useState(false); // true when clicking a flavor button
     const [selectedVariation, setSelectedVariation] = useState(null);
 
     const currentProduct = products.length > 0 ? products[currentIndex] : null;
@@ -157,6 +158,7 @@ const App = () => {
 
     const paginate = (newDirection) => {
         setDirection(newDirection);
+        setIsInternalSpin(false); // Arrow/swipe is not an internal spin
         // Circular navigation
         let nextIndex = currentIndex + newDirection;
 
@@ -194,8 +196,8 @@ const App = () => {
     }, [currentIndex]);
 
     const variants = {
-        enter: ({ direction, isFood, isIce, isSkolBeats }) => {
-            const isCircular = isFood || isIce || isSkolBeats;
+        enter: ({ direction, isFood, isIce, isSkolBeats, isInternalSpin }) => {
+            const isCircular = isFood || ((isIce || isSkolBeats) && isInternalSpin);
             return {
                 x: direction > 0 ? (isCircular ? 150 : 50) : (isCircular ? -150 : -50),
                 y: isCircular ? 50 : 0,
@@ -210,8 +212,8 @@ const App = () => {
             rotate: 0,
             opacity: 1,
         },
-        exit: ({ direction, isFood, isIce, isSkolBeats }) => {
-            const isCircular = isFood || isIce || isSkolBeats;
+        exit: ({ direction, isFood, isIce, isSkolBeats, isInternalSpin }) => {
+            const isCircular = isFood || ((isIce || isSkolBeats) && isInternalSpin);
             return {
                 zIndex: 0,
                 x: direction < 0 ? (isCircular ? 150 : 50) : (isCircular ? -150 : -50),
@@ -262,10 +264,10 @@ const App = () => {
 
             {/* ANIMATED HERO SECTION */}
             <div className="hero" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', paddingTop: '10px' }}>
-                <AnimatePresence initial={false} custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-'), isSkolBeats: currentProduct?.slug?.startsWith('skol-beats-') }}>
+                <AnimatePresence initial={false} custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-'), isSkolBeats: currentProduct?.slug?.startsWith('skol-beats-'), isInternalSpin }}>
                     <motion.div
                         key={currentProduct.id}
-                        custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-'), isSkolBeats: currentProduct?.slug?.startsWith('skol-beats-') }}
+                        custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-'), isSkolBeats: currentProduct?.slug?.startsWith('skol-beats-'), isInternalSpin }}
                         variants={variants}
                         initial="enter"
                         animate="center"
@@ -479,6 +481,7 @@ const App = () => {
                                                     if (targetIndex !== -1 && targetIndex !== currentIndex) {
                                                         const spinDirection = targetIndex > currentIndex ? 1 : -1;
                                                         setDirection(spinDirection);
+                                                        setIsInternalSpin(true); // Clicked flavor button means internal spin
                                                         // Adding a tiny timeout allows direction state to commit before unmounting
                                                         setTimeout(() => setCurrentIndex(targetIndex), 0);
                                                     }
