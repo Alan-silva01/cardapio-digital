@@ -4,6 +4,31 @@ import { ChevronLeft, ChevronRight, ShoppingCart, ArrowLeft, Loader2 } from 'luc
 import { supabase } from './lib/supabase';
 import { productVisuals } from './data/visuals';
 
+const countryFlags = {
+    'Brasil': '/flags/brasil.png',
+    'Escócia': '/flags/escocia.png',
+    'Reino Unido': '/flags/reino_unido.png',
+    'Inglaterra': '/flags/reino_unido.png',
+    'México': '/flags/mexico.png',
+    'EUA': '/flags/eua.png',
+    'Estados Unidos (EUA)': '/flags/eua.png',
+    'Itália': '/flags/Italia 100x60.png',
+    'Portugal': '/flags/Portugal 100x60.png',
+    'França': '/flags/franca.png',
+    'Holanda': '/flags/holanda.png',
+    'Suécia': '/flags/Suecia 100x60.png',
+    'Alemanha': '/flags/Bandeira Alemanha 100x60.png',
+    'Espanha': '/flags/Espanha 100x60.png',
+    'Japão': '/flags/Japão 100x60.png',
+    'Polônia': '/flags/Polonia 100x60.png',
+    'Porto Rico': '/flags/Porto Rico 100x60.png',
+    'Rússia': '/flags/Russia 100x60.png',
+    'Cuba': '/flags/Cuba 100x60.png',
+    'Áustria': '/flags/Austria 100x60.png',
+    'África do Sul': '/flags/África do Sul 100x60.png',
+    'Bélgica': '/flags/belgica.png'
+};
+
 const App = () => {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -84,7 +109,8 @@ const App = () => {
                         variations: varsDict,
                         backgroundColor: visuals.backgroundColor || null,
                         backgroundUrl: visuals.backgroundUrl || null,
-                        flagUrl: visuals.flagUrl || null,
+                        flagUrl: visuals.flagUrl || (p.pais_origem ? countryFlags[p.pais_origem] : null),
+                        paisOrigem: p.pais_origem || null,
                         size: visuals.size || '',
                         tint: visuals.tint || 'neutral'
                     };
@@ -240,23 +266,39 @@ const App = () => {
                             right: 0
                         }}
                     >
-                        {/* FLAG OVERLAY */}
-                        {currentProduct.flagUrl && (
+                        {/* FLAG OVERLAY / PAIS ORIGEM */}
+                        {(currentProduct.flagUrl || currentProduct.paisOrigem) && (
                             <div style={{
                                 display: 'flex',
+                                flexDirection: 'column',
                                 justifyContent: 'center',
+                                alignItems: 'center',
+                                gap: '2px',
                                 marginBottom: '2px',
                                 zIndex: 10
                             }}>
-                                <img
-                                    src={currentProduct.flagUrl}
-                                    alt="Origin Flag"
-                                    style={{
-                                        width: '24px', /* Menor conforme pedido */
-                                        height: 'auto',
-                                        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
-                                    }}
-                                />
+                                {currentProduct.flagUrl && (
+                                    <img
+                                        src={currentProduct.flagUrl}
+                                        alt="Origin Flag"
+                                        style={{
+                                            width: '24px', /* Menor conforme pedido */
+                                            height: 'auto',
+                                            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
+                                        }}
+                                    />
+                                )}
+                                {currentProduct.paisOrigem && (
+                                    <span style={{
+                                        color: '#555555',
+                                        fontSize: '9px',
+                                        fontWeight: 800,
+                                        letterSpacing: '1px',
+                                        textTransform: 'uppercase'
+                                    }}>
+                                        {currentProduct.paisOrigem}
+                                    </span>
+                                )}
                             </div>
                         )}
 

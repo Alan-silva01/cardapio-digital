@@ -94,14 +94,12 @@ export const productVisuals = {
     'galliotto-seco': {
         size: '750ml',
         backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
-        tint: 'neutral',
-        flagUrl: '/flags/franca.png'
+        tint: 'neutral'
     },
     'galliotto-suave': {
         size: '750ml',
         backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
-        tint: 'neutral',
-        flagUrl: '/flags/franca.png'
+        tint: 'neutral'
     },
     'quinta-morgado-suave': {
         size: '750ml',
