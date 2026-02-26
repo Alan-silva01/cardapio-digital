@@ -200,12 +200,52 @@ export const productVisuals = {
         backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
         tint: 'neutral'
     },
-    'skol-beats-ln': {
+    'skol-beats-senses': {
         size: '269ml',
         backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
         tint: 'neutral'
     },
-    'ice-ln': {
+    'skol-beats-red-mix': {
+        size: '269ml',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
+        tint: 'neutral'
+    },
+    'skol-beats-gin-tonica': {
+        size: '269ml',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
+        tint: 'neutral'
+    },
+    'skol-beats-tropical': {
+        size: '269ml',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
+        tint: 'neutral'
+    },
+    'ice-balada': {
+        size: '275ml',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
+        tint: 'neutral'
+    },
+    'ice-fruit-mix': {
+        size: '275ml',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
+        tint: 'neutral'
+    },
+    'ice-kiwi': {
+        size: '275ml',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
+        tint: 'neutral'
+    },
+    'ice-limao': {
+        size: '275ml',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
+        tint: 'neutral'
+    },
+    'ice-maracuja': {
+        size: '275ml',
+        backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
+        tint: 'neutral'
+    },
+    'ice-tangerina': {
         size: '275ml',
         backgroundUrl: 'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771767716/App_Bar_1080x1920_1_a9syji.png',
         tint: 'neutral'

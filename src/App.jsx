@@ -174,12 +174,15 @@ const App = () => {
     }, [currentIndex]);
 
     const variants = {
-        enter: ({ direction, isFood }) => ({
-            x: direction > 0 ? (isFood ? 150 : 50) : (isFood ? -150 : -50),
-            y: isFood ? 50 : 0,
-            rotate: isFood ? (direction > 0 ? 15 : -15) : 0,
-            opacity: 0,
-        }),
+        enter: ({ direction, isFood, isIce }) => {
+            const isCircular = isFood || isIce;
+            return {
+                x: direction > 0 ? (isCircular ? 150 : 50) : (isCircular ? -150 : -50),
+                y: isCircular ? 50 : 0,
+                rotate: isCircular ? (direction > 0 ? 15 : -15) : 0,
+                opacity: 0,
+            };
+        },
         center: {
             zIndex: 1,
             x: 0,
@@ -187,13 +190,16 @@ const App = () => {
             rotate: 0,
             opacity: 1,
         },
-        exit: ({ direction, isFood }) => ({
-            zIndex: 0,
-            x: direction < 0 ? (isFood ? 150 : 50) : (isFood ? -150 : -50),
-            y: isFood ? 50 : 0,
-            rotate: isFood ? (direction < 0 ? 15 : -15) : 0,
-            opacity: 0,
-        }),
+        exit: ({ direction, isFood, isIce }) => {
+            const isCircular = isFood || isIce;
+            return {
+                zIndex: 0,
+                x: direction < 0 ? (isCircular ? 150 : 50) : (isCircular ? -150 : -50),
+                y: isCircular ? 50 : 0,
+                rotate: isCircular ? (direction < 0 ? 15 : -15) : 0,
+                opacity: 0,
+            };
+        },
     };
 
     if (loading) {
@@ -236,10 +242,10 @@ const App = () => {
 
             {/* ANIMATED HERO SECTION */}
             <div className="hero" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', paddingTop: '10px' }}>
-                <AnimatePresence initial={false} custom={{ direction, isFood: currentProduct?.category === 'Petiscos' }}>
+                <AnimatePresence initial={false} custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-') }}>
                     <motion.div
                         key={currentProduct.id}
-                        custom={{ direction, isFood: currentProduct?.category === 'Petiscos' }}
+                        custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-') }}
                         variants={variants}
                         initial="enter"
                         animate="center"
@@ -424,50 +430,98 @@ const App = () => {
                             {currentProduct.description}
                         </p>
 
-                        {/* VARIATION SELECTION (CHECKBOX STYLE) */}
-                        {currentProduct.variations && (
-                            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-                                {Object.keys(currentProduct.variations).map((variant) => (
-                                    <button
-                                        key={variant}
-                                        onClick={() => setSelectedVariation(variant)}
-                                        style={{
-                                            flex: 1,
-                                            padding: '10px',
-                                            borderRadius: '12px',
-                                            border: `1.5px solid ${selectedVariation === variant ? '#D4AF37' : '#333'}`,
-                                            background: selectedVariation === variant ? 'rgba(212, 175, 55, 0.1)' : 'transparent',
-                                            color: selectedVariation === variant ? '#D4AF37' : '#888',
-                                            fontSize: '11px',
-                                            fontWeight: '800',
-                                            textTransform: 'uppercase',
-                                            letterSpacing: '1px',
-                                            transition: 'all 0.3s ease',
-                                            cursor: 'pointer',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: '8px'
-                                        }}
-                                    >
-                                        <div style={{
-                                            width: '14px',
-                                            height: '14px',
-                                            borderRadius: '4px',
-                                            border: `1px solid ${selectedVariation === variant ? '#D4AF37' : '#444'}`,
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            background: selectedVariation === variant ? '#D4AF37' : 'transparent'
-                                        }}>
-                                            {selectedVariation === variant && (
-                                                <div style={{ width: '6px', height: '6px', backgroundColor: '#000', borderRadius: '1px' }} />
-                                            )}
-                                        </div>
-                                        {variant}
-                                    </button>
-                                ))}
+                        {/* FLAVOR SELECTION (CUSTOM FOR ICE & SKOL BEATS) */}
+                        {(currentProduct.slug && (currentProduct.slug.startsWith('ice-') || currentProduct.slug.startsWith('skol-beats-'))) ? (
+                            <div style={{ marginBottom: '20px' }}>
+                                <div style={{ fontSize: '11px', fontWeight: '800', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px', textAlign: 'left' }}>
+                                    ESCOLHA O SABOR
+                                </div>
+                                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                                    {(currentProduct.slug.startsWith('ice-')
+                                        ? ['Balada', 'Fruit Mix', 'Kiwi', 'Limão', 'Maracujá', 'Tangerina']
+                                        : ['Senses', 'Red Mix', 'Gin e Tônica', 'Tropical']
+                                    ).map((flavor) => {
+                                        const baseSlug = currentProduct.slug.startsWith('ice-') ? 'ice' : 'skol-beats';
+                                        const flavorSlug = `${baseSlug}-${flavor.toLowerCase().replace('ã', 'a').replace('á', 'a').replace('ô', 'o').replace(' ', '-')}`;
+                                        const isSelected = currentProduct.slug === flavorSlug;
+                                        return (
+                                            <button
+                                                key={flavor}
+                                                onClick={() => {
+                                                    const targetIndex = products.findIndex(p => p.slug === flavorSlug);
+                                                    if (targetIndex !== -1 && targetIndex !== currentIndex) {
+                                                        const spinDirection = targetIndex > currentIndex ? 1 : -1;
+                                                        setDirection(spinDirection);
+                                                        // Adding a tiny timeout allows direction state to commit before unmounting
+                                                        setTimeout(() => setCurrentIndex(targetIndex), 0);
+                                                    }
+                                                }}
+                                                style={{
+                                                    padding: '8px 12px',
+                                                    borderRadius: '20px',
+                                                    border: `1.5px solid ${isSelected ? '#D4AF37' : '#333'}`,
+                                                    background: isSelected ? 'rgba(212, 175, 55, 0.1)' : 'transparent',
+                                                    color: isSelected ? '#D4AF37' : '#888',
+                                                    fontSize: '11px',
+                                                    fontWeight: '800',
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '1px',
+                                                    transition: 'all 0.3s ease',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                {flavor}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
                             </div>
+                        ) : (
+                            /* NORMAL VARIATION SELECTION (CHECKBOX STYLE) */
+                            currentProduct.variations && (
+                                <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                                    {Object.keys(currentProduct.variations).map((variant) => (
+                                        <button
+                                            key={variant}
+                                            onClick={() => setSelectedVariation(variant)}
+                                            style={{
+                                                flex: 1,
+                                                padding: '10px',
+                                                borderRadius: '12px',
+                                                border: `1.5px solid ${selectedVariation === variant ? '#D4AF37' : '#333'}`,
+                                                background: selectedVariation === variant ? 'rgba(212, 175, 55, 0.1)' : 'transparent',
+                                                color: selectedVariation === variant ? '#D4AF37' : '#888',
+                                                fontSize: '11px',
+                                                fontWeight: '800',
+                                                textTransform: 'uppercase',
+                                                letterSpacing: '1px',
+                                                transition: 'all 0.3s ease',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: '8px'
+                                            }}
+                                        >
+                                            <div style={{
+                                                width: '14px',
+                                                height: '14px',
+                                                borderRadius: '4px',
+                                                border: `1px solid ${selectedVariation === variant ? '#D4AF37' : '#444'}`,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                background: selectedVariation === variant ? '#D4AF37' : 'transparent'
+                                            }}>
+                                                {selectedVariation === variant && (
+                                                    <div style={{ width: '6px', height: '6px', backgroundColor: '#000', borderRadius: '1px' }} />
+                                                )}
+                                            </div>
+                                            {variant}
+                                        </button>
+                                    ))}
+                                </div>
+                            )
                         )}
                     </motion.div>
                 </AnimatePresence>
