@@ -451,7 +451,9 @@ const App = () => {
                                             );
                                         })}
                                     </div>
-                                    <div className="category-label" style={{ marginBottom: 0 }}>{currentProduct.category}</div>
+                                    <div className="category-label" style={{ marginBottom: 0 }}>
+                                        {currentProduct.category.replace(/ unidade/gi, '')}
+                                    </div>
                                 </div>
                                 <div className="price-tag" style={{ border: '1px solid rgba(255,255,255,0.1)', padding: '4px 10px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)' }}>
                                     {formattedPrice}
@@ -605,7 +607,7 @@ const App = () => {
                     const itemTotal = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(displayPrice * pendingQty);
 
                     return (
-                        <div className="sheet-footer">
+                        <div className="sheet-footer" style={{ padding: '8px 0 16px' }}>
                             {/* Quantity Selector Pill - Centered */}
                             <div style={{
                                 display: 'flex', alignItems: 'center',
@@ -617,15 +619,15 @@ const App = () => {
                                 <button
                                     onClick={() => setPendingQty(q => Math.max(1, q - 1))}
                                     style={{
-                                        width: '40px', height: '44px',
+                                        width: '32px', height: '36px',
                                         border: 'none',
                                         background: 'transparent',
                                         color: pendingQty <= 1 ? '#555' : '#D4AF37',
-                                        fontSize: '20px',
+                                        fontSize: '18px',
                                         fontWeight: '700',
                                         cursor: pendingQty <= 1 ? 'default' : 'pointer',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        transition: 'color 0.2s ease'
+                                        transition: 'all 0.2s ease'
                                     }}
                                     disabled={pendingQty <= 1}
                                 >
@@ -643,15 +645,15 @@ const App = () => {
                                 <button
                                     onClick={() => setPendingQty(q => q + 1)}
                                     style={{
-                                        width: '40px', height: '44px',
+                                        width: '32px', height: '36px',
                                         border: 'none',
                                         background: 'transparent',
                                         color: '#D4AF37',
-                                        fontSize: '20px',
+                                        fontSize: '18px',
                                         fontWeight: '700',
                                         cursor: 'pointer',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        transition: 'color 0.2s ease'
+                                        transition: 'all 0.2s ease'
                                     }}
                                 >
                                     +
