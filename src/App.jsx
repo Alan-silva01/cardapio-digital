@@ -275,7 +275,7 @@ const App = () => {
 
     return (
         <div className="app-container" style={{
-            background: `url('${bgUrl}') center/cover no-repeat`,
+            background: `url('https://res.cloudinary.com/ddhlqymvf/image/upload/v1771525899/App_Bar_1080x1920_2_afm0f1.png') center/cover no-repeat`,
             transition: 'background 0.5s ease-in-out'
         }}>
             {/* Background Tint Overlay */}
