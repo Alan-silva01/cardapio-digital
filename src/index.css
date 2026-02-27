@@ -60,9 +60,10 @@ body,
 
 /* Browser mode adjustments (Safari toolbar compensation) */
 body.is-browser .top-nav {
-  padding-top: calc(24px + env(safe-area-inset-top));
-  /* More space to avoid camera/notch */
+  padding-top: calc(45px + env(safe-area-inset-top));
+  /* Drastic space to avoid camera/notch in Browser */
 }
+
 
 
 
