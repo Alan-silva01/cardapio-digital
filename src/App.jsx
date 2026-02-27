@@ -254,8 +254,6 @@ const App = () => {
     const formattedPrice = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(displayPrice);
 
 
-
-
     return (
         <div className="app-container" style={{
             background: `url('https://res.cloudinary.com/ddhlqymvf/image/upload/v1771525899/App_Bar_1080x1920_2_afm0f1.png') center/cover no-repeat`,
@@ -554,7 +552,7 @@ const App = () => {
                             ) : (
                                 /* NORMAL VARIATION SELECTION (CHECKBOX STYLE) */
                                 currentProduct.variations && (
-                                    <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                                    <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
                                         {Object.keys(currentProduct.variations).map((variant) => (
                                             <button
                                                 key={variant}
