@@ -616,7 +616,9 @@ const App = () => {
                                 background: 'rgba(255,255,255,0.06)',
                                 borderRadius: '14px',
                                 border: '1px solid rgba(255,255,255,0.1)',
-                                overflow: 'hidden'
+                                overflow: 'hidden',
+                                width: 'fit-content',
+                                margin: '0 auto'
                             }}>
                                 <button
                                     onClick={() => setPendingQty(q => Math.max(1, q - 1))}
@@ -636,9 +638,9 @@ const App = () => {
                                     −
                                 </button>
                                 <span style={{
-                                    width: '32px',
+                                    width: '24px',
                                     textAlign: 'center',
-                                    fontSize: '16px',
+                                    fontSize: '14px',
                                     fontWeight: '800',
                                     color: '#fff'
                                 }}>
