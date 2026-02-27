@@ -206,3 +206,36 @@ body,
 .add-btn:active {
   transform: scale(0.98);
 }
+
+/* Fly to Cart Animation */
+@keyframes flyToCart {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: translate(calc(var(--end-x) * 0.5), calc(var(--end-y) * 0.5 - 80px)) scale(0.6);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: translate(var(--end-x), var(--end-y)) scale(0.2);
+    opacity: 0;
+  }
+}
+
+/* Cart Badge Pop */
+@keyframes cartBadgePop {
+  0% {
+    transform: scale(0);
+  }
+
+  60% {
+    transform: scale(1.3);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}

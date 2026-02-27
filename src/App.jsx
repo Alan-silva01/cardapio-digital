@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, ShoppingCart, ArrowLeft, Loader2 } from 'lucide-react';
 import { supabase } from './lib/supabase';
@@ -37,6 +37,10 @@ const App = () => {
     const [isInternalSpin, setIsInternalSpin] = useState(false); // true when clicking a flavor button
     const [selectedVariation, setSelectedVariation] = useState(null);
     const [cart, setCart] = useState({}); // { productId: quantity }
+    const [flyingItems, setFlyingItems] = useState([]); // for fly-to-cart animation
+    const cartIconRef = useRef(null);
+
+    const totalCartItems = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
 
     const currentProduct = products.length > 0 ? products[currentIndex] : null;
 
@@ -260,7 +264,30 @@ const App = () => {
             <div className="top-nav">
                 <ArrowLeft className="icon" />
                 <div className="page-title">{currentProduct.category}</div>
-                <ShoppingCart className="icon" />
+                <div ref={cartIconRef} style={{ position: 'relative' }}>
+                    <ShoppingCart className="icon" />
+                    {totalCartItems > 0 && (
+                        <div style={{
+                            position: 'absolute',
+                            top: '-6px',
+                            right: '-8px',
+                            background: '#E53935',
+                            color: '#fff',
+                            fontSize: '10px',
+                            fontWeight: '800',
+                            width: '18px',
+                            height: '18px',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            boxShadow: '0 2px 6px rgba(229, 57, 53, 0.5)',
+                            animation: 'cartBadgePop 0.3s ease'
+                        }}>
+                            {totalCartItems}
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* ANIMATED HERO SECTION */}
@@ -639,11 +666,35 @@ const App = () => {
                             {/* Add to Cart Button - Full Width Below */}
                             <button
                                 className="add-btn"
-                                onClick={() => {
-                                    if (!cart[currentProduct.id]) {
-                                        setCart(prev => ({ ...prev, [currentProduct.id]: 1 }));
+                                onClick={(e) => {
+                                    const addQty = qty || 1;
+                                    // Get button position
+                                    const btnRect = e.currentTarget.getBoundingClientRect();
+                                    const cartEl = cartIconRef.current;
+                                    if (cartEl) {
+                                        const cartRect = cartEl.getBoundingClientRect();
+                                        const id = Date.now();
+                                        setFlyingItems(prev => [...prev, {
+                                            id,
+                                            startX: btnRect.left + btnRect.width / 2,
+                                            startY: btnRect.top,
+                                            endX: cartRect.left + cartRect.width / 2,
+                                            endY: cartRect.top + cartRect.height / 2
+                                        }]);
+                                        // Update cart after animation
+                                        setTimeout(() => {
+                                            setCart(prev => ({
+                                                ...prev,
+                                                [currentProduct.id]: (prev[currentProduct.id] || 0) + addQty
+                                            }));
+                                            setFlyingItems(prev => prev.filter(f => f.id !== id));
+                                        }, 600);
+                                    } else {
+                                        setCart(prev => ({
+                                            ...prev,
+                                            [currentProduct.id]: (prev[currentProduct.id] || 0) + addQty
+                                        }));
                                     }
-                                    // TODO: integrate with real cart/order system
                                 }}
                                 style={{
                                     width: '100%', height: '44px',
@@ -660,6 +711,28 @@ const App = () => {
                     );
                 })()}
             </div>
+
+            {/* FLYING ITEMS ANIMATION */}
+            {flyingItems.map(item => (
+                <div
+                    key={item.id}
+                    style={{
+                        position: 'fixed',
+                        left: item.startX - 10,
+                        top: item.startY - 10,
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #D4AF37, #FFD700)',
+                        boxShadow: '0 0 12px rgba(212, 175, 55, 0.6)',
+                        zIndex: 9999,
+                        pointerEvents: 'none',
+                        animation: 'flyToCart 0.6s ease-in forwards',
+                        '--end-x': `${item.endX - item.startX}px`,
+                        '--end-y': `${item.endY - item.startY}px`
+                    }}
+                />
+            ))}
         </div>
     );
 };
