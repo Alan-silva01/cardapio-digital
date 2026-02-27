@@ -66,8 +66,8 @@ body.is-browser .top-nav {
 
 
 .hero {
-  flex: 1.3;
-  /* Lowering the sheet specifically in PWA as requested */
+  flex: 1.0;
+  /* Adjusted for a better middle ground in PWA */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -93,6 +93,8 @@ body.is-browser .hero {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+  /* Force children to opposite ends */
   margin-top: 0;
 }
 
@@ -110,6 +112,8 @@ body.is-browser .hero {
 }
 
 .sheet-footer {
+  margin-top: auto;
+  /* Push to bottom */
   padding: 10px 0 24px;
   padding-bottom: calc(24px + env(safe-area-inset-bottom));
   display: flex;
