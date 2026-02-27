@@ -621,11 +621,11 @@ const App = () => {
                                 <button
                                     onClick={() => setPendingQty(q => Math.max(1, q - 1))}
                                     style={{
-                                        width: '32px', height: '36px',
+                                        width: '28px', height: '32px',
                                         border: 'none',
                                         background: 'transparent',
                                         color: pendingQty <= 1 ? '#555' : '#D4AF37',
-                                        fontSize: '18px',
+                                        fontSize: '16px',
                                         fontWeight: '700',
                                         cursor: pendingQty <= 1 ? 'default' : 'pointer',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -647,11 +647,11 @@ const App = () => {
                                 <button
                                     onClick={() => setPendingQty(q => q + 1)}
                                     style={{
-                                        width: '32px', height: '36px',
+                                        width: '28px', height: '32px',
                                         border: 'none',
                                         background: 'transparent',
                                         color: '#D4AF37',
-                                        fontSize: '18px',
+                                        fontSize: '16px',
                                         fontWeight: '700',
                                         cursor: 'pointer',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
