@@ -61,11 +61,11 @@ body,
 /* Browser mode adjustments (Safari toolbar compensation) */
 body.is-browser .top-nav {
   padding-top: 10px;
-  /* Reduced further to save space */
 }
 
 .hero {
-  flex: 1;
+  flex: 0.85;
+  /* Reduced to raise the sheet higher in PWA */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -74,27 +74,50 @@ body.is-browser .top-nav {
 }
 
 body.is-browser .hero {
-  flex: 1.35;
-  /* Give more space to hero in browser mode to push sheet down */
+  flex: 1.15;
+  /* Reduced from 1.35 to raise the sheet in browser mode */
 }
 
 .bottom-sheet {
   background-color: var(--black);
   border-top-left-radius: 35px;
   border-top-right-radius: 35px;
-  padding: 12px 24px 24px;
+  padding: 12px 24px 0;
+  /* padding-bottom handled by footer */
   position: relative;
   z-index: 10;
   flex: 1;
-  overflow-y: auto;
+  overflow: hidden;
+  /* prevents sheet itself from scrolling */
   display: flex;
   flex-direction: column;
   margin-top: 0;
-  /* Reduced to align better with hero */
-  padding-bottom: calc(24px + env(safe-area-inset-bottom));
 }
 
-body.is-browser .bottom-sheet {
+.sheet-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 20px;
+  /* Custom scrollbar for better aesthetics */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.sheet-content::-webkit-scrollbar {
+  display: none;
+}
+
+.sheet-footer {
+  padding: 10px 0 24px;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background-color: var(--black);
+  z-index: 20;
+}
+
+body.is-browser .sheet-footer {
   padding-bottom: calc(12px + env(safe-area-inset-bottom));
 }
 
