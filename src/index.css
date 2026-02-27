@@ -141,8 +141,17 @@ body.is-browser .sheet-footer {
   justify-content: space-between;
   align-items: center;
   padding: 45px 24px 10px;
+  /* Default browser padding */
+  padding-top: calc(16px + env(safe-area-inset-top));
+  /* Safari PWA focus */
   z-index: 10;
 }
+
+/* Specific adjustment when using black-translucent status bar (PWA) */
+body.is-pwa .top-nav {
+  padding-top: calc(20px + env(safe-area-inset-top));
+}
+
 
 .page-title {
   font-size: 13px;
