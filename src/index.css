@@ -20,12 +20,19 @@ body,
 #root {
   background-color: #000;
   overflow: hidden;
-  height: 100vh;
+  height: 100dvh;
+  /* Use dynamic height for PWA robustness */
   width: 100vw;
   display: flex;
   justify-content: center;
   align-items: center;
   font-family: 'Inter', sans-serif;
+  touch-action: manipulation;
+  /* Disable double-tap zoom */
+  user-select: none;
+  /* Prevent selection while interacting */
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 /* Main App Container - Responsive for mobile, fixed mockup for desktop */
