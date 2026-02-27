@@ -253,25 +253,8 @@ const App = () => {
     }
     const formattedPrice = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(displayPrice);
 
-    const backgrounds = [
-        'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771525899/App_Bar_1080x1920_2_afm0f1.png', // Default
-        'https://res.cloudinary.com/ddhlqymvf/image/upload/v1772196282/mapa_reino_unido_f9touo.png',   // UK Map
-        'https://res.cloudinary.com/ddhlqymvf/image/upload/v1772196789/Mapa_EUA_1080x1920_3_nmjdvx.png', // USA Map 1
-        'https://res.cloudinary.com/ddhlqymvf/image/upload/v1772196789/Mapa_EUA_1080x1920_2_tgmwtq.png', // USA Map 2
-        'https://res.cloudinary.com/ddhlqymvf/image/upload/v1772196788/Mapa_EUA_1080x1920_1_b6wtcb.png'  // USA Map 3
-    ];
 
-    // Priority logic: UK for UK products, USA for USA products, otherwise rotate
-    const isUK = currentProduct.origin === 'Reino Unido' || currentProduct.origin === 'Inglaterra';
-    const isUSA = currentProduct.origin === 'EUA' || currentProduct.origin === 'Estados Unidos (EUA)';
 
-    let bgUrl = backgrounds[currentIndex % backgrounds.length];
-    if (isUK) bgUrl = backgrounds[1];
-    else if (isUSA) {
-        // Rotate between the 3 USA maps for USA products
-        const usaStartIdx = 2;
-        bgUrl = backgrounds[usaStartIdx + (currentIndex % 3)];
-    }
 
     return (
         <div className="app-container" style={{
