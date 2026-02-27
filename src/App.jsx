@@ -461,7 +461,9 @@ const App = () => {
                             </div>
 
                             <div className="info-header" style={{ marginBottom: '10px', textAlign: 'center' }}>
-                                <div className="product-name" style={{ fontSize: '26px' }}>{currentProduct.name}</div>
+                                <div className="product-name" style={{ fontSize: '22px' }}>
+                                    {currentProduct.name.replace(/ unidade/gi, '')}
+                                </div>
                             </div>
 
                             {currentProduct.size && (
@@ -554,7 +556,7 @@ const App = () => {
                             ) : (
                                 /* NORMAL VARIATION SELECTION (CHECKBOX STYLE) */
                                 currentProduct.variations && (
-                                    <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                                    <div style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
                                         {Object.keys(currentProduct.variations).map((variant) => (
                                             <button
                                                 key={variant}

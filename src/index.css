@@ -98,7 +98,7 @@ body.is-browser .hero {
   background-color: var(--black);
   border-top-left-radius: 35px;
   border-top-right-radius: 35px;
-  padding: 12px 24px 0;
+  padding: 8px 16px 0;
   position: relative;
   z-index: 10;
   flex: 1;
