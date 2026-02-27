@@ -203,13 +203,7 @@ body.is-pwa .top-nav {
 
 
 
-.drag-handle {
-  width: 50px;
-  height: 4px;
-  background-color: #222;
-  border-radius: 2px;
-  margin: 0 auto 10px;
-}
+
 
 .category-label {
   font-size: 10px;
