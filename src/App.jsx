@@ -37,6 +37,7 @@ const App = () => {
     const [isInternalSpin, setIsInternalSpin] = useState(false); // true when clicking a flavor button
     const [selectedVariation, setSelectedVariation] = useState(null);
     const [cart, setCart] = useState({}); // { productId: quantity }
+    const [pendingQty, setPendingQty] = useState(1); // local qty before adding to cart
     const [flyingItems, setFlyingItems] = useState([]); // for fly-to-cart animation
     const cartIconRef = useRef(null);
 
@@ -597,14 +598,7 @@ const App = () => {
                 </AnimatePresence>
                 {/* QUANTITY + ADD TO CART - PINNED TO BOTTOM */}
                 {(() => {
-                    const qty = cart[currentProduct.id] || 0;
-                    const updateQty = (delta) => {
-                        setCart(prev => {
-                            const newQty = Math.max(1, (prev[currentProduct.id] || 1) + delta);
-                            return { ...prev, [currentProduct.id]: newQty };
-                        });
-                    };
-                    const itemTotal = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(displayPrice * (qty || 1));
+                    const itemTotal = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(displayPrice * pendingQty);
 
                     return (
                         <div style={{
@@ -620,19 +614,19 @@ const App = () => {
                                 overflow: 'hidden'
                             }}>
                                 <button
-                                    onClick={() => updateQty(-1)}
+                                    onClick={() => setPendingQty(q => Math.max(1, q - 1))}
                                     style={{
                                         width: '40px', height: '44px',
                                         border: 'none',
                                         background: 'transparent',
-                                        color: qty <= 1 ? '#555' : '#D4AF37',
+                                        color: pendingQty <= 1 ? '#555' : '#D4AF37',
                                         fontSize: '20px',
                                         fontWeight: '700',
-                                        cursor: qty <= 1 ? 'default' : 'pointer',
+                                        cursor: pendingQty <= 1 ? 'default' : 'pointer',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         transition: 'color 0.2s ease'
                                     }}
-                                    disabled={qty <= 1}
+                                    disabled={pendingQty <= 1}
                                 >
                                     −
                                 </button>
@@ -643,10 +637,10 @@ const App = () => {
                                     fontWeight: '800',
                                     color: '#fff'
                                 }}>
-                                    {qty || 1}
+                                    {pendingQty}
                                 </span>
                                 <button
-                                    onClick={() => updateQty(1)}
+                                    onClick={() => setPendingQty(q => q + 1)}
                                     style={{
                                         width: '40px', height: '44px',
                                         border: 'none',
@@ -667,8 +661,7 @@ const App = () => {
                             <button
                                 className="add-btn"
                                 onClick={(e) => {
-                                    const addQty = qty || 1;
-                                    // Get button position
+                                    const addQty = pendingQty;
                                     const btnRect = e.currentTarget.getBoundingClientRect();
                                     const cartEl = cartIconRef.current;
                                     if (cartEl) {
@@ -681,7 +674,6 @@ const App = () => {
                                             endX: cartRect.left + cartRect.width / 2,
                                             endY: cartRect.top + cartRect.height / 2
                                         }]);
-                                        // Update cart after animation
                                         setTimeout(() => {
                                             setCart(prev => ({
                                                 ...prev,
@@ -695,6 +687,8 @@ const App = () => {
                                             [currentProduct.id]: (prev[currentProduct.id] || 0) + addQty
                                         }));
                                     }
+                                    // Reset pending qty back to 1
+                                    setPendingQty(1);
                                 }}
                                 style={{
                                     width: '100%', height: '44px',
