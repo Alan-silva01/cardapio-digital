@@ -65,7 +65,7 @@ body.is-browser .top-nav {
 
 .hero {
   flex: 0.8;
-  /* Iteration 2: Lower slightly from 0.7 */
+  /* Final height limit: Perfect balance for PWA */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -75,7 +75,7 @@ body.is-browser .top-nav {
 
 body.is-browser .hero {
   flex: 1.1;
-  /* Iteration 2: Lower slightly from 1.0 */
+  /* Final height limit: Perfect balance for Browser (Safari) */
 }
 
 .bottom-sheet {
