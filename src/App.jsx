@@ -292,7 +292,7 @@ const App = () => {
             </div>
 
             {/* ANIMATED HERO SECTION */}
-            <div className="hero" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative', paddingTop: '10px' }}>
+            <div className="hero">
                 <AnimatePresence initial={false} custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-'), isSkolBeats: currentProduct?.slug?.startsWith('skol-beats-'), isInternalSpin }}>
                     <motion.div
                         key={currentProduct.id}
@@ -403,7 +403,7 @@ const App = () => {
             </div>
 
             {/* BOTTOM SHEET */}
-            <div className="bottom-sheet" style={{ display: 'flex', flexDirection: 'column' }}>
+            <div className="bottom-sheet">
                 <div className="drag-handle" />
                 <AnimatePresence mode="wait">
                     <motion.div

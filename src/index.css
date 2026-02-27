@@ -58,6 +58,47 @@ body,
   }
 }
 
+/* Browser mode adjustments (Safari toolbar compensation) */
+body.is-browser .top-nav {
+  padding-top: 10px;
+  /* Reduced further to save space */
+}
+
+.hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  padding-top: 10px;
+}
+
+body.is-browser .hero {
+  flex: 1.35;
+  /* Give more space to hero in browser mode to push sheet down */
+}
+
+.bottom-sheet {
+  background-color: var(--black);
+  border-top-left-radius: 35px;
+  border-top-right-radius: 35px;
+  padding: 12px 24px 24px;
+  position: relative;
+  z-index: 10;
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  margin-top: 0;
+  /* Reduced to align better with hero */
+  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+}
+
+body.is-browser .bottom-sheet {
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+}
+
+
 /* Background Tint Overlays */
 .tint-layer {
   position: absolute;
