@@ -84,10 +84,7 @@ body.is-browser .top-nav {
 }
 
 /* Specific heights per mode */
-body.is-pwa .hero {
-  flex: 1.0;
-  /* This was approved by user */
-}
+
 
 body.is-browser .hero {
   flex: 1.3;
