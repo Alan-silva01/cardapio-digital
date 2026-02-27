@@ -60,12 +60,14 @@ body,
 
 /* Browser mode adjustments (Safari toolbar compensation) */
 body.is-browser .top-nav {
-  padding-top: 10px;
+  padding-top: calc(12px + env(safe-area-inset-top));
+  /* Safe for notch in browser too */
 }
 
+
 .hero {
-  flex: 0.8;
-  /* Final height limit: Perfect balance for PWA */
+  flex: 0.55;
+  /* Reduced from 0.8 to raise the sheet to match Browser's level in PWA */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -75,7 +77,7 @@ body.is-browser .top-nav {
 
 body.is-browser .hero {
   flex: 1.1;
-  /* Final height limit: Perfect balance for Browser (Safari) */
+  /* Keeping the height that was already perfect in the browser */
 }
 
 .bottom-sheet {
