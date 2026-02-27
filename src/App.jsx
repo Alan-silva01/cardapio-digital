@@ -253,9 +253,17 @@ const App = () => {
     }
     const formattedPrice = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(displayPrice);
 
+    const backgrounds = [
+        'https://res.cloudinary.com/ddhlqymvf/image/upload/v1771525899/App_Bar_1080x1920_2_afm0f1.png',
+        'https://res.cloudinary.com/ddhlqymvf/image/upload/v1772196282/mapa_reino_unido_f9touo.png'
+    ];
+    // Use modulo to alternate. If it's a Gin/United Kingdom product, maybe force the map, otherwise alternate.
+    const isUK = currentProduct.origin === 'Reino Unido' || currentProduct.origin === 'Inglaterra';
+    const bgUrl = isUK ? backgrounds[1] : backgrounds[currentIndex % 2];
+
     return (
         <div className="app-container" style={{
-            background: `url('https://res.cloudinary.com/ddhlqymvf/image/upload/v1771525899/App_Bar_1080x1920_2_afm0f1.png') center/cover no-repeat`,
+            background: `url('${bgUrl}') center/cover no-repeat`,
             transition: 'background 0.5s ease-in-out'
         }}>
             {/* Background Tint Overlay */}
