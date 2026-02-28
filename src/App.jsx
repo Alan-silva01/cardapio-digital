@@ -160,6 +160,7 @@ const App = () => {
         if (currentProduct && currentProduct.variations) {
             setSelectedVariation(Object.keys(currentProduct.variations)[0]);
         }
+        setPendingQty(1); // Reset quantity when product changes
     }, [currentIndex, currentProduct]);
 
     const paginate = (newDirection) => {
@@ -609,105 +610,61 @@ const App = () => {
                     const itemTotal = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(displayPrice * pendingQty);
 
                     return (
-                        <div className="sheet-footer" style={{ padding: '8px 0 16px' }}>
-                            {/* Quantity Selector Pill - Centered */}
-                            <div style={{
-                                display: 'flex', alignItems: 'center',
-                                background: 'rgba(255,255,255,0.06)',
-                                borderRadius: '14px',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                                overflow: 'hidden',
-                                width: 'fit-content',
-                                margin: '0 auto'
-                            }}>
-                                <button
-                                    onClick={() => setPendingQty(q => Math.max(1, q - 1))}
-                                    style={{
-                                        width: '28px', height: '32px',
-                                        border: 'none',
-                                        background: 'transparent',
-                                        color: pendingQty <= 1 ? '#555' : '#D4AF37',
-                                        fontSize: '16px',
-                                        fontWeight: '700',
-                                        cursor: pendingQty <= 1 ? 'default' : 'pointer',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        transition: 'all 0.2s ease'
-                                    }}
-                                    disabled={pendingQty <= 1}
-                                >
-                                    −
-                                </button>
-                                <span style={{
-                                    width: '24px',
-                                    textAlign: 'center',
-                                    fontSize: '14px',
-                                    fontWeight: '800',
-                                    color: '#fff'
-                                }}>
-                                    {pendingQty}
-                                </span>
-                                <button
-                                    onClick={() => setPendingQty(q => q + 1)}
-                                    style={{
-                                        width: '28px', height: '32px',
-                                        border: 'none',
-                                        background: 'transparent',
-                                        color: '#D4AF37',
-                                        fontSize: '16px',
-                                        fontWeight: '700',
-                                        cursor: 'pointer',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        transition: 'all 0.2s ease'
-                                    }}
-                                >
-                                    +
-                                </button>
-                            </div>
+                        <div className="sheet-footer">
+                            <div className="super-pill">
+                                <div className="qty-controls-integrated">
+                                    <button
+                                        className={`qty-ball ${pendingQty <= 1 ? 'disabled' : ''}`}
+                                        onClick={() => setPendingQty(q => Math.max(1, q - 1))}
+                                        disabled={pendingQty <= 1}
+                                    >
+                                        −
+                                    </button>
+                                    <span className="qty-number">{pendingQty}</span>
+                                    <button
+                                        className="qty-ball"
+                                        onClick={() => setPendingQty(q => q + 1)}
+                                    >
+                                        +
+                                    </button>
+                                </div>
 
-                            {/* Add to Cart Button - Full Width Below */}
-                            <button
-                                className="add-btn"
-                                onClick={(e) => {
-                                    const addQty = pendingQty;
-                                    const btnRect = e.currentTarget.getBoundingClientRect();
-                                    const cartEl = cartIconRef.current;
-                                    if (cartEl) {
-                                        const cartRect = cartEl.getBoundingClientRect();
-                                        const id = Date.now();
-                                        setFlyingItems(prev => [...prev, {
-                                            id,
-                                            startX: btnRect.left + btnRect.width / 2,
-                                            startY: btnRect.top,
-                                            endX: cartRect.left + cartRect.width / 2,
-                                            endY: cartRect.top + cartRect.height / 2
-                                        }]);
-                                        setTimeout(() => {
+                                <button
+                                    className="add-btn"
+                                    onClick={(e) => {
+                                        const addQty = pendingQty;
+                                        const btnRect = e.currentTarget.getBoundingClientRect();
+                                        const cartEl = cartIconRef.current;
+                                        if (cartEl) {
+                                            const cartRect = cartEl.getBoundingClientRect();
+                                            const id = Date.now();
+                                            setFlyingItems(prev => [...prev, {
+                                                id,
+                                                startX: btnRect.left + btnRect.width / 2,
+                                                startY: btnRect.top,
+                                                endX: cartRect.left + cartRect.width / 2,
+                                                endY: cartRect.top + cartRect.height / 2
+                                            }]);
+                                            setTimeout(() => {
+                                                setCart(prev => ({
+                                                    ...prev,
+                                                    [currentProduct.id]: (prev[currentProduct.id] || 0) + addQty
+                                                }));
+                                                setFlyingItems(prev => prev.filter(f => f.id !== id));
+                                            }, 600);
+                                        } else {
                                             setCart(prev => ({
                                                 ...prev,
                                                 [currentProduct.id]: (prev[currentProduct.id] || 0) + addQty
                                             }));
-                                            setFlyingItems(prev => prev.filter(f => f.id !== id));
-                                        }, 600);
-                                    } else {
-                                        setCart(prev => ({
-                                            ...prev,
-                                            [currentProduct.id]: (prev[currentProduct.id] || 0) + addQty
-                                        }));
-                                    }
-                                    // Reset pending qty back to 1
-                                    setPendingQty(1);
-                                }}
-                                style={{
-                                    width: '100%', height: '44px',
-                                    margin: 0,
-                                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                    padding: '0 16px',
-                                    fontSize: '13px'
-                                }}
-                            >
-                                <span>Adicionar</span>
-                                <span style={{ fontWeight: '800' }}>{itemTotal}</span>
-                            </button>
+                                        }
+                                        setPendingQty(1);
+                                    }}
+                                >
+                                    <span style={{ fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>ADICIONAR</span>
+                                    <span style={{ fontWeight: '900', fontSize: '14px', marginLeft: '8px', whiteSpace: 'nowrap' }}>{itemTotal}</span>
+                                </button>
+                            </div>
                         </div>
                     );
                 })()}
