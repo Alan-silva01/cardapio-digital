@@ -42,7 +42,7 @@ body,
   /* Limits width on desktop */
   height: 100dvh;
   /* Use dynamic viewport height */
-  background-image: url('https://res.cloudinary.com/ddhlqymvf/image/upload/v1771525899/App_Bar_1080x1920_2_afm0f1.png');
+  background-image: url('https://res.cloudinary.com/ddhlqymvf/image/upload/f_auto,q_auto,w_450/v1771525899/App_Bar_1080x1920_2_afm0f1.png');
   background-size: cover;
   background-position: center;
   position: relative;

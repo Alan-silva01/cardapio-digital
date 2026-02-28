@@ -3,6 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, ShoppingCart, ArrowLeft, Loader2 } from 'lucide-react';
 import { supabase } from './lib/supabase';
 
+// Cloudinary URL optimizer: injects format/quality/width transforms
+const optimizeCloudinaryUrl = (url, width = 450) => {
+    if (!url || !url.includes('res.cloudinary.com')) return url;
+    return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width}/`);
+};
+
 const countryFlags = {
     'Brasil': '/flags/brasil.png',
     'Escócia': '/flags/escocia.png',
@@ -110,7 +116,7 @@ const App = () => {
                         categoryId: p.categoria_id,
                         category: categoryName,
                         description: p.descricao,
-                        imageUrl: p.imagem_url,
+                        imageUrl: optimizeCloudinaryUrl(p.imagem_url),
                         price: defaultPrice,
                         variations: varsDict,
                         flagUrl: p.pais_origem ? countryFlags[p.pais_origem] : null,
@@ -118,16 +124,21 @@ const App = () => {
                     };
                 });
 
-                // Preload all images (backgrounds and flags) in the background
-                const imagesToPreload = new Set();
+                // Preload only the first 3 products + all flags (flags are tiny)
+                const flagsToPreload = new Set();
                 enrichedProducts.forEach(p => {
-                    if (p.imageUrl) imagesToPreload.add(p.imageUrl);
-                    if (p.flagUrl) imagesToPreload.add(p.flagUrl);
+                    if (p.flagUrl) flagsToPreload.add(p.flagUrl);
                 });
-
-                imagesToPreload.forEach(url => {
+                flagsToPreload.forEach(url => {
                     const img = new Image();
                     img.src = url;
+                });
+                // Preload first 3 product images
+                enrichedProducts.slice(0, 3).forEach(p => {
+                    if (p.imageUrl) {
+                        const img = new Image();
+                        img.src = p.imageUrl;
+                    }
                 });
 
                 setProducts(enrichedProducts);
@@ -162,6 +173,22 @@ const App = () => {
         }
         setPendingQty(1); // Reset quantity when product changes
     }, [currentIndex, currentProduct]);
+
+    // Smart neighbor preloading: preload prev/next 2 product images
+    useEffect(() => {
+        if (products.length === 0) return;
+        const neighbors = [-2, -1, 1, 2];
+        neighbors.forEach(offset => {
+            let idx = currentIndex + offset;
+            if (idx < 0) idx = products.length + idx;
+            if (idx >= products.length) idx = idx - products.length;
+            const p = products[idx];
+            if (p?.imageUrl) {
+                const img = new Image();
+                img.src = p.imageUrl;
+            }
+        });
+    }, [currentIndex, products]);
 
     const paginate = (newDirection) => {
         setDirection(newDirection);
@@ -257,7 +284,7 @@ const App = () => {
 
     return (
         <div className="app-container" style={{
-            background: `url('https://res.cloudinary.com/ddhlqymvf/image/upload/v1771525899/App_Bar_1080x1920_2_afm0f1.png') center/cover no-repeat`,
+            background: `url('https://res.cloudinary.com/ddhlqymvf/image/upload/f_auto,q_auto,w_450/v1771525899/App_Bar_1080x1920_2_afm0f1.png') center/cover no-repeat`,
             transition: 'background 0.5s ease-in-out'
         }}>
             {/* Background Tint Overlay */}
