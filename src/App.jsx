@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, ShoppingCart, ArrowLeft, Loader2 } from 'lucide-react';
 import { supabase } from './lib/supabase';
@@ -52,79 +52,79 @@ const App = () => {
     const currentProduct = products.length > 0 ? products[currentIndex] : null;
 
     // Fetch Products and their Variants from Supabase
-    useEffect(() => {
-        const fetchMenu = async () => {
-            try {
-                // Fetch categories to map names to products
-                const { data: catData, error: catError } = await supabase
-                    .from('categorias')
-                    .select('id, nome, icone')
-                    .eq('ativo', true);
+    const fetchMenu = useCallback(async (isInitial = false) => {
+        try {
+            // Fetch categories to map names to products
+            const { data: catData, error: catError } = await supabase
+                .from('categorias')
+                .select('id, nome, icone')
+                .eq('ativo', true);
 
-                if (catError) throw catError;
+            if (catError) throw catError;
 
-                const catMap = catData.reduce((acc, cat) => {
-                    acc[cat.id] = cat.nome;
-                    return acc;
-                }, {});
+            const catMap = catData.reduce((acc, cat) => {
+                acc[cat.id] = cat.nome;
+                return acc;
+            }, {});
 
-                // Fetch products that are available
-                const { data: prodData, error: prodError } = await supabase
-                    .from('produtos')
-                    .select('*')
-                    .eq('disponivel', true)
-                    .order('ordem', { ascending: true });
+            // Fetch products that are available
+            const { data: prodData, error: prodError } = await supabase
+                .from('produtos')
+                .select('*')
+                .eq('disponivel', true)
+                .order('ordem', { ascending: true });
 
-                if (prodError) throw prodError;
+            if (prodError) throw prodError;
 
-                // Fetch active variants
-                const { data: varData, error: varError } = await supabase
-                    .from('variacoes_produto')
-                    .select('*')
-                    .eq('ativo', true)
-                    .order('ordem', { ascending: true });
+            // Fetch active variants
+            const { data: varData, error: varError } = await supabase
+                .from('variacoes_produto')
+                .select('*')
+                .eq('ativo', true)
+                .order('ordem', { ascending: true });
 
-                if (varError) throw varError;
+            if (varError) throw varError;
 
-                // Reconstruct the data shape expected by the frontend
-                const enrichedProducts = prodData.map(p => {
-                    const myVariants = varData.filter(v => v.produto_id === p.id);
+            // Reconstruct the data shape expected by the frontend
+            const enrichedProducts = prodData.map(p => {
+                const myVariants = varData.filter(v => v.produto_id === p.id);
 
-                    // Organize variants dict
-                    let varsDict = null;
-                    let defaultPrice = 0;
+                // Organize variants dict
+                let varsDict = null;
+                let defaultPrice = 0;
 
-                    if (myVariants.length > 0) {
-                        varsDict = {};
-                        myVariants.forEach(v => {
-                            varsDict[v.nome] = {
-                                id: v.id,
-                                price: v.preco,
-                                stock: v.estoque
-                            };
-                        });
-                        defaultPrice = myVariants[0].preco;
-                    }
+                if (myVariants.length > 0) {
+                    varsDict = {};
+                    myVariants.forEach(v => {
+                        varsDict[v.nome] = {
+                            id: v.id,
+                            price: v.preco,
+                            stock: v.estoque
+                        };
+                    });
+                    defaultPrice = myVariants[0].preco;
+                }
 
-                    // Visual properties linked by slug
-                    const categoryName = catMap[p.categoria_id] || 'Outros';
+                // Visual properties linked by slug
+                const categoryName = catMap[p.categoria_id] || 'Outros';
 
-                    return {
-                        id: p.id,
-                        slug: p.slug,
-                        name: p.nome,
-                        categoryId: p.categoria_id,
-                        category: categoryName,
-                        description: p.descricao,
-                        imageUrl: optimizeCloudinaryUrl(p.imagem_url),
-                        price: defaultPrice,
-                        variations: varsDict,
-                        flagUrl: p.pais_origem ? countryFlags[p.pais_origem] : null,
-                        paisOrigem: p.pais_origem || null,
-                    };
-                });
+                return {
+                    id: p.id,
+                    slug: p.slug,
+                    name: p.nome,
+                    categoryId: p.categoria_id,
+                    category: categoryName,
+                    description: p.descricao,
+                    imageUrl: optimizeCloudinaryUrl(p.imagem_url),
+                    price: defaultPrice,
+                    variations: varsDict,
+                    flagUrl: p.pais_origem ? countryFlags[p.pais_origem] : null,
+                    paisOrigem: p.pais_origem || null,
+                };
+            });
 
-                // Preload only the first 3 products + all flags (flags are tiny)
+            // Preload only on initial load
+            if (isInitial) {
                 const flagsToPreload = new Set();
                 enrichedProducts.forEach(p => {
                     if (p.flagUrl) flagsToPreload.add(p.flagUrl);
@@ -133,24 +133,40 @@ const App = () => {
                     const img = new Image();
                     img.src = url;
                 });
-                // Preload first 3 product images
                 enrichedProducts.slice(0, 3).forEach(p => {
                     if (p.imageUrl) {
                         const img = new Image();
                         img.src = p.imageUrl;
                     }
                 });
-
-                setProducts(enrichedProducts);
-            } catch (error) {
-                console.error('Error fetching menu from Supabase:', error);
-            } finally {
-                setLoading(false);
             }
-        };
 
-        fetchMenu();
+            setProducts(enrichedProducts);
+        } catch (error) {
+            console.error('Error fetching menu from Supabase:', error);
+        } finally {
+            if (isInitial) setLoading(false);
+        }
     }, []);
+
+    // Initial fetch
+    useEffect(() => {
+        fetchMenu(true);
+    }, [fetchMenu]);
+
+    // Realtime subscriptions: auto-refresh on any DB change
+    useEffect(() => {
+        const channel = supabase
+            .channel('menu-changes')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'produtos' }, () => fetchMenu())
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'variacoes_produto' }, () => fetchMenu())
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'categorias' }, () => fetchMenu())
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [fetchMenu]);
     useEffect(() => {
         const checkMode = () => {
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
