@@ -142,7 +142,7 @@ body.is-browser .hero {
 }
 
 body.is-browser .sheet-footer {
-  padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 body.is-pwa .sheet-footer {
