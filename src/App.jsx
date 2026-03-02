@@ -596,7 +596,7 @@ const App = () => {
                             </div>
 
                             <p className="description" style={{
-                                marginBottom: '20px',
+                                marginBottom: '10px',
                                 fontSize: '12px',
                                 color: '#ccc',
                                 textAlign: 'center',
@@ -605,12 +605,10 @@ const App = () => {
                                 {currentProduct.description}
                             </p>
 
-                            <div style={{ flex: 1 }} />
-
                             {/* MULTI-FLAVOR / VARIATION SELECTION (HORIZONTAL SCROLL STYLE) */}
                             {((currentProduct.variations && Object.keys(currentProduct.variations).length > 1) ||
                                 (currentProduct.slug && (currentProduct.slug.startsWith('ice-') || currentProduct.slug.startsWith('skol-beats-')))) && (
-                                    <div style={{ marginTop: '10px', marginBottom: '20px', width: '100%' }}>
+                                    <div style={{ marginTop: '0px', marginBottom: '20px', width: '100%' }}>
                                         <div style={{
                                             textAlign: 'center',
                                             fontSize: '9px',
