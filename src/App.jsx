@@ -1,12 +1,40 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, ShoppingCart, ArrowLeft, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ShoppingCart, ArrowLeft, Loader2, Heart, Users, Droplet } from 'lucide-react';
 import { supabase } from './lib/supabase';
 
 // Cloudinary URL optimizer: injects format/quality/width transforms
 const optimizeCloudinaryUrl = (url, width = 450) => {
     if (!url || !url.includes('res.cloudinary.com')) return url;
     return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width}/`);
+};
+
+// HEART BURST PARTICLE COMPONENT
+const HeartParticle = ({ x, y, onComplete }) => {
+    return (
+        <motion.div
+            initial={{ opacity: 1, scale: 0, x: 0, y: 0 }}
+            animate={{
+                opacity: 0,
+                scale: [0, 1.5, 1],
+                x: (Math.random() - 0.5) * 150,
+                y: -Math.random() * 150 - 50,
+                rotate: (Math.random() - 0.5) * 45
+            }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+            onAnimationComplete={onComplete}
+            style={{
+                position: 'fixed',
+                left: x,
+                top: y,
+                zIndex: 9999,
+                pointerEvents: 'none',
+                color: '#444'
+            }}
+        >
+            <Heart size={16} fill="#444" />
+        </motion.div>
+    );
 };
 
 const countryFlags = {
@@ -45,6 +73,7 @@ const App = () => {
     const [cart, setCart] = useState({}); // { productId: quantity }
     const [pendingQty, setPendingQty] = useState(1); // local qty before adding to cart
     const [flyingItems, setFlyingItems] = useState([]); // for fly-to-cart animation
+    const [heartParticles, setHeartParticles] = useState([]); // for heart burst effect
     const cartIconRef = useRef(null);
 
     const totalCartItems = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
@@ -120,6 +149,11 @@ const App = () => {
                     variations: varsDict,
                     flagUrl: p.pais_origem ? countryFlags[p.pais_origem] : null,
                     paisOrigem: p.pais_origem || null,
+                    rating: p.rating || 5.0,
+                    volume_ml: p.volume_ml,
+                    teor_alcolico: p.teor_alcolico,
+                    serve_pessoas: p.serve_pessoas,
+                    curtidas: p.curtidas || 0
                 };
             });
 
@@ -188,7 +222,7 @@ const App = () => {
             setSelectedVariation(Object.keys(currentProduct.variations)[0]);
         }
         setPendingQty(1); // Reset quantity when product changes
-    }, [currentIndex, currentProduct]);
+    }, [currentIndex, currentProduct?.id]);
 
     // Smart neighbor preloading: preload prev/next 2 product images
     useEffect(() => {
@@ -448,12 +482,48 @@ const App = () => {
             </div>
 
             {/* BOTTOM SHEET */}
-            <div className="bottom-sheet">
+            <div className="bottom-sheet" style={{ position: 'relative' }}>
                 <div className="drag-handle" />
+
+                {/* FIXED HEART ON THE SIDE */}
+                <div style={{ position: 'absolute', top: '45px', right: '15px', zIndex: 100 }}>
+                    <button
+                        onClick={async (e) => {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const centerX = rect.left + rect.width / 2;
+                            const centerY = rect.top + rect.height / 2;
+
+                            // Create 6-8 particles
+                            const newParticles = Array.from({ length: 8 }).map(() => ({
+                                id: Math.random(),
+                                x: centerX,
+                                y: centerY
+                            }));
+
+                            setHeartParticles(prev => [...prev, ...newParticles]);
+
+                            try {
+                                await supabase.rpc('increment_likes', { product_id: currentProduct.id });
+                                fetchMenu();
+                            } catch (err) {
+                                console.error("Error liking product:", err);
+                            }
+                        }}
+                        style={{ background: 'none', border: 'none', padding: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                    >
+                        <Heart
+                            size={22}
+                            color="#444"
+                            fill={currentProduct.curtidas > 0 ? "#444" : "transparent"}
+                            style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}
+                        />
+                    </button>
+                </div>
+
                 <div className="sheet-content">
                     <AnimatePresence mode="popLayout">
                         <motion.div
-                            key={currentProduct.id + '-sheet'}
+                            key={currentProduct.id}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
@@ -462,17 +532,9 @@ const App = () => {
                         >
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <div className="rating" style={{ display: 'flex', gap: '2px' }}>
+                                    <div className="rating" style={{ display: 'flex', gap: '2px', alignItems: 'center' }}>
                                         {[1, 2, 3, 4, 5].map((star) => {
-                                            // Dynamic rating based on variation
-                                            let effectiveRating = currentProduct.rating || 5;
-                                            if (currentProduct.variations) {
-                                                if (selectedVariation === 'nacional') effectiveRating = 4;
-                                                else if (selectedVariation === 'importado') effectiveRating = 5;
-                                                else if (selectedVariation === 'com álcool') effectiveRating = 5;
-                                                else if (selectedVariation === 'sem álcool') effectiveRating = 4.5;
-                                            }
-
+                                            const effectiveRating = currentProduct.rating || 5;
                                             const isFull = star <= effectiveRating;
                                             const isHalf = !isFull && star - 0.5 <= effectiveRating;
 
@@ -481,7 +543,7 @@ const App = () => {
                                                     key={star}
                                                     className={`star ${!isFull && !isHalf ? 'inactive' : ''}`}
                                                     style={{
-                                                        fontSize: '12px',
+                                                        fontSize: '11px',
                                                         position: 'relative',
                                                         display: 'inline-block',
                                                         color: isFull ? '#D4AF37' : (isHalf ? 'transparent' : '#333'),
@@ -494,156 +556,169 @@ const App = () => {
                                                 </span>
                                             );
                                         })}
-                                    </div>
-                                    <div className="category-label" style={{ marginBottom: 0 }}>
-                                        {currentProduct.category.replace(/ unidade/gi, '')}
+                                        <div className="category-label" style={{ marginBottom: 0, marginLeft: '6px', fontSize: '9px', opacity: 0.6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                            {currentProduct.category}
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="price-tag" style={{ border: '1px solid rgba(255,255,255,0.1)', padding: '4px 10px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)' }}>
-                                    {formattedPrice}
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                                    <div className="price-tag" style={{ border: '1px solid rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', fontSize: '14px', fontWeight: '800' }}>
+                                        {formattedPrice}
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="info-header" style={{ marginBottom: '10px', textAlign: 'center' }}>
-                                <div className="product-name" style={{ fontSize: '22px' }}>
-                                    {currentProduct.name.replace(/ unidade/gi, '')}
+                            <div className="info-header" style={{ marginBottom: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
+                                <div className="product-name" style={{ fontSize: '20px' }}>
+                                    {currentProduct.name}
                                 </div>
                             </div>
 
-                            {currentProduct.size && (
-                                <div className="specs-row" style={{ marginBottom: '10px' }}>
-                                    <div className="ingredients-line" style={{
-                                        color: '#eee',
-                                        fontSize: '11px',
-                                        fontWeight: 500,
-                                        background: 'rgba(255,255,255,0.05)',
-                                        padding: '4px 8px',
-                                        borderRadius: '4px',
-                                        width: '100%',
-                                        textAlign: 'center'
-                                    }}>
-                                        {currentProduct.size}
+                            {/* ELITE METADATA LINE */}
+                            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '10px', opacity: 0.8, alignItems: 'center' }}>
+                                {currentProduct.volume_ml && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '10px', color: '#A0A0A0' }}>
+                                        <Droplet size={10} /> {currentProduct.volume_ml >= 1000 ? `${currentProduct.volume_ml / 1000}L` : `${currentProduct.volume_ml}ml`}
                                     </div>
-                                </div>
-                            )}
+                                )}
+                                {currentProduct.volume_ml && currentProduct.teor_alcolico > 0 && <span style={{ color: '#A0A0A0', fontSize: '10px' }}>•</span>}
+                                {currentProduct.teor_alcolico > 0 && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '10px', color: '#A0A0A0' }}>
+                                        Teor Alcoólico: {currentProduct.teor_alcolico}% vol
+                                    </div>
+                                )}
+                                {((currentProduct.volume_ml || currentProduct.teor_alcolico > 0) && currentProduct.serve_pessoas) && <span style={{ color: '#A0A0A0', fontSize: '10px' }}>•</span>}
+                                {currentProduct.serve_pessoas && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '10px', color: '#A0A0A0' }}>
+                                        <Users size={10} /> Serve {currentProduct.serve_pessoas} {currentProduct.serve_pessoas > 1 ? 'pes.' : 'pes.'}
+                                    </div>
+                                )}
+                            </div>
 
-                            <p className="description" style={{ marginBottom: '15px' }}>
+                            <p className="description" style={{
+                                marginBottom: '20px',
+                                fontSize: '12px',
+                                color: '#ccc',
+                                textAlign: 'center',
+                                lineHeight: '1.4'
+                            }}>
                                 {currentProduct.description}
                             </p>
 
-                            {/* FLAVOR SELECTION (CUSTOM FOR ICE & SKOL BEATS) */}
-                            {(currentProduct.slug && (currentProduct.slug.startsWith('ice-') || currentProduct.slug.startsWith('skol-beats-'))) ? (
-                                <div style={{ marginBottom: '20px' }}>
-                                    <div style={{ fontSize: '11px', fontWeight: '800', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px', textAlign: 'center' }}>
-                                        ESCOLHA O SABOR
+                            <div style={{ flex: 1 }} />
+
+                            {/* MULTI-FLAVOR / VARIATION SELECTION (HORIZONTAL SCROLL STYLE) */}
+                            {((currentProduct.variations && Object.keys(currentProduct.variations).length > 1) ||
+                                (currentProduct.slug && (currentProduct.slug.startsWith('ice-') || currentProduct.slug.startsWith('skol-beats-')))) && (
+                                    <div style={{ marginTop: '10px', marginBottom: '20px', width: '100%' }}>
+                                        <div style={{
+                                            textAlign: 'center',
+                                            fontSize: '9px',
+                                            fontWeight: '800',
+                                            color: '#D4AF37',
+                                            letterSpacing: '1.2px',
+                                            textTransform: 'uppercase',
+                                            marginBottom: '10px'
+                                        }}>
+                                            Escolha sua Opção
+                                        </div>
+                                        <div
+                                            className="flavors-grid"
+                                            style={{
+                                                display: 'flex',
+                                                flexWrap: 'wrap',
+                                                justifyContent: 'center',
+                                                gap: '8px',
+                                                padding: '0 5px'
+                                            }}
+                                        >
+
+                                            {/* OPTION 1: SLUG-BASED (ICES & SKOL BEATS) */}
+                                            {currentProduct.slug && (currentProduct.slug.startsWith('ice-') || currentProduct.slug.startsWith('skol-beats-')) ? (
+                                                (currentProduct.slug.startsWith('ice-')
+                                                    ? ['Limão', 'Balada', 'Fruit Mix', 'Kiwi', 'Maracujá', 'Tangerina']
+                                                    : ['Senses', 'Gin e Tônica', 'Tropical', 'Red Mix', 'Green Mix']
+                                                ).map((flavor, flavorIdx) => {
+                                                    const baseSlug = currentProduct.slug.startsWith('ice-') ? 'ice' : 'skol-beats';
+                                                    const flavorsArray = currentProduct.slug.startsWith('ice-')
+                                                        ? ['Limão', 'Balada', 'Fruit Mix', 'Kiwi', 'Maracujá', 'Tangerina']
+                                                        : ['Senses', 'Gin e Tônica', 'Tropical', 'Red Mix', 'Green Mix'];
+
+                                                    let cleanFlavor = flavor.toLowerCase().replace(/ã/g, 'a').replace(/á/g, 'a').replace(/ô/g, 'o').replace(/ /g, '-');
+                                                    if (flavor === 'Gin e Tônica') cleanFlavor = 'gin-tonica';
+
+                                                    const flavorSlug = `${baseSlug}-${cleanFlavor}`;
+                                                    const isSelected = currentProduct.slug === flavorSlug;
+
+                                                    const currentFlavorIdx = flavorsArray.findIndex(f => {
+                                                        let cf = f.toLowerCase().replace(/ã/g, 'a').replace(/á/g, 'a').replace(/ô/g, 'o').replace(/ /g, '-');
+                                                        if (f === 'Gin e Tônica') cf = 'gin-tonica';
+                                                        return `${baseSlug}-${cf}` === currentProduct.slug;
+                                                    });
+
+                                                    return (
+                                                        <button
+                                                            key={flavor}
+                                                            onClick={() => {
+                                                                const targetIndex = products.findIndex(p => p.slug === flavorSlug);
+                                                                if (targetIndex !== -1 && targetIndex !== currentIndex) {
+                                                                    const spinDirection = flavorIdx > currentFlavorIdx ? 1 : -1;
+                                                                    setDirection(spinDirection);
+                                                                    setIsInternalSpin(true);
+                                                                    setTimeout(() => setCurrentIndex(targetIndex), 0);
+                                                                }
+                                                            }}
+                                                            style={{
+                                                                padding: '8px 14px',
+                                                                borderRadius: '18px',
+                                                                border: `1.1px solid ${isSelected ? '#D4AF37' : 'rgba(255,255,255,0.1)'}`,
+                                                                background: isSelected ? 'rgba(212, 175, 55, 0.15)' : 'rgba(255,255,255,0.03)',
+                                                                color: isSelected ? '#D4AF37' : '#999',
+                                                                fontSize: '11px',
+                                                                fontWeight: '700',
+                                                                textTransform: 'uppercase',
+                                                                letterSpacing: '0.5px',
+                                                                transition: 'all 0.2s ease',
+                                                                cursor: 'pointer',
+                                                                boxShadow: isSelected ? '0 4px 12px rgba(212, 175, 55, 0.15)' : 'none'
+                                                            }}
+                                                        >
+                                                            {flavor}
+                                                        </button>
+                                                    );
+                                                })
+                                            ) : (
+                                                /* OPTION 2: VARIATIONS (OTHER PRODUCTS) */
+                                                Object.keys(currentProduct.variations).map((variant) => {
+                                                    const isSelected = selectedVariation === variant;
+                                                    return (
+                                                        <button
+                                                            key={variant}
+                                                            onClick={() => setSelectedVariation(variant)}
+                                                            style={{
+                                                                padding: '8px 14px',
+                                                                borderRadius: '18px',
+                                                                border: `1.1px solid ${isSelected ? '#D4AF37' : 'rgba(255,255,255,0.1)'}`,
+                                                                background: isSelected ? 'rgba(212, 175, 55, 0.15)' : 'rgba(255,255,255,0.03)',
+                                                                color: isSelected ? '#D4AF37' : '#999',
+                                                                fontSize: '11px',
+                                                                fontWeight: '700',
+                                                                textTransform: 'uppercase',
+                                                                letterSpacing: '0.5px',
+                                                                transition: 'all 0.2s ease',
+                                                                cursor: 'pointer',
+                                                                whiteSpace: 'nowrap',
+                                                                boxShadow: isSelected ? '0 4px 12px rgba(212, 175, 55, 0.15)' : 'none'
+                                                            }}
+                                                        >
+                                                            {variant}
+                                                        </button>
+                                                    );
+                                                })
+                                            )}
+                                        </div>
                                     </div>
-                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                                        {(currentProduct.slug.startsWith('ice-')
-                                            ? ['Limão', 'Balada', 'Fruit Mix', 'Kiwi', 'Maracujá', 'Tangerina']
-                                            : ['Senses', 'Gin e Tônica', 'Tropical', 'Red Mix', 'Green Mix']
-                                        ).map((flavor, flavorIdx) => {
-                                            const baseSlug = currentProduct.slug.startsWith('ice-') ? 'ice' : 'skol-beats';
-                                            const flavorsArray = currentProduct.slug.startsWith('ice-')
-                                                ? ['Limão', 'Balada', 'Fruit Mix', 'Kiwi', 'Maracujá', 'Tangerina']
-                                                : ['Senses', 'Gin e Tônica', 'Tropical', 'Red Mix', 'Green Mix'];
-
-                                            // Specific handling for difficult accents/spaces
-                                            let cleanFlavor = flavor.toLowerCase().replace(/ã/g, 'a').replace(/á/g, 'a').replace(/ô/g, 'o').replace(/ /g, '-');
-                                            if (flavor === 'Gin e Tônica') {
-                                                cleanFlavor = 'gin-tonica'; // Hard override to match DB
-                                            }
-
-                                            const flavorSlug = `${baseSlug}-${cleanFlavor}`;
-                                            const isSelected = currentProduct.slug === flavorSlug;
-
-                                            // Determine which flavor is currently active (by button index)
-                                            const currentFlavorSlugClean = currentProduct.slug;
-                                            const currentFlavorIdx = flavorsArray.findIndex(f => {
-                                                let cf = f.toLowerCase().replace(/ã/g, 'a').replace(/á/g, 'a').replace(/ô/g, 'o').replace(/ /g, '-');
-                                                if (f === 'Gin e Tônica') cf = 'gin-tonica';
-                                                return `${baseSlug}-${cf}` === currentFlavorSlugClean;
-                                            });
-
-                                            return (
-                                                <button
-                                                    key={flavor}
-                                                    onClick={() => {
-                                                        const targetIndex = products.findIndex(p => p.slug === flavorSlug);
-                                                        if (targetIndex !== -1 && targetIndex !== currentIndex) {
-                                                            // Direction based on BUTTON position, not DB position
-                                                            const spinDirection = flavorIdx > currentFlavorIdx ? 1 : -1;
-                                                            setDirection(spinDirection);
-                                                            setIsInternalSpin(true);
-                                                            setTimeout(() => setCurrentIndex(targetIndex), 0);
-                                                        }
-                                                    }}
-                                                    style={{
-                                                        padding: '8px 12px',
-                                                        borderRadius: '20px',
-                                                        border: `1.5px solid ${isSelected ? '#D4AF37' : '#333'}`,
-                                                        background: isSelected ? 'rgba(212, 175, 55, 0.1)' : 'transparent',
-                                                        color: isSelected ? '#D4AF37' : '#888',
-                                                        fontSize: '11px',
-                                                        fontWeight: '800',
-                                                        textTransform: 'uppercase',
-                                                        letterSpacing: '1px',
-                                                        transition: 'all 0.3s ease',
-                                                        cursor: 'pointer'
-                                                    }}
-                                                >
-                                                    {flavor}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            ) : (
-                                /* NORMAL VARIATION SELECTION (CHECKBOX STYLE) */
-                                currentProduct.variations && (
-                                    <div style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
-                                        {Object.keys(currentProduct.variations).map((variant) => (
-                                            <button
-                                                key={variant}
-                                                onClick={() => setSelectedVariation(variant)}
-                                                style={{
-                                                    flex: 1,
-                                                    padding: '10px',
-                                                    borderRadius: '12px',
-                                                    border: `1.5px solid ${selectedVariation === variant ? '#D4AF37' : '#333'}`,
-                                                    background: selectedVariation === variant ? 'rgba(212, 175, 55, 0.1)' : 'transparent',
-                                                    color: selectedVariation === variant ? '#D4AF37' : '#888',
-                                                    fontSize: '11px',
-                                                    fontWeight: '800',
-                                                    textTransform: 'uppercase',
-                                                    letterSpacing: '1px',
-                                                    transition: 'all 0.3s ease',
-                                                    cursor: 'pointer',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    gap: '8px'
-                                                }}
-                                            >
-                                                <div style={{
-                                                    width: '14px',
-                                                    height: '14px',
-                                                    borderRadius: '4px',
-                                                    border: `1px solid ${selectedVariation === variant ? '#D4AF37' : '#444'}`,
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    background: selectedVariation === variant ? '#D4AF37' : 'transparent'
-                                                }}>
-                                                    {selectedVariation === variant && (
-                                                        <div style={{ width: '6px', height: '6px', backgroundColor: '#000', borderRadius: '1px' }} />
-                                                    )}
-                                                </div>
-                                                {variant}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )
-                            )}
+                                )}
                         </motion.div>
                     </AnimatePresence>
                 </div>
@@ -732,6 +807,16 @@ const App = () => {
                         '--end-x': `${item.endX - item.startX}px`,
                         '--end-y': `${item.endY - item.startY}px`
                     }}
+                />
+            ))}
+
+            {/* HEART BURST PARTICLES */}
+            {heartParticles.map(particle => (
+                <HeartParticle
+                    key={particle.id}
+                    x={particle.x}
+                    y={particle.y}
+                    onComplete={() => setHeartParticles(prev => prev.filter(p => p.id !== particle.id))}
                 />
             ))}
         </div>
