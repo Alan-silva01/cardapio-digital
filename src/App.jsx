@@ -120,10 +120,12 @@ const App = () => {
                 .from('tipos_vinho')
                 .select('tipo, imagem_taca_url');
 
+            let glassMapToPreload = null;
             if (!wineError && wineData) {
                 const glassMap = {};
-                wineData.forEach(w => { glassMap[w.tipo] = w.imagem_taca_url; });
+                wineData.forEach(w => { glassMap[w.tipo] = optimizeCloudinaryUrl(w.imagem_taca_url); });
                 setWineGlassImages(glassMap);
+                glassMapToPreload = glassMap;
             }
 
             // Reconstruct the data shape expected by the frontend
@@ -187,6 +189,16 @@ const App = () => {
                         img.src = p.imageUrl;
                     }
                 });
+
+                // Preload wine glass images to ensure they load fast like everything else
+                if (glassMapToPreload) {
+                    Object.values(glassMapToPreload).forEach(url => {
+                        if (url) {
+                            const img = new Image();
+                            img.src = url;
+                        }
+                    });
+                }
             }
 
             setProducts(enrichedProducts);
@@ -484,7 +496,12 @@ const App = () => {
                             <img
                                 src={displayImage}
                                 alt={currentProduct.name}
-                                style={{ maxHeight: '90%', width: 'auto', objectFit: 'contain', zIndex: 2 }}
+                                style={{
+                                    maxHeight: '90%',
+                                    width: 'auto',
+                                    objectFit: 'contain',
+                                    zIndex: 2
+                                }}
                             />
 
                             {/* Real ground shadow */}
@@ -510,7 +527,7 @@ const App = () => {
                 <div className="drag-handle" />
 
                 {/* FIXED HEART ON THE SIDE */}
-                <div style={{ position: 'absolute', top: '45px', right: '15px', zIndex: 100 }}>
+                <div style={{ position: 'absolute', top: '65px', right: '15px', zIndex: 100 }}>
                     <button
                         onClick={async (e) => {
                             const rect = e.currentTarget.getBoundingClientRect();
@@ -554,8 +571,9 @@ const App = () => {
                             transition={{ duration: 0.2 }}
                             style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
                         >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', width: '100%', marginTop: '4px', position: 'relative' }}>
+                                {/* Left Container: Rating & Category */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', zIndex: 1 }}>
                                     <div className="rating" style={{ display: 'flex', gap: '2px', alignItems: 'center' }}>
                                         {[1, 2, 3, 4, 5].map((star) => {
                                             const effectiveRating = currentProduct.rating || 5;
@@ -585,15 +603,26 @@ const App = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+
+                                {/* Center Container: Logo (Absolutely positioned to guarantee dead center) */}
+                                <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 0 }}>
+                                    <img
+                                        src="https://res.cloudinary.com/ddhlqymvf/image/upload/v1772656206/Logotipo_2_odktzy.png"
+                                        alt="Logo Restaurante"
+                                        style={{ width: '30px', height: 'auto', opacity: 0.85 }}
+                                    />
+                                </div>
+
+                                {/* Right Container: Price */}
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px', zIndex: 1 }}>
                                     <div className="price-tag" style={{ border: '1px solid rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', fontSize: '14px', fontWeight: '800' }}>
                                         {formattedPrice}
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="info-header" style={{ marginBottom: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
-                                <div className="product-name" style={{ fontSize: '20px' }}>
+                            <div className="info-header" style={{ marginBottom: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
+                                <div className="product-name" style={{ fontSize: '20px', textAlign: 'center' }}>
                                     {currentProduct.name}
                                 </div>
                             </div>
