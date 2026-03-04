@@ -74,6 +74,7 @@ const App = () => {
     const [pendingQty, setPendingQty] = useState(1); // local qty before adding to cart
     const [flyingItems, setFlyingItems] = useState([]); // for fly-to-cart animation
     const [heartParticles, setHeartParticles] = useState([]); // for heart burst effect
+    const [wineGlassImages, setWineGlassImages] = useState({}); // { tinto: url, branco: url, rose: url }
     const cartIconRef = useRef(null);
 
     const totalCartItems = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
@@ -114,6 +115,17 @@ const App = () => {
 
             if (varError) throw varError;
 
+            // Fetch wine glass images
+            const { data: wineData, error: wineError } = await supabase
+                .from('tipos_vinho')
+                .select('tipo, imagem_taca_url');
+
+            if (!wineError && wineData) {
+                const glassMap = {};
+                wineData.forEach(w => { glassMap[w.tipo] = w.imagem_taca_url; });
+                setWineGlassImages(glassMap);
+            }
+
             // Reconstruct the data shape expected by the frontend
             const enrichedProducts = prodData.map(p => {
                 const myVariants = varData.filter(v => v.produto_id === p.id);
@@ -153,7 +165,9 @@ const App = () => {
                     volume_ml: p.volume_ml,
                     teor_alcolico: p.teor_alcolico,
                     serve_pessoas: p.serve_pessoas,
-                    curtidas: p.curtidas || 0
+                    curtidas: p.curtidas || 0,
+                    tipo_vinho: p.tipo_vinho || null,
+                    ml_taca: p.ml_taca || 200
                 };
             });
 
@@ -195,6 +209,7 @@ const App = () => {
             .on('postgres_changes', { event: '*', schema: 'public', table: 'produtos' }, () => fetchMenu())
             .on('postgres_changes', { event: '*', schema: 'public', table: 'variacoes_produto' }, () => fetchMenu())
             .on('postgres_changes', { event: '*', schema: 'public', table: 'categorias' }, () => fetchMenu())
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'tipos_vinho' }, () => fetchMenu())
             .subscribe();
 
         return () => {
@@ -280,8 +295,8 @@ const App = () => {
     }, [currentIndex]);
 
     const variants = {
-        enter: ({ direction, isFood, isIce, isSkolBeats, isInternalSpin }) => {
-            const isCircular = isFood || ((isIce || isSkolBeats) && isInternalSpin);
+        enter: ({ direction, isFood, isIce, isSkolBeats, isInternalSpin, isWineSpin }) => {
+            const isCircular = isFood || ((isIce || isSkolBeats) && isInternalSpin) || isWineSpin;
             return {
                 x: direction > 0 ? (isCircular ? 150 : 50) : (isCircular ? -150 : -50),
                 y: isCircular ? 50 : 0,
@@ -296,8 +311,8 @@ const App = () => {
             rotate: 0,
             opacity: 1,
         },
-        exit: ({ direction, isFood, isIce, isSkolBeats, isInternalSpin }) => {
-            const isCircular = isFood || ((isIce || isSkolBeats) && isInternalSpin);
+        exit: ({ direction, isFood, isIce, isSkolBeats, isInternalSpin, isWineSpin }) => {
+            const isCircular = isFood || ((isIce || isSkolBeats) && isInternalSpin) || isWineSpin;
             return {
                 zIndex: 0,
                 x: direction < 0 ? (isCircular ? 150 : 50) : (isCircular ? -150 : -50),
@@ -330,6 +345,15 @@ const App = () => {
         displayPrice = currentProduct.variations[selectedVariation].price;
     }
     const formattedPrice = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(displayPrice);
+
+    const isTaca = selectedVariation && (selectedVariation.toLowerCase().includes('taça') || selectedVariation.toLowerCase().includes('taca'));
+    let displayImage = currentProduct.imageUrl;
+    if (currentProduct.tipo_vinho && isTaca && wineGlassImages[currentProduct.tipo_vinho]) {
+        displayImage = wineGlassImages[currentProduct.tipo_vinho];
+    }
+
+    // Swap volume: show ml_taca when Taça is selected
+    const displayVolume = (currentProduct.tipo_vinho && isTaca) ? currentProduct.ml_taca : currentProduct.volume_ml;
 
 
     return (
@@ -372,10 +396,10 @@ const App = () => {
 
             {/* ANIMATED HERO SECTION */}
             <div className="hero">
-                <AnimatePresence initial={false} custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-'), isSkolBeats: currentProduct?.slug?.startsWith('skol-beats-'), isInternalSpin }}>
+                <AnimatePresence initial={false} custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-'), isSkolBeats: currentProduct?.slug?.startsWith('skol-beats-'), isInternalSpin, isWineSpin: isInternalSpin && currentProduct?.category?.toLowerCase().includes('vinho') }}>
                     <motion.div
-                        key={currentProduct.id}
-                        custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-'), isSkolBeats: currentProduct?.slug?.startsWith('skol-beats-'), isInternalSpin }}
+                        key={`${currentProduct.id}-${selectedVariation || ''}`}
+                        custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-'), isSkolBeats: currentProduct?.slug?.startsWith('skol-beats-'), isInternalSpin, isWineSpin: isInternalSpin && currentProduct?.category?.toLowerCase().includes('vinho') }}
                         variants={variants}
                         initial="enter"
                         animate="center"
@@ -458,7 +482,7 @@ const App = () => {
                             }} />
 
                             <img
-                                src={currentProduct.imageUrl}
+                                src={displayImage}
                                 alt={currentProduct.name}
                                 style={{ maxHeight: '90%', width: 'auto', objectFit: 'contain', zIndex: 2 }}
                             />
@@ -575,19 +599,25 @@ const App = () => {
                             </div>
 
                             {/* ELITE METADATA LINE */}
-                            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '10px', opacity: 0.8, alignItems: 'center' }}>
-                                {currentProduct.volume_ml && (
+                            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '10px', opacity: 0.8, alignItems: 'center', flexWrap: 'wrap' }}>
+                                {currentProduct.tipo_vinho && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '10px', color: '#A0A0A0' }}>
-                                        <Droplet size={10} /> {currentProduct.volume_ml >= 1000 ? `${currentProduct.volume_ml / 1000}L` : `${currentProduct.volume_ml}ml`}
+                                        <Droplet size={10} fill={currentProduct.tipo_vinho === 'tinto' ? '#722F37' : currentProduct.tipo_vinho === 'rose' ? '#DB7093' : '#F5F5F5'} color={currentProduct.tipo_vinho === 'tinto' ? '#722F37' : currentProduct.tipo_vinho === 'rose' ? '#DB7093' : '#F5F5F5'} /> {currentProduct.tipo_vinho === 'rose' ? 'Rosé' : currentProduct.tipo_vinho === 'tinto' ? 'Tinto' : 'Branco'}
                                     </div>
                                 )}
-                                {currentProduct.volume_ml && currentProduct.teor_alcolico > 0 && <span style={{ color: '#A0A0A0', fontSize: '10px' }}>•</span>}
+                                {currentProduct.tipo_vinho && (displayVolume || currentProduct.teor_alcolico > 0) && <span style={{ color: '#A0A0A0', fontSize: '10px' }}>•</span>}
+                                {displayVolume && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '10px', color: '#A0A0A0' }}>
+                                        <Droplet size={10} /> {displayVolume >= 1000 ? `${displayVolume / 1000}L` : `${displayVolume}ml`}
+                                    </div>
+                                )}
+                                {displayVolume && currentProduct.teor_alcolico > 0 && <span style={{ color: '#A0A0A0', fontSize: '10px' }}>•</span>}
                                 {currentProduct.teor_alcolico > 0 && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '10px', color: '#A0A0A0' }}>
                                         Teor Alcoólico: {currentProduct.teor_alcolico}% vol
                                     </div>
                                 )}
-                                {((currentProduct.volume_ml || currentProduct.teor_alcolico > 0) && currentProduct.serve_pessoas) && <span style={{ color: '#A0A0A0', fontSize: '10px' }}>•</span>}
+                                {((displayVolume || currentProduct.teor_alcolico > 0) && currentProduct.serve_pessoas) && <span style={{ color: '#A0A0A0', fontSize: '10px' }}>•</span>}
                                 {currentProduct.serve_pessoas && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '10px', color: '#A0A0A0' }}>
                                         <Users size={10} /> Serve {currentProduct.serve_pessoas} {currentProduct.serve_pessoas > 1 ? 'pes.' : 'pes.'}
@@ -687,12 +717,20 @@ const App = () => {
                                                 })
                                             ) : (
                                                 /* OPTION 2: VARIATIONS (OTHER PRODUCTS) */
-                                                Object.keys(currentProduct.variations).map((variant) => {
+                                                Object.keys(currentProduct.variations).map((variant, variantIdx) => {
                                                     const isSelected = selectedVariation === variant;
                                                     return (
                                                         <button
                                                             key={variant}
-                                                            onClick={() => setSelectedVariation(variant)}
+                                                            onClick={() => {
+                                                                const isWine = currentProduct.category && currentProduct.category.toLowerCase().includes('vinho');
+                                                                if (isWine && selectedVariation !== variant) {
+                                                                    const currentVariantIdx = Object.keys(currentProduct.variations).indexOf(selectedVariation);
+                                                                    setDirection(variantIdx > currentVariantIdx ? 1 : -1);
+                                                                    setIsInternalSpin(true);
+                                                                }
+                                                                setSelectedVariation(variant);
+                                                            }}
                                                             style={{
                                                                 padding: '8px 14px',
                                                                 borderRadius: '18px',
