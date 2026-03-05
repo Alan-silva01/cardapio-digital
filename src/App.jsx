@@ -481,9 +481,27 @@ const App = () => {
                             </div>
                         )}
 
-                        <h1 style={{ fontFamily: 'Playfair Display, serif', fontSize: '28px', fontWeight: 900, marginBottom: '5px', zIndex: 5, textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
-                            {currentProduct.name}
-                        </h1>
+                        {/* FIXED HEIGHT TITLE CONTAINER TO PREVENT IMAGE SHIFTING ON LONG NAMES */}
+                        <div style={{
+                            height: '60px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '90%',
+                            marginBottom: '5px',
+                            zIndex: 5
+                        }}>
+                            <h1 style={{
+                                fontFamily: 'Playfair Display, serif',
+                                fontSize: '24px',
+                                fontWeight: 900,
+                                textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+                                textAlign: 'center',
+                                lineHeight: '1.2'
+                            }}>
+                                {currentProduct.name}
+                            </h1>
+                        </div>
 
                         <div style={{ position: 'relative', width: '100%', height: '280px', display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '5px' }}>
                             {/* Back Glow */}
