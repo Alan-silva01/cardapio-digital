@@ -641,6 +641,9 @@ const App = () => {
                                     <img
                                         src="https://res.cloudinary.com/ddhlqymvf/image/upload/v1772656206/Logotipo_2_odktzy.png"
                                         alt="Logo Restaurante"
+                                        fetchPriority="high"
+                                        loading="eager"
+                                        decoding="sync"
                                         style={{ width: '30px', height: 'auto', opacity: 0.85 }}
                                     />
                                 </div>
