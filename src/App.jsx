@@ -481,14 +481,12 @@ const App = () => {
                             </div>
                         )}
 
-                        {/* FIXED HEIGHT TITLE CONTAINER TO PREVENT IMAGE SHIFTING ON LONG NAMES */}
+                        {/* TITLE CONTAINER - AUTO HEIGHT FOR BALANCE */}
                         <div style={{
-                            height: '60px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
+                            padding: '0 20px',
+                            textAlign: 'center',
                             width: '90%',
-                            marginBottom: '5px',
+                            marginBottom: '10px',
                             zIndex: 5
                         }}>
                             <h1 style={{
@@ -545,7 +543,7 @@ const App = () => {
                 <div className="drag-handle" />
 
                 {/* FIXED HEART ON THE SIDE */}
-                <div style={{ position: 'absolute', top: '75px', right: '15px', zIndex: 100 }}>
+                <div style={{ position: 'absolute', top: '65px', right: '15px', zIndex: 100 }}>
                     <button
                         onClick={async (e) => {
                             const rect = e.currentTarget.getBoundingClientRect();
@@ -601,7 +599,7 @@ const App = () => {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.2 }}
-                            style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
+                            style={{ display: 'flex', flexDirection: 'column' }}
                         >
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', width: '100%', marginTop: '4px', position: 'relative' }}>
                                 {/* Left Container: Rating & Category */}
