@@ -545,7 +545,7 @@ const App = () => {
                 <div className="drag-handle" />
 
                 {/* FIXED HEART ON THE SIDE */}
-                <div style={{ position: 'absolute', top: '65px', right: '15px', zIndex: 100 }}>
+                <div style={{ position: 'absolute', top: '75px', right: '15px', zIndex: 100 }}>
                     <button
                         onClick={async (e) => {
                             const rect = e.currentTarget.getBoundingClientRect();
@@ -561,11 +561,25 @@ const App = () => {
 
                             setHeartParticles(prev => [...prev, ...newParticles]);
 
+                            // Optmistic UI Update: Fill the heart immediately while DB processes
+                            setProducts(prevProducts => prevProducts.map(p =>
+                                p.id === currentProduct.id
+                                    ? { ...p, curtidas: (p.curtidas || 0) + 1 }
+                                    : p
+                            ));
+
                             try {
                                 await supabase.rpc('increment_likes', { product_id: currentProduct.id });
+                                // Keep fetchMenu running in background to sync true state invisibly
                                 fetchMenu();
                             } catch (err) {
                                 console.error("Error liking product:", err);
+                                // Revert optimistic update on failure
+                                setProducts(prevProducts => prevProducts.map(p =>
+                                    p.id === currentProduct.id
+                                        ? { ...p, curtidas: Math.max(0, (p.curtidas || 1) - 1) }
+                                        : p
+                                ));
                             }
                         }}
                         style={{ background: 'none', border: 'none', padding: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
