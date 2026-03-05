@@ -607,21 +607,23 @@ const App = () => {
                                     <div className="rating" style={{ display: 'flex', gap: '2px', alignItems: 'center' }}>
                                         {[1, 2, 3, 4, 5].map((star) => {
                                             const effectiveRating = currentProduct.rating || 5;
-                                            const isFull = star <= effectiveRating;
-                                            const isHalf = !isFull && star - 0.5 <= effectiveRating;
+                                            const isFull = star <= Math.floor(effectiveRating);
+                                            const isEmpty = star > Math.ceil(effectiveRating);
+                                            const isPartial = !isFull && !isEmpty;
+                                            const fillPercentage = isPartial ? (effectiveRating % 1) * 100 : 0;
 
                                             return (
                                                 <span
                                                     key={star}
-                                                    className={`star ${!isFull && !isHalf ? 'inactive' : ''}`}
+                                                    className={`star ${isEmpty ? 'inactive' : ''}`}
                                                     style={{
                                                         fontSize: '11px',
                                                         position: 'relative',
                                                         display: 'inline-block',
-                                                        color: isFull ? '#D4AF37' : (isHalf ? 'transparent' : '#333'),
-                                                        backgroundImage: isHalf ? 'linear-gradient(90deg, #D4AF37 50%, #333 50%)' : 'none',
-                                                        WebkitBackgroundClip: isHalf ? 'text' : 'none',
-                                                        MozBackgroundClip: isHalf ? 'text' : 'none',
+                                                        color: isFull ? 'var(--star-color)' : (isPartial ? 'transparent' : '#333'),
+                                                        backgroundImage: isPartial ? `linear-gradient(90deg, var(--star-color) ${fillPercentage}%, #333 ${fillPercentage}%)` : 'none',
+                                                        WebkitBackgroundClip: isPartial ? 'text' : 'none',
+                                                        MozBackgroundClip: isPartial ? 'text' : 'none',
                                                     }}
                                                 >
                                                     ★
@@ -707,7 +709,7 @@ const App = () => {
                                             textAlign: 'center',
                                             fontSize: '9px',
                                             fontWeight: '800',
-                                            color: '#D4AF37',
+                                            color: 'var(--accent-gold)',
                                             letterSpacing: '1.2px',
                                             textTransform: 'uppercase',
                                             marginBottom: '10px'
@@ -798,9 +800,9 @@ const App = () => {
                                                             style={{
                                                                 padding: '8px 14px',
                                                                 borderRadius: '18px',
-                                                                border: `1.1px solid ${isSelected ? '#D4AF37' : 'rgba(255,255,255,0.1)'}`,
+                                                                border: `1.1px solid ${isSelected ? 'var(--accent-gold)' : 'rgba(255,255,255,0.1)'}`,
                                                                 background: isSelected ? 'rgba(212, 175, 55, 0.15)' : 'rgba(255,255,255,0.03)',
-                                                                color: isSelected ? '#D4AF37' : '#999',
+                                                                color: isSelected ? 'var(--accent-gold)' : '#999',
                                                                 fontSize: '11px',
                                                                 fontWeight: '700',
                                                                 textTransform: 'uppercase',
@@ -899,7 +901,7 @@ const App = () => {
                         width: '20px',
                         height: '20px',
                         borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #D4AF37, #FFD700)',
+                        background: 'linear-gradient(135deg, var(--cart-animation-start), var(--cart-animation-end))',
                         boxShadow: '0 0 12px rgba(212, 175, 55, 0.6)',
                         zIndex: 9999,
                         pointerEvents: 'none',
