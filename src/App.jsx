@@ -621,7 +621,7 @@ const App = () => {
                                 </div>
                             </div>
 
-                            <div className="info-header" style={{ marginBottom: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
+                            <div className="info-header" style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
                                 <div className="product-name" style={{ fontSize: '20px', textAlign: 'center' }}>
                                     {currentProduct.name}
                                 </div>
