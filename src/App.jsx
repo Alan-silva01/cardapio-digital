@@ -636,7 +636,8 @@ const App = () => {
                                     </div>
                                 </div>
 
-                                {/* Center Container: Logo (Absolutely positioned to guarantee dead center) */}
+                                {/* LOGO OCULTA MOMENTANEAMENTE - PARA REATIVAR, DESCOMENTE O BLOCO ABAIXO */}
+                                {/* 
                                 <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 0 }}>
                                     <img
                                         src="https://res.cloudinary.com/ddhlqymvf/image/upload/v1772656206/Logotipo_2_odktzy.png"
@@ -647,6 +648,7 @@ const App = () => {
                                         style={{ width: '30px', height: 'auto', opacity: 0.85 }}
                                     />
                                 </div>
+                                */}
 
                                 {/* Right Container: Price */}
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px', zIndex: 1 }}>
