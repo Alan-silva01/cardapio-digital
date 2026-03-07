@@ -103,7 +103,7 @@ export function Sidebar() {
 
                             {/* Label - Only transitions in opacity and width, no horizontal movement for the icon */}
                             <span className={cn(
-                                "text-[13px] font-normal whitespace-nowrap transition-all duration-150 ease-out pl-2",
+                                "text-[13px] font-medium whitespace-nowrap transition-all duration-150 ease-out pl-2",
                                 isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2 pointer-events-none w-0"
                             )}>
                                 {item.label}

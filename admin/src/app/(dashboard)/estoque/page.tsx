@@ -312,15 +312,15 @@ function EstoqueContent() {
                 <Table>
                     <TableHeader>
                         <TableRow className="hover:bg-transparent border-border">
-                            <TableHead className="w-[50px] text-muted-foreground text-[11px] font-medium uppercase"></TableHead>
-                            <TableHead className="text-muted-foreground text-[11px] font-medium uppercase">Produto</TableHead>
-                            <TableHead className="text-center text-muted-foreground text-[11px] font-medium uppercase">Variação</TableHead>
-                            <TableHead className="text-center text-muted-foreground text-[11px] font-medium uppercase">Categoria</TableHead>
-                            <TableHead className="text-center text-muted-foreground text-[11px] font-medium uppercase">Estoque</TableHead>
-                            <TableHead className="text-center text-muted-foreground text-[11px] font-medium uppercase">Status</TableHead>
-                            <TableHead className="text-center text-muted-foreground text-[11px] font-medium uppercase">App</TableHead>
-                            <TableHead className="text-center text-muted-foreground text-[11px] font-medium uppercase">Preço</TableHead>
-                            <TableHead className="text-right text-muted-foreground text-[11px] font-medium uppercase">Ação</TableHead>
+                            <TableHead className="w-[50px] text-muted-foreground text-[11px] font-semibold uppercase"></TableHead>
+                            <TableHead className="text-muted-foreground text-[11px] font-semibold uppercase">Produto</TableHead>
+                            <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">Variação</TableHead>
+                            <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">Categoria</TableHead>
+                            <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">Estoque</TableHead>
+                            <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">Status</TableHead>
+                            <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">App</TableHead>
+                            <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">Preço</TableHead>
+                            <TableHead className="text-right text-muted-foreground text-[11px] font-semibold uppercase">Ação</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -408,7 +408,7 @@ function EstoqueContent() {
                                         </TableCell>
 
                                         <TableCell>
-                                            <div className="font-medium text-foreground text-sm">{item.produto_nome}</div>
+                                            <div className="font-semibold text-foreground text-sm">{item.produto_nome}</div>
                                         </TableCell>
                                         <TableCell className="text-center text-muted-foreground text-sm">
                                             {item.variacao_nome}
