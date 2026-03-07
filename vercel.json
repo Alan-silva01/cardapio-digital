@@ -1,0 +1,21 @@
+{
+    "builds": [
+        {
+            "src": "package.json",
+            "use": "@vercel/static-build",
+            "config": {
+                "distDir": "dist"
+            }
+        },
+        {
+            "src": "admin/package.json",
+            "use": "@vercel/next"
+        }
+    ],
+    "rewrites": [
+        {
+            "source": "/admin/(.*)",
+            "destination": "/admin/$1"
+        }
+    ]
+}
