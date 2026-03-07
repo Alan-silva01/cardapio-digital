@@ -66,6 +66,7 @@ const topProducts = [
     { name: "Stella Gold", category: "Cervejas", qty: 38, revenue: "R$ 1.520", img: "https://res.cloudinary.com/ddhlqymvf/image/upload/v1772140661/App_Bar_50Acorona_50kb_1_mstuq1.png" },
     { name: "Pérgola Tinto", category: "Vinhos", qty: 22, revenue: "R$ 770", img: "https://res.cloudinary.com/ddhlqymvf/image/upload/v1772733834/Bebida_500x600_5_umkpav.png" },
     { name: "Skol", category: "Cervejas", qty: 18, revenue: "R$ 2.160", img: "https://res.cloudinary.com/ddhlqymvf/image/upload/v1772140662/App_Bar_50Acorona_50kb_3_bpkyvq.png" },
+    { name: "Ice Fruit Mix", category: "Bebidas", qty: 15, revenue: "R$ 450", img: "https://res.cloudinary.com/ddhlqymvf/image/upload/v1772146251/App_Bar_50Acorona_50kb_27_vg1ujs.png" },
 ];
 
 const lowStockProducts = [
@@ -73,6 +74,7 @@ const lowStockProducts = [
     { name: "Casal Garcia Branco", category: "Vinhos", stock: 3, img: "https://res.cloudinary.com/ddhlqymvf/image/upload/v1772673377/Bebida_Canva_wyzaek.png" },
     { name: "Gin Tanqueray", category: "Destilados", stock: 2, img: "https://res.cloudinary.com/ddhlqymvf/image/upload/v1771541223/App_Bar_50Acorona_50kb_7_akzpmv.png" },
     { name: "Drink Melancita", category: "Drinks", stock: 4, img: "https://res.cloudinary.com/ddhlqymvf/image/upload/v1771585718/App_Bar_50Acorona_50kb_15_mpfjzn.png" },
+    { name: "Quinta do Morgado", category: "Vinhos", stock: 1, img: "https://res.cloudinary.com/ddhlqymvf/image/upload/v1772674139/Bebida_Canva_eoqfxf.png" },
 ];
 
 // --- CHART CONFIGS ---
@@ -267,26 +269,28 @@ export default function DashboardPage() {
                         <CardTitle className="text-xs font-semibold">Top Mais Vendidos</CardTitle>
                         <CardDescription className="text-[11px]">Ranking de saída hoje</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex-1 space-y-1.5 px-4 pb-3 overflow-auto min-h-0">
-                        {topProducts.map((product) => (
-                            <div key={product.name} className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <div className="h-9 w-8 relative rounded-md bg-muted/60 overflow-hidden border border-border shrink-0 flex items-center justify-center">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={product.img} alt={product.name} className="h-full w-full object-contain p-0.5" loading="lazy" />
+                    <CardContent className="flex-1 space-y-1.5 px-4 pb-2 min-h-0 flex flex-col justify-between">
+                        <div className="flex-1 space-y-1.5 overflow-hidden">
+                            {topProducts.map((product) => (
+                                <div key={product.name} className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-9 w-8 relative rounded-md bg-muted/60 overflow-hidden border border-border shrink-0 flex items-center justify-center">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src={product.img} alt={product.name} className="h-full w-full object-contain p-0.5" loading="lazy" />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-[13px] font-medium leading-tight">{product.name}</span>
+                                            <span className="text-[10px] text-muted-foreground">{product.category}</span>
+                                        </div>
                                     </div>
-                                    <div className="flex flex-col">
-                                        <span className="text-[13px] font-medium leading-tight">{product.name}</span>
-                                        <span className="text-[10px] text-muted-foreground">{product.category}</span>
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-[13px] font-bold">{product.qty} un</span>
+                                        <span className="text-[10px] text-muted-foreground">{product.revenue}</span>
                                     </div>
                                 </div>
-                                <div className="flex flex-col items-end">
-                                    <span className="text-[13px] font-bold">{product.qty} un</span>
-                                    <span className="text-[10px] text-muted-foreground">{product.revenue}</span>
-                                </div>
-                            </div>
-                        ))}
-                        <Button variant="outline" className="w-full text-xs font-normal mt-1" render={<Link href="/estoque" />}>
+                            ))}
+                        </div>
+                        <Button variant="outline" className="w-full text-xs font-normal mt-1 shrink-0" render={<Link href="/estoque" />}>
                             Ver ranking completo <ArrowRight className="ml-2 h-3 w-3" />
                         </Button>
                     </CardContent>
@@ -347,30 +351,32 @@ export default function DashboardPage() {
                             <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
                         </div>
                     </CardHeader>
-                    <CardContent className="flex-1 space-y-1.5 px-4 pb-3 overflow-auto min-h-0">
-                        {lowStockProducts.map((product) => (
-                            <div key={product.name} className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <div className="h-9 w-8 relative rounded-md bg-muted/60 overflow-hidden border border-border shrink-0 flex items-center justify-center">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={product.img} alt={product.name} className="h-full w-full object-contain p-0.5" loading="lazy" />
+                    <CardContent className="flex-1 space-y-1.5 px-4 pb-2 min-h-0 flex flex-col justify-between">
+                        <div className="flex-1 space-y-1.5 overflow-hidden">
+                            {lowStockProducts.map((product) => (
+                                <div key={product.name} className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <div className="h-9 w-8 relative rounded-md bg-muted/60 overflow-hidden border border-border shrink-0 flex items-center justify-center">
+                                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                                            <img src={product.img} alt={product.name} className="h-full w-full object-contain p-0.5" loading="lazy" />
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-[13px] font-medium leading-tight">{product.name}</span>
+                                            <span className="text-[10px] text-muted-foreground">{product.category}</span>
+                                        </div>
                                     </div>
-                                    <div className="flex flex-col">
-                                        <span className="text-[13px] font-medium leading-tight">{product.name}</span>
-                                        <span className="text-[10px] text-muted-foreground">{product.category}</span>
-                                    </div>
+                                    <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5 font-medium shrink-0">
+                                        <AlertTriangle className="w-2.5 h-2.5 mr-0.5" /> {product.stock} un
+                                    </Badge>
                                 </div>
-                                <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5 font-medium shrink-0">
-                                    <AlertTriangle className="w-2.5 h-2.5 mr-0.5" /> {product.stock} un
-                                </Badge>
-                            </div>
-                        ))}
-                        <Button variant="outline" className="w-full text-xs font-normal mt-1" render={<Link href="/estoque" />}>
+                            ))}
+                        </div>
+                        <Button variant="outline" className="w-full text-xs font-normal mt-1 shrink-0" render={<Link href="/estoque" />}>
                             Ver todos os alertas <ArrowRight className="ml-2 h-3 w-3" />
                         </Button>
                     </CardContent>
                 </Card>
             </div>
-        </div>
+        </div >
     );
 }
