@@ -86,10 +86,10 @@ export default function DashboardPage() {
     const totalCategories = categoryData.reduce((acc, curr) => acc + curr.visitors, 0);
 
     return (
-        <div className="flex-1 w-full space-y-6 p-8">
+        <div className="flex-1 w-full space-y-3 p-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-semibold tracking-tight">Dashboard General</h1>
+                    <h1 className="text-xl font-semibold tracking-tight">Dashboard General</h1>
                     <p className="text-sm text-muted-foreground mt-1">Visão geral da operação hoje</p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -103,7 +103,7 @@ export default function DashboardPage() {
             </div>
 
             {/* --- METRICS CARDS --- */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
                 <Card className="shadow-none rounded-xl border border-border">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium text-muted-foreground">Faturamento Hoje</CardTitle>
@@ -158,7 +158,7 @@ export default function DashboardPage() {
             </div>
 
             {/* --- CHARTS ROW 1 --- */}
-            <div className="grid gap-4 md:grid-cols-7 lg:grid-cols-10">
+            <div className="grid gap-3 md:grid-cols-7 lg:grid-cols-10">
 
                 {/* BAR CHART: Orders per Day */}
                 <Card className="md:col-span-4 lg:col-span-6 shadow-none rounded-xl border border-border flex flex-col">
@@ -167,7 +167,7 @@ export default function DashboardPage() {
                         <CardDescription>Volume semanal de pedidos</CardDescription>
                     </CardHeader>
                     <CardContent className="flex-1">
-                        <ChartContainer config={ordersChartConfig} className="h-[250px] w-full">
+                        <ChartContainer config={ordersChartConfig} className="h-[160px] w-full">
                             <BarChart data={ordersData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
                                 <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.3} />
                                 <XAxis
@@ -196,7 +196,7 @@ export default function DashboardPage() {
                     <CardContent className="flex-1 pb-0">
                         <ChartContainer
                             config={categoryChartConfig}
-                            className="mx-auto aspect-square max-h-[250px]"
+                            className="mx-auto aspect-square max-h-[180px]"
                         >
                             <PieChart>
                                 <ChartTooltip
@@ -258,7 +258,7 @@ export default function DashboardPage() {
                         <CardDescription>Volume de pedidos por hora</CardDescription>
                     </CardHeader>
                     <CardContent className="flex-1">
-                        <ChartContainer config={trafficChartConfig} className="h-[250px] w-full">
+                        <ChartContainer config={trafficChartConfig} className="h-[160px] w-full">
                             <AreaChart data={trafficData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="colorActive" x1="0" y1="0" x2="0" y2="1">
@@ -297,7 +297,7 @@ export default function DashboardPage() {
                         <CardTitle className="text-base font-semibold">Top Mais Vendidos</CardTitle>
                         <CardDescription>Ranking de saída hoje</CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-5">
+                    <CardContent className="space-y-3">
                         {/* Product 1 */}
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
