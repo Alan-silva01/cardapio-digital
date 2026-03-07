@@ -49,40 +49,40 @@ export default function MesasPage() {
       case "ocupada": return "text-blue-500 bg-blue-500/10";
       case "chamando": return "text-red-500 bg-red-500/10 animate-pulse";
       case "reservada": return "text-amber-500 bg-amber-500/10";
-      default: return "bg-[#222]";
+      default: return "bg-muted";
     }
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-[#0D0D0D] text-[#EDEDED] min-h-screen">
+    <div className="flex-1 flex flex-col bg-background text-foreground min-h-screen">
       {/* Header / Subnav */}
-      <div className="h-14 border-b border-[#222] px-6 flex items-center justify-between bg-[#111]">
-        <div className="flex items-center gap-2 text-sm text-[#666]">
+      <div className="h-14 border-b px-6 flex items-center justify-between bg-card">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span>Monitoramento</span>
           <ChevronRight className="h-4 w-4" />
-          <span className="text-[#EDEDED] font-medium">Mapa de Mesas</span>
+          <span className="text-foreground font-medium">Mapa de Mesas</span>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex bg-[#1A1A1A] rounded-md border border-[#222] p-0.5">
-            <Button variant="ghost" size="sm" className="h-7 text-[10px] font-bold bg-[#2A2A2A] text-white">GRID</Button>
-            <Button variant="ghost" size="sm" className="h-7 text-[10px] font-bold text-[#666]">LISTA</Button>
+          <div className="flex bg-muted rounded-md border p-0.5">
+            <Button variant="ghost" size="sm" className="h-7 text-[10px] font-bold bg-background text-foreground shadow-xs">GRID</Button>
+            <Button variant="ghost" size="sm" className="h-7 text-[10px] font-bold text-muted-foreground hover:text-foreground">LISTA</Button>
           </div>
         </div>
       </div>
 
       {/* Toolbar */}
-      <div className="p-6 border-b border-[#222]/50 flex items-center justify-between gap-4">
+      <div className="p-6 border-b border-border/50 flex items-center justify-between gap-4">
         <div className="relative w-full max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#666]" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Buscar mesa..."
-            className="pl-10 bg-[#111] border-[#222] focus:border-[#333] h-9 text-sm"
+            className="pl-10 bg-card border-border focus:border-border h-9 text-sm"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" className="bg-[#111] border-[#222] text-[#999] h-9 text-xs">
+          <Button variant="outline" className="bg-card border-border text-muted-foreground h-9 text-xs">
             <Filter className="h-3.5 w-3.5 mr-2" />
             Filtros
           </Button>
@@ -97,14 +97,14 @@ export default function MesasPage() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {mockMesas.map((mesa) => (
             <Card key={mesa.id} className={cn(
-              "bg-[#1A1A1A] border-[#2A2A2A] transition-all cursor-pointer group hover:scale-[1.02]",
+              "bg-card border-border transition-all cursor-pointer group hover:scale-[1.02] hover:border-border/80 shadow-xs",
               mesa.status === "chamando" && "ring-1 ring-red-500/50 scale-[1.01]"
             )}>
               <CardContent className="p-4 space-y-4">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-[10px] font-bold text-[#666] tracking-widest uppercase mb-1">MESA</p>
-                    <h2 className="text-3xl font-serif font-bold text-[#F9F6EE]">{mesa.numero}</h2>
+                    <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase mb-1">MESA</p>
+                    <h2 className="text-3xl font-serif font-bold text-foreground">{mesa.numero}</h2>
                   </div>
                   <Badge className={cn("border-none text-[10px] font-bold uppercase tracking-wider h-6 py-0 px-2", getStatusColor(mesa.status))}>
                     {mesa.status}
@@ -114,16 +114,16 @@ export default function MesasPage() {
                 {mesa.ocupantes ? (
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5 text-[10px] text-[#888]">
+                      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
                         <Users className="h-3 w-3" />
                         {mesa.ocupantes}/{mesa.capacidade} Pessoas
                       </div>
-                      <div className="flex items-center gap-1.5 text-[10px] text-[#888]">
+                      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
                         <Timer className="h-3 w-3" />
                         {mesa.tempo}
                       </div>
                     </div>
-                    <div className="p-2 rounded bg-[#0D0D0D] border border-[#222] flex items-center justify-between">
+                    <div className="p-2 rounded bg-muted border flex items-center justify-between">
                       <DollarSign className="h-3 w-3 text-emerald-500" />
                       <span className="text-sm font-bold text-emerald-500 tracking-tight">{mesa.total}</span>
                     </div>
@@ -135,17 +135,17 @@ export default function MesasPage() {
                     )}
                   </div>
                 ) : (
-                  <div className="flex items-center gap-1.5 text-[10px] text-[#666]">
+                  <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
                     <Users className="h-3 w-3" />
                     Capacidade: {mesa.capacidade}
                   </div>
                 )}
 
-                <div className="flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity pt-2 border-t border-[#222]">
-                  <Button variant="ghost" size="sm" className="h-7 text-[10px] text-[#888] hover:text-[#ff5e1e] hover:bg-[#ff5e1e]/10">
+                <div className="flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity pt-2 border-t text-muted-foreground">
+                  <Button variant="ghost" size="sm" className="h-7 text-[10px] hover:text-[#ff5e1e] hover:bg-[#ff5e1e]/10">
                     Detalhes
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 text-[#666]">
+                  <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground">
                     <MoreVertical className="h-4 w-4" />
                   </Button>
                 </div>

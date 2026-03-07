@@ -38,10 +38,10 @@ interface StockItem {
 }
 
 function getStatus(estoque: number, estoque_minimo: number): { label: string; color: string; type: string } {
-    if (estoque === -1) return { label: "Ilimitado", color: "text-[#666] border-[#333] bg-[#1a1a1a]", type: "ilimitado" };
-    if (estoque === 0) return { label: "Esgotado", color: "text-red-400 border-red-500/20 bg-red-500/10", type: "esgotado" };
-    if (estoque <= estoque_minimo) return { label: "Baixo", color: "text-amber-400 border-amber-500/20 bg-amber-500/10", type: "baixo" };
-    return { label: "OK", color: "text-emerald-400 border-emerald-500/20 bg-emerald-500/10", type: "ok" };
+    if (estoque === -1) return { label: "Ilimitado", color: "text-muted-foreground bg-muted border-border", type: "ilimitado" };
+    if (estoque === 0) return { label: "Esgotado", color: "text-red-500 border-red-500/20 bg-red-500/10", type: "esgotado" };
+    if (estoque <= estoque_minimo) return { label: "Baixo", color: "text-amber-500 border-amber-500/20 bg-amber-500/10", type: "baixo" };
+    return { label: "OK", color: "text-emerald-500 border-emerald-500/20 bg-emerald-500/10", type: "ok" };
 }
 
 function EstoqueContent() {
@@ -184,13 +184,13 @@ function EstoqueContent() {
 
     const filterButtons = useMemo(() => {
         return [
-            { key: "todos", label: "Todos", count: counts.total, icon: Package, activeColor: "text-white" },
+            { key: "todos", label: "Todos", count: counts.total, icon: Package, activeColor: "text-foreground" },
             ...categories.map(cat => ({
                 key: cat,
                 label: cat,
                 count: items.filter(i => i.categoria_nome === cat).length,
                 icon: Tag,
-                activeColor: "text-white"
+                activeColor: "text-foreground"
             }))
         ];
     }, [counts.total, categories, items]);
@@ -198,7 +198,7 @@ function EstoqueContent() {
     if (loading) {
         return (
             <div className="flex-1 flex items-center justify-center h-[60vh]">
-                <Loader2 className="h-6 w-6 animate-spin text-[#666]" />
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
         );
     }
@@ -208,63 +208,63 @@ function EstoqueContent() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-xl font-semibold tracking-tight text-white">Controle de Estoque</h1>
-                    <p className="text-[13px] text-[#666] mt-0.5">{counts.total} variações cadastradas</p>
+                    <h1 className="text-xl font-semibold tracking-tight text-foreground">Controle de Estoque</h1>
+                    <p className="text-[13px] text-muted-foreground mt-0.5">{counts.total} variações cadastradas</p>
                 </div>
                 <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-[#555]" />
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
                         type="search"
                         placeholder="Buscar produto..."
                         value={search || ""}
                         onChange={e => setSearch(e.target.value)}
-                        className="w-64 pl-8 bg-[#1a1a1a] border-[#333] text-[13px] h-9 focus:border-[#555] placeholder:text-[#444]"
+                        className="w-64 pl-8 bg-card border-border text-[13px] h-9 focus:border-border placeholder:text-muted-foreground/60"
                     />
                 </div>
             </div>
 
             {/* Summary Cards */}
             <div className="grid gap-3 grid-cols-4">
-                <Card className="bg-[#111] border-[#222] shadow-none">
+                <Card className="bg-card border-border shadow-none">
                     <CardHeader className="flex flex-row items-center justify-between pb-1 pt-4 px-4">
-                        <CardTitle className="text-[11px] font-medium text-[#666] uppercase tracking-wider">OK</CardTitle>
+                        <CardTitle className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">OK</CardTitle>
                         <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500/50" />
                     </CardHeader>
                     <CardContent className="px-4 pb-4">
-                        <div className="text-2xl font-bold text-emerald-400">{counts.ok}</div>
+                        <div className="text-2xl font-bold text-emerald-500">{counts.ok}</div>
                     </CardContent>
                 </Card>
-                <Card className="bg-[#111] border-[#222] shadow-none">
+                <Card className="bg-card border-border shadow-none">
                     <CardHeader className="flex flex-row items-center justify-between pb-1 pt-4 px-4">
-                        <CardTitle className="text-[11px] font-medium text-[#666] uppercase tracking-wider">Baixo</CardTitle>
+                        <CardTitle className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Baixo</CardTitle>
                         <AlertTriangle className="h-3.5 w-3.5 text-amber-500/50" />
                     </CardHeader>
                     <CardContent className="px-4 pb-4">
-                        <div className="text-2xl font-bold text-amber-400">{counts.baixo}</div>
+                        <div className="text-2xl font-bold text-amber-500">{counts.baixo}</div>
                     </CardContent>
                 </Card>
-                <Card className="bg-[#111] border-[#222] shadow-none">
+                <Card className="bg-card border-border shadow-none">
                     <CardHeader className="flex flex-row items-center justify-between pb-1 pt-4 px-4">
-                        <CardTitle className="text-[11px] font-medium text-[#666] uppercase tracking-wider">Esgotados</CardTitle>
+                        <CardTitle className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Esgotados</CardTitle>
                         <XCircle className="h-3.5 w-3.5 text-red-500/50" />
                     </CardHeader>
                     <CardContent className="px-4 pb-4">
-                        <div className="text-2xl font-bold text-red-400">{counts.esgotado}</div>
+                        <div className="text-2xl font-bold text-red-500">{counts.esgotado}</div>
                     </CardContent>
                 </Card>
-                <Card className="bg-[#111] border-[#222] shadow-none">
+                <Card className="bg-card border-border shadow-none">
                     <CardHeader className="flex flex-row items-center justify-between pb-1 pt-4 px-4">
-                        <CardTitle className="text-[11px] font-medium text-[#666] uppercase tracking-wider">Total</CardTitle>
-                        <Package className="h-3.5 w-3.5 text-[#555]" />
+                        <CardTitle className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Total</CardTitle>
+                        <Package className="h-3.5 w-3.5 text-muted-foreground" />
                     </CardHeader>
                     <CardContent className="px-4 pb-4">
-                        <div className="text-2xl font-bold text-white">{counts.total}</div>
+                        <div className="text-2xl font-bold text-foreground">{counts.total}</div>
                     </CardContent>
                 </Card>
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex gap-1 border-b border-[#222] pb-0 overflow-x-auto scrollbar-none">
+            <div className="flex gap-1 border-b border-border pb-0 overflow-x-auto scrollbar-none">
                 {filterButtons.map(fb => (
                     <button
                         key={fb.key}
@@ -273,14 +273,14 @@ function EstoqueContent() {
                             "flex items-center gap-1.5 px-3 py-2 text-[12px] font-medium transition-colors border-b-2 -mb-[1px] whitespace-nowrap",
                             filter === fb.key
                                 ? `${fb.activeColor} border-current`
-                                : "text-[#555] border-transparent hover:text-[#888]"
+                                : "text-muted-foreground border-transparent hover:opacity-80"
                         )}
                     >
                         {fb.icon && <fb.icon className="h-3.5 w-3.5" />}
                         {fb.label}
                         <span className={cn(
                             "text-[10px] px-1.5 py-0.5 rounded-full",
-                            filter === fb.key ? "bg-white/10" : "bg-[#1a1a1a] text-[#555]"
+                            filter === fb.key ? "bg-foreground/10" : "bg-muted text-muted-foreground"
                         )}>
                             {fb.count}
                         </span>
@@ -289,25 +289,25 @@ function EstoqueContent() {
             </div>
 
             {/* Table */}
-            <div className="rounded-lg border border-[#222] overflow-hidden bg-[#111]">
+            <div className="rounded-lg border overflow-hidden bg-card">
                 <Table>
                     <TableHeader>
-                        <TableRow className="hover:bg-transparent border-[#222]">
-                            <TableHead className="w-[50px] text-[#555] text-[11px] font-medium uppercase"></TableHead>
-                            <TableHead className="text-[#555] text-[11px] font-medium uppercase">Produto</TableHead>
-                            <TableHead className="text-[#555] text-[11px] font-medium uppercase">Variação</TableHead>
-                            <TableHead className="text-[#555] text-[11px] font-medium uppercase">Categoria</TableHead>
-                            <TableHead className="text-center text-[#555] text-[11px] font-medium uppercase">Estoque</TableHead>
-                            <TableHead className="text-center text-[#555] text-[11px] font-medium uppercase">Status</TableHead>
-                            <TableHead className="text-center text-[#555] text-[11px] font-medium uppercase">App</TableHead>
-                            <TableHead className="text-right text-[#555] text-[11px] font-medium uppercase">Preço</TableHead>
-                            <TableHead className="text-right text-[#555] text-[11px] font-medium uppercase">Ação</TableHead>
+                        <TableRow className="hover:bg-transparent border-border">
+                            <TableHead className="w-[50px] text-muted-foreground text-[11px] font-medium uppercase"></TableHead>
+                            <TableHead className="text-muted-foreground text-[11px] font-medium uppercase">Produto</TableHead>
+                            <TableHead className="text-muted-foreground text-[11px] font-medium uppercase">Variação</TableHead>
+                            <TableHead className="text-muted-foreground text-[11px] font-medium uppercase">Categoria</TableHead>
+                            <TableHead className="text-center text-muted-foreground text-[11px] font-medium uppercase">Estoque</TableHead>
+                            <TableHead className="text-center text-muted-foreground text-[11px] font-medium uppercase">Status</TableHead>
+                            <TableHead className="text-center text-muted-foreground text-[11px] font-medium uppercase">App</TableHead>
+                            <TableHead className="text-right text-muted-foreground text-[11px] font-medium uppercase">Preço</TableHead>
+                            <TableHead className="text-right text-muted-foreground text-[11px] font-medium uppercase">Ação</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {filtered.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={9} className="text-center text-[#555] py-12">
+                                <TableCell colSpan={9} className="text-center text-muted-foreground py-12">
                                     Nenhum produto encontrado
                                 </TableCell>
                             </TableRow>
@@ -319,8 +319,8 @@ function EstoqueContent() {
                                     <TableRow
                                         key={item.variacao_id}
                                         className={cn(
-                                            "border-[#1a1a1a] hover:bg-[#1a1a1a]/50 transition-colors",
-                                            idx % 2 === 1 && "bg-[#0d0d0d]/50",
+                                            "border-border hover:bg-muted/50 transition-colors",
+                                            idx % 2 === 1 && "bg-muted/20",
                                             item.estoque === 0 && "opacity-60"
                                         )}
                                     >
@@ -328,7 +328,7 @@ function EstoqueContent() {
                                         <TableCell className="py-2">
                                             <HoverCard>
                                                 <HoverCardTrigger>
-                                                    <div className="h-9 w-9 relative rounded-md overflow-hidden bg-[#1a1a1a] border border-[#222] cursor-pointer group">
+                                                    <div className="h-9 w-9 relative rounded-md overflow-hidden bg-muted border cursor-pointer group">
                                                         {item.imagem_url ? (
                                                             <>
                                                                 <Image
@@ -350,15 +350,15 @@ function EstoqueContent() {
                                                                 )}
                                                             </>
                                                         ) : (
-                                                            <div className="absolute inset-0 flex items-center justify-center text-[8px] text-[#444]">
+                                                            <div className="absolute inset-0 flex items-center justify-center text-[8px] text-muted-foreground/60">
                                                                 <Package className="h-3.5 w-3.5" />
                                                             </div>
                                                         )}
                                                     </div>
                                                 </HoverCardTrigger>
                                                 {item.imagem_url && (
-                                                    <HoverCardContent side="right" className="w-64 p-0 rounded-xl overflow-hidden border-[#333] bg-[#111] shadow-2xl flex flex-col">
-                                                        <div className="relative w-full aspect-[5/6] bg-black/40">
+                                                    <HoverCardContent side="right" className="w-64 p-0 rounded-xl overflow-hidden border bg-card shadow-2xl flex flex-col z-50">
+                                                        <div className="relative w-full aspect-[5/6] bg-muted/50">
                                                             <Image
                                                                 src={item.imagem_url}
                                                                 alt={item.produto_nome}
@@ -379,9 +379,9 @@ function EstoqueContent() {
                                                                 </div>
                                                             )}
                                                         </div>
-                                                        <div className="p-4 bg-[#111] border-t border-[#222]">
-                                                            <p className="text-white font-medium text-sm leading-tight">{item.produto_nome}</p>
-                                                            <p className="text-[#888] text-xs mt-1">{item.variacao_nome}</p>
+                                                        <div className="p-4 bg-card border-t">
+                                                            <p className="text-foreground font-medium text-sm leading-tight">{item.produto_nome}</p>
+                                                            <p className="text-muted-foreground text-xs mt-1">{item.variacao_nome}</p>
                                                         </div>
                                                     </HoverCardContent>
                                                 )}
@@ -389,13 +389,13 @@ function EstoqueContent() {
                                         </TableCell>
 
                                         <TableCell>
-                                            <div className="font-medium text-white/90 text-sm">{item.produto_nome}</div>
+                                            <div className="font-medium text-foreground text-sm">{item.produto_nome}</div>
                                         </TableCell>
-                                        <TableCell className="text-[#888] text-sm">
+                                        <TableCell className="text-muted-foreground text-sm">
                                             {item.variacao_nome}
                                         </TableCell>
                                         <TableCell>
-                                            <Badge variant="outline" className="text-[10px] font-medium bg-[#1a1a1a] border-[#333] text-[#888] rounded-md px-2 py-0.5">
+                                            <Badge variant="outline" className="text-[10px] font-medium bg-muted border text-muted-foreground rounded-md px-2 py-0.5">
                                                 {item.categoria_nome}
                                             </Badge>
                                         </TableCell>
@@ -403,7 +403,7 @@ function EstoqueContent() {
                                         <TableCell className="text-center">
                                             <div className="inline-flex items-center justify-center min-w-[3rem]">
                                                 {item.estoque === -1 ? (
-                                                    <Infinity className="h-4 w-4 text-[#666]" />
+                                                    <Infinity className="h-4 w-4 text-muted-foreground" />
                                                 ) : (
                                                     <span className={cn(
                                                         "font-mono text-[13px] font-medium",
@@ -437,7 +437,7 @@ function EstoqueContent() {
                                                     onClick={() => toggleDisponivel(item.produto_id, item.disponivel)}
                                                     className={cn(
                                                         "relative inline-flex h-4 w-7 cursor-pointer items-center rounded-full transition-colors focus:outline-hidden",
-                                                        item.disponivel ? "bg-emerald-500/80" : "bg-[#333]"
+                                                        item.disponivel ? "bg-emerald-500/80" : "bg-muted-foreground/30"
                                                     )}
                                                     role="switch"
                                                     aria-checked={item.disponivel}
@@ -453,7 +453,7 @@ function EstoqueContent() {
                                             </div>
                                         </TableCell>
 
-                                        <TableCell className="text-right font-mono text-sm text-[#888]">
+                                        <TableCell className="text-right font-mono text-sm text-muted-foreground">
                                             R$ {item.preco.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                                         </TableCell>
 
@@ -462,7 +462,7 @@ function EstoqueContent() {
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-7 w-7 rounded-full text-[#666] hover:text-white hover:bg-[#222]"
+                                                    className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
                                                     onClick={() => adjustStock(item.variacao_id, -1)}
                                                     disabled={isUpdating || item.estoque <= 0}
                                                 >
@@ -471,7 +471,7 @@ function EstoqueContent() {
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-7 w-7 rounded-full text-[#666] hover:text-white hover:bg-[#222]"
+                                                    className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
                                                     onClick={() => adjustStock(item.variacao_id, 1)}
                                                     disabled={isUpdating || item.estoque === -1}
                                                 >
@@ -494,7 +494,7 @@ export default function EstoquePage() {
     return (
         <Suspense fallback={
             <div className="flex-1 flex items-center justify-center h-[60vh]">
-                <Loader2 className="h-6 w-6 animate-spin text-[#666]" />
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
         }>
             <EstoqueContent />

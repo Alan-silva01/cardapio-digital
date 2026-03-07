@@ -43,13 +43,13 @@ export default function PedidosPage() {
   const getColumnPedidos = (status: string) => pedidos.filter(p => p.status === status);
 
   return (
-    <div className="flex-1 flex flex-col bg-[#0D0D0D] text-[#EDEDED] min-h-screen">
+    <div className="flex-1 flex flex-col bg-background text-foreground min-h-screen">
       {/* Header / Subnav */}
-      <div className="h-14 border-b border-[#222] px-6 flex items-center justify-between bg-[#111]">
-        <div className="flex items-center gap-2 text-sm text-[#666]">
+      <div className="h-14 border-b px-6 flex items-center justify-between bg-card">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span>Pedidos</span>
           <ChevronRight className="h-4 w-4" />
-          <span className="text-[#EDEDED] font-medium">Kanban Live</span>
+          <span className="text-foreground font-medium">Kanban Live</span>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-none px-2 py-0 h-5 text-[10px] font-bold">
@@ -66,31 +66,31 @@ export default function PedidosPage() {
               {/* Column Header */}
               <div className="flex items-center justify-between px-2">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-[#666]">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                     {column.label}
                   </h3>
-                  <Badge variant="outline" className="bg-[#222] border-none text-[#999] px-1.5 h-5 text-[10px]">
+                  <Badge variant="outline" className="bg-muted border-none text-muted-foreground px-1.5 h-5 text-[10px]">
                     {getColumnPedidos(column.id).length}
                   </Badge>
                 </div>
-                <Button variant="ghost" size="icon" className="h-6 w-6 text-[#666] hover:text-white">
+                <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-foreground">
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </div>
 
               {/* Cards Container */}
-              <div className="flex-1 flex flex-col gap-3 rounded-xl bg-[#161616]/50 p-2 border border-[#222]/50">
+              <div className="flex-1 flex flex-col gap-3 rounded-xl bg-muted/30 p-2 border">
                 {getColumnPedidos(column.id).map((pedido) => (
-                  <Card key={pedido.id} className="bg-[#1A1A1A] border-[#2A2A2A] hover:border-[#333] transition-colors cursor-pointer group">
+                  <Card key={pedido.id} className="bg-card border-border hover:border-border/80 transition-colors cursor-pointer group shadow-xs">
                     <CardContent className="p-4 space-y-3">
                       <div className="flex justify-between items-start">
                         <div className="flex items-center gap-2">
-                          <div className="h-7 w-7 rounded-md bg-[#222] flex items-center justify-center">
-                            <Utensils className="h-4 w-4 text-[#888]" />
+                          <div className="h-7 w-7 rounded-md bg-muted flex items-center justify-center">
+                            <Utensils className="h-4 w-4 text-muted-foreground" />
                           </div>
-                          <span className="font-bold text-sm tracking-tight text-[#F9F6EE]">{pedido.mesa}</span>
+                          <span className="font-bold text-sm tracking-tight text-foreground">{pedido.mesa}</span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-[10px] text-[#666] font-medium bg-[#0D0D0D] px-2 py-1 rounded-full border border-[#222]">
+                        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-medium bg-muted px-2 py-1 rounded-full border">
                           <Clock className="h-3 w-3" />
                           {pedido.tempo}
                         </div>
@@ -98,7 +98,7 @@ export default function PedidosPage() {
 
                       <div className="space-y-1">
                         {pedido.itens.map((item, idx) => (
-                          <p key={idx} className="text-xs text-[#a1a1aa] leading-relaxed">
+                          <p key={idx} className="text-xs text-muted-foreground leading-relaxed">
                             {item}
                           </p>
                         ))}
@@ -111,9 +111,9 @@ export default function PedidosPage() {
                         </div>
                       )}
                     </CardContent>
-                    <Separator className="bg-[#222]" />
-                    <CardFooter className="px-4 py-3 flex justify-between items-center group-hover:bg-[#222]/30 transition-colors">
-                      <div className="flex items-center gap-2 text-[10px] text-[#666]">
+                    <Separator />
+                    <CardFooter className="px-4 py-3 flex justify-between items-center group-hover:bg-muted/50 transition-colors">
+                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
                         <User className="h-3 w-3" />
                         #8129
                       </div>
@@ -124,7 +124,7 @@ export default function PedidosPage() {
                   </Card>
                 ))}
 
-                <Button variant="ghost" className="w-full border border-dashed border-[#222] text-[#666] hover:text-[#999] hover:bg-transparent h-10 text-xs">
+                <Button variant="ghost" className="w-full border border-dashed text-muted-foreground hover:text-foreground hover:bg-transparent h-10 text-xs">
                   + Adicionar Pedido Manual
                 </Button>
               </div>

@@ -62,30 +62,30 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen w-full flex bg-[#0D0D0D] text-[#ededed]">
+        <div className="min-h-screen w-full flex bg-background text-foreground">
             {/* Esquerda: Branding (50%) */}
             <div className="hidden lg:flex w-1/2 flex-col justify-center items-center relative overflow-hidden">
                 {/* Textura sutil vintage de fundo (opcional/css) */}
                 <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] pointer-events-none" />
 
                 <div className="z-10 text-center">
-                    <h1 className="text-6xl font-serif font-bold text-[#F9F6EE] tracking-tighter mb-4">
+                    <h1 className="text-6xl font-serif font-bold text-foreground tracking-tighter mb-4">
                         SEU MANEL
                     </h1>
-                    <p className="text-sm font-medium uppercase tracking-[0.2em] text-[#a1a1aa]">
+                    <p className="text-sm font-medium uppercase tracking-[0.2em] text-muted-foreground">
                         Painel Administrativo
                     </p>
                 </div>
             </div>
 
             {/* Direita: Form (50%) */}
-            <div className="w-full lg:w-1/2 flex justify-center items-center bg-[#1A1A1A] p-8">
+            <div className="w-full lg:w-1/2 flex justify-center items-center bg-card p-8 border-l border-border">
                 <div className="w-full max-w-sm space-y-8">
                     <div className="text-center lg:text-left space-y-2">
-                        <h2 className="text-2xl font-semibold text-[#F9F6EE] tracking-tight">
+                        <h2 className="text-2xl font-semibold text-foreground tracking-tight">
                             Bem-vindo de volta
                         </h2>
-                        <p className="text-sm text-[#a1a1aa]">
+                        <p className="text-sm text-muted-foreground">
                             Faça login para acessar o painel
                         </p>
                     </div>
@@ -98,12 +98,12 @@ export default function LoginPage() {
                         )}
                         <div className="space-y-4">
                             <div className="space-y-2">
-                                <Label htmlFor="email" className="text-[#ededed]">E-mail</Label>
+                                <Label htmlFor="email" className="text-foreground">E-mail</Label>
                                 <Input
                                     id="email"
                                     type="email"
                                     placeholder="admin@seumanel.com"
-                                    className="bg-[#0D0D0D] border-[#27272a] focus-visible:ring-[#ededed]"
+                                    className="bg-background border-border focus-visible:ring-foreground"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
@@ -111,14 +111,14 @@ export default function LoginPage() {
                             </div>
                             <div className="space-y-2 relative">
                                 <div className="flex justify-between items-center">
-                                    <Label htmlFor="password" className="text-[#ededed]">Senha</Label>
+                                    <Label htmlFor="password" className="text-foreground">Senha</Label>
                                 </div>
                                 <div className="relative">
                                     <Input
                                         id="password"
                                         type={showPassword ? "text" : "password"}
                                         placeholder="••••••••"
-                                        className="bg-[#0D0D0D] border-[#27272a] focus-visible:ring-[#ededed] pr-10"
+                                        className="bg-background border-border focus-visible:ring-foreground pr-10"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         required
@@ -126,13 +126,13 @@ export default function LoginPage() {
                                     <button
                                         type="button"
                                         onClick={() => setShowPassword(!showPassword)}
-                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#a1a1aa] hover:text-[#ededed]"
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                                     >
                                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                     </button>
                                 </div>
                                 <div className="flex justify-end pt-1">
-                                    <Link href="/login/reset" className="text-xs text-[#a1a1aa] hover:text-[#ededed] transition-colors">
+                                    <Link href="/login/reset" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
                                         Esqueci minha senha
                                     </Link>
                                 </div>
