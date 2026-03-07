@@ -270,9 +270,9 @@ export default function DashboardPage() {
                         <CardTitle className="text-xs font-semibold">Top Mais Vendidos</CardTitle>
                         <CardDescription className="text-[11px]">Ranking de saída hoje</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex-1 px-4 pb-2 min-h-0 flex flex-col">
-                        <ScrollArea className="flex-1 pr-4">
-                            <div className="space-y-1.5 py-1">
+                    <CardContent className="flex-1 flex flex-col min-h-0 px-4 pb-3">
+                        <ScrollArea className="flex-1 w-full rounded-md">
+                            <div className="space-y-1.5 pr-4 py-1">
                                 {topProducts.map((product) => (
                                     <div key={product.name} className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
@@ -293,9 +293,11 @@ export default function DashboardPage() {
                                 ))}
                             </div>
                         </ScrollArea>
-                        <Button variant="outline" className="w-full text-xs font-normal mt-1 shrink-0" render={<Link href="/estoque" />}>
-                            Ver ranking completo <ArrowRight className="ml-2 h-3 w-3" />
-                        </Button>
+                        <div className="pt-2 shrink-0">
+                            <Button variant="outline" className="w-full text-xs font-normal" render={<Link href="/estoque" />}>
+                                Ver ranking completo <ArrowRight className="ml-2 h-3 w-3" />
+                            </Button>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
@@ -354,9 +356,9 @@ export default function DashboardPage() {
                             <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
                         </div>
                     </CardHeader>
-                    <CardContent className="flex-1 px-4 pb-2 min-h-0 flex flex-col">
-                        <ScrollArea className="flex-1 pr-4">
-                            <div className="space-y-1.5 py-1">
+                    <CardContent className="flex-1 flex flex-col min-h-0 px-4 pb-3">
+                        <ScrollArea className="flex-1 w-full rounded-md">
+                            <div className="space-y-1.5 pr-4 py-1">
                                 {lowStockProducts.map((product) => (
                                     <div key={product.name} className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
@@ -376,9 +378,11 @@ export default function DashboardPage() {
                                 ))}
                             </div>
                         </ScrollArea>
-                        <Button variant="outline" className="w-full text-xs font-normal mt-1 shrink-0" render={<Link href="/estoque" />}>
-                            Ver todos os alertas <ArrowRight className="ml-2 h-3 w-3" />
-                        </Button>
+                        <div className="pt-2 shrink-0">
+                            <Button variant="outline" className="w-full text-xs font-normal" render={<Link href="/estoque" />}>
+                                Ver todos os alertas <ArrowRight className="ml-2 h-3 w-3" />
+                            </Button>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
