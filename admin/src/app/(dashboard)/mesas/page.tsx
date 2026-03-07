@@ -60,7 +60,7 @@ export default function MesasPage() {
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span>Monitoramento</span>
           <ChevronRight className="h-4 w-4" />
-          <span className="text-foreground font-medium">Mapa de Mesas</span>
+          <span className="text-foreground font-semibold">Mapa de Mesas</span>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex bg-muted rounded-md border p-0.5">
@@ -104,7 +104,7 @@ export default function MesasPage() {
                 <div className="flex justify-between items-start">
                   <div>
                     <p className="text-[10px] font-bold text-muted-foreground tracking-widest uppercase mb-1">MESA</p>
-                    <h2 className="text-3xl font-serif font-bold text-foreground">{mesa.numero}</h2>
+                    <h2 className="text-3xl font-serif font-black text-foreground">{mesa.numero}</h2>
                   </div>
                   <Badge className={cn("border-none text-[10px] font-bold uppercase tracking-wider h-6 py-0 px-2", getStatusColor(mesa.status))}>
                     {mesa.status}

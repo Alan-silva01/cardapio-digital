@@ -142,10 +142,11 @@
 
 @layer base {
     * {
-        @apply border-border;
+        @apply border-border outline-none;
     }
 
     body {
-        @apply bg-background text-foreground;
+        @apply bg-background text-foreground antialiased selection:bg-brand/10 selection:text-brand;
+        font-feature-settings: "cv02", "cv05", "cv11";
     }
 }

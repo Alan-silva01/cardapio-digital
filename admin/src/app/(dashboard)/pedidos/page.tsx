@@ -49,7 +49,7 @@ export default function PedidosPage() {
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span>Pedidos</span>
           <ChevronRight className="h-4 w-4" />
-          <span className="text-foreground font-medium">Kanban Live</span>
+          <span className="text-foreground font-semibold">Kanban Live</span>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-none px-2 py-0 h-5 text-[10px] font-bold">
@@ -88,7 +88,7 @@ export default function PedidosPage() {
                           <div className="h-7 w-7 rounded-md bg-muted flex items-center justify-center">
                             <Utensils className="h-4 w-4 text-muted-foreground" />
                           </div>
-                          <span className="font-bold text-sm tracking-tight text-foreground">{pedido.mesa}</span>
+                          <span className="font-semibold text-sm tracking-tight text-foreground">{pedido.mesa}</span>
                         </div>
                         <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground font-medium bg-muted px-2 py-1 rounded-full border">
                           <Clock className="h-3 w-3" />
