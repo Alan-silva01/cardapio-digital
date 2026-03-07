@@ -82,6 +82,46 @@ const App = () => {
 
     const currentProduct = products.length > 0 ? products[currentIndex] : null;
 
+    // CHECKOUT LOGIC
+    const handleCheckout = () => {
+        if (Object.keys(cart).length === 0) return;
+
+        // Try getting table number from URL (ex: ?mesa=5)
+        const params = new URLSearchParams(window.location.search);
+        const mesa = params.get('mesa') || 'Não informada';
+
+        let cartText = `*NOVO PEDIDO* 🛒\n*Mesa:* ${mesa}\n\n`;
+        let totalVal = 0;
+
+        Object.entries(cart).forEach(([key, qty]) => {
+            const hasVariation = key.includes('-');
+            const pid = hasVariation ? key.split('-')[0] : key;
+            const varName = hasVariation ? key.split('-').slice(1).join('-') : null;
+            const pModel = products.find(p => p.id === pid);
+
+            if (pModel) {
+                let currentPrice = pModel.price;
+                let displayVar = '';
+
+                if (hasVariation && pModel.variations && pModel.variations[varName]) {
+                    currentPrice = pModel.variations[varName].price;
+                    displayVar = ` (${varName})`;
+                }
+
+                totalVal += currentPrice * qty;
+                const priceFormatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(currentPrice * qty);
+                cartText += `▫️ ${qty}x ${pModel.name}${displayVar} - ${priceFormatted}\n`;
+            }
+        });
+
+        const totalFormatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalVal);
+        cartText += `\n*TOTAL: ${totalFormatted}*`;
+
+        const whatsappMsg = encodeURIComponent(cartText);
+        const phoneStr = '5511999999999'; // Replace with real number
+        window.open(`https://wa.me/${phoneStr}?text=${whatsappMsg}`, '_blank');
+    };
+
     // Fetch Products and their Variants from Supabase
     const fetchMenu = useCallback(async (isInitial = false) => {
         try {
@@ -1040,9 +1080,38 @@ const App = () => {
                             )}
                         </div>
 
+                        {/* UPSELL SECTION */}
+                        {Object.keys(cart).length > 0 && products.length > 0 && (
+                            <div className="cart-upsell-container">
+                                <h4 className="upsell-title">Que tal adicionar?</h4>
+                                <div className="upsell-scroll">
+                                    {products
+                                        .filter(p => !cart[p.id] && !Object.keys(cart).some(k => k.startsWith(p.id)) && p.id !== currentProduct?.id)
+                                        .slice(0, 5)
+                                        .map(p => (
+                                            <div key={p.id} className="upsell-item" onClick={() => {
+                                                setCart(prev => ({ ...prev, [p.id]: (prev[p.id] || 0) + 1 }));
+                                            }}>
+                                                <div className="upsell-img-box">
+                                                    <img src={p.imageUrl} alt={p.name} />
+                                                </div>
+                                                <div className="upsell-info">
+                                                    <span className="upsell-name">{p.name}</span>
+                                                    <span className="upsell-price">
+                                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.price)}
+                                                    </span>
+                                                </div>
+                                                <div className="upsell-add-icon">+</div>
+                                            </div>
+                                        ))
+                                    }
+                                </div>
+                            </div>
+                        )}
+
                         <div className="cart-footer">
                             <div className="cart-subtotal-row">
-                                <span className="cart-subtotal-label">Total</span>
+                                <span className="cart-subtotal-label">Subtotal</span>
                                 <span className="cart-subtotal-value">
                                     {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
                                         Object.entries(cart).reduce((sum, [key, qty]) => {
@@ -1060,7 +1129,12 @@ const App = () => {
                                     )}
                                 </span>
                             </div>
-                            <button className="checkout-btn">
+                            <button
+                                className="checkout-btn"
+                                onClick={handleCheckout}
+                                disabled={Object.keys(cart).length === 0}
+                                style={{ opacity: Object.keys(cart).length === 0 ? 0.5 : 1 }}
+                            >
                                 FINALIZAR PEDIDO <ChevronRight size={18} />
                             </button>
                         </div>

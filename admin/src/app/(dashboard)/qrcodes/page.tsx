@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Printer, Link as LinkIcon, Hash, Download } from "lucide-react";
 
 export default function QRCodesPage() {
-  const [baseUrl, setBaseUrl] = useState("https://seu-manel.vercel.app");
+  const [baseUrl, setBaseUrl] = useState("https://menu-bar-xi.vercel.app");
   const [tableCount, setTableCount] = useState(20);
 
   const handlePrint = () => {
