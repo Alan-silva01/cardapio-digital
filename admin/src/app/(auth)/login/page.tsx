@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { Eye, EyeOff } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
@@ -16,6 +16,7 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
+    const supabase = createClient();
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -30,24 +31,15 @@ export default function LoginPage() {
 
             if (authError) throw authError;
 
-            // Optional: check role in funcionarios table
-            const { data: funcData, error: funcError } = await supabase
-                .from("funcionarios")
-                .select("cargo, ativo")
-                .eq("auth_id", data.user.id)
-                .single();
+            // Read cargo from JWT app_metadata — zero extra DB queries
+            const cargo = data.user?.app_metadata?.cargo;
 
-            if (funcError || !funcData) {
+            if (!cargo) {
                 await supabase.auth.signOut();
-                throw new Error("Usuário não tem permissão para acessar o painel");
+                throw new Error("Usuário não cadastrado como funcionário");
             }
 
-            if (!funcData.ativo) {
-                await supabase.auth.signOut();
-                throw new Error("Contra desativada");
-            }
-
-            if (funcData.cargo !== "dono" && funcData.cargo !== "admin") {
+            if (cargo !== "dono" && cargo !== "admin") {
                 await supabase.auth.signOut();
                 throw new Error("Sem permissão de administrador");
             }

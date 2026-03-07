@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo, Suspense } from "react";
 import { useQueryState, parseAsString } from "nuqs";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -51,6 +51,7 @@ function EstoqueContent() {
     const [search, setSearch] = useQueryState("search", parseAsString.withDefault("").withOptions({ shallow: false }));
     const [filter, setFilter] = useQueryState("categoria", parseAsString.withDefault("todos").withOptions({ shallow: false }));
     const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
+    const supabase = createClient();
 
     async function fetchStock() {
         // Fetch wine types for glass image mapping
