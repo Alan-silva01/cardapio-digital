@@ -1,8 +1,11 @@
+"use client";
+
+import { useEffect, useState, useMemo } from "react";
+import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     Table,
     TableBody,
@@ -11,216 +14,421 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { Search, Plus, Minus, Infinity } from "lucide-react";
+import { Search, Plus, Minus, Infinity, Package, AlertTriangle, XCircle, CheckCircle2, Loader2 } from "lucide-react";
 import Image from "next/image";
+import { cn } from "@/lib/utils";
+
+interface StockItem {
+    variacao_id: string;
+    variacao_nome: string;
+    preco: number;
+    estoque: number;
+    estoque_minimo: number;
+    produto_id: string;
+    produto_nome: string;
+    imagem_url: string | null;
+    disponivel: boolean;
+    categoria_nome: string;
+}
+
+type FilterType = "todos" | "ok" | "baixo" | "esgotado" | "ilimitado";
+
+function getStatus(estoque: number, estoque_minimo: number): { label: string; color: string; type: FilterType } {
+    if (estoque === -1) return { label: "Ilimitado", color: "text-[#666] border-[#333] bg-[#1a1a1a]", type: "ilimitado" };
+    if (estoque === 0) return { label: "Esgotado", color: "text-red-400 border-red-500/20 bg-red-500/10", type: "esgotado" };
+    if (estoque <= estoque_minimo) return { label: "Baixo", color: "text-amber-400 border-amber-500/20 bg-amber-500/10", type: "baixo" };
+    return { label: "OK", color: "text-emerald-400 border-emerald-500/20 bg-emerald-500/10", type: "ok" };
+}
 
 export default function EstoquePage() {
+    const [items, setItems] = useState<StockItem[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [search, setSearch] = useState("");
+    const [filter, setFilter] = useState<FilterType>("todos");
+    const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
+
+    async function fetchStock() {
+        const { data, error } = await supabase
+            .from("variacoes_produto")
+            .select(`
+                id,
+                nome,
+                preco,
+                estoque,
+                estoque_minimo,
+                produto_id,
+                produtos!inner (
+                    id,
+                    nome,
+                    imagem_url,
+                    disponivel,
+                    categorias (
+                        nome
+                    )
+                )
+            `)
+            .eq("ativo", true)
+            .order("nome");
+
+        if (error) {
+            console.error("Erro ao buscar estoque:", error);
+            setLoading(false);
+            return;
+        }
+
+        const mapped: StockItem[] = (data || []).map((v: any) => ({
+            variacao_id: v.id,
+            variacao_nome: v.nome,
+            preco: Number(v.preco),
+            estoque: v.estoque,
+            estoque_minimo: v.estoque_minimo,
+            produto_id: v.produtos.id,
+            produto_nome: v.produtos.nome,
+            imagem_url: v.produtos.imagem_url,
+            disponivel: v.produtos.disponivel,
+            categoria_nome: v.produtos.categorias?.nome || "Sem Categoria",
+        }));
+
+        setItems(mapped);
+        setLoading(false);
+    }
+
+    useEffect(() => {
+        fetchStock();
+    }, []);
+
+    // Counts
+    const counts = useMemo(() => {
+        const ok = items.filter(i => i.estoque > i.estoque_minimo || i.estoque === -1).length;
+        const baixo = items.filter(i => i.estoque > 0 && i.estoque <= i.estoque_minimo).length;
+        const esgotado = items.filter(i => i.estoque === 0).length;
+        return { ok, baixo, esgotado, total: items.length };
+    }, [items]);
+
+    // Filtered items
+    const filtered = useMemo(() => {
+        let result = items;
+
+        if (search) {
+            const s = search.toLowerCase();
+            result = result.filter(i =>
+                i.produto_nome.toLowerCase().includes(s) ||
+                i.variacao_nome.toLowerCase().includes(s) ||
+                i.categoria_nome.toLowerCase().includes(s)
+            );
+        }
+
+        if (filter !== "todos") {
+            result = result.filter(i => getStatus(i.estoque, i.estoque_minimo).type === filter);
+        }
+
+        return result;
+    }, [items, search, filter]);
+
+    // Quick stock adjustment
+    async function adjustStock(variacaoId: string, delta: number) {
+        const item = items.find(i => i.variacao_id === variacaoId);
+        if (!item || item.estoque === -1) return;
+
+        const newStock = Math.max(0, item.estoque + delta);
+        setUpdatingIds(prev => new Set(prev).add(variacaoId));
+
+        // Optimistic update
+        setItems(prev => prev.map(i =>
+            i.variacao_id === variacaoId ? { ...i, estoque: newStock } : i
+        ));
+
+        const { error } = await supabase
+            .from("variacoes_produto")
+            .update({ estoque: newStock })
+            .eq("id", variacaoId);
+
+        if (error) {
+            console.error("Erro ao atualizar estoque:", error);
+            fetchStock(); // Revert on error
+        }
+
+        setUpdatingIds(prev => {
+            const next = new Set(prev);
+            next.delete(variacaoId);
+            return next;
+        });
+    }
+
+    // Toggle disponivel
+    async function toggleDisponivel(produtoId: string, current: boolean) {
+        setItems(prev => prev.map(i =>
+            i.produto_id === produtoId ? { ...i, disponivel: !current } : i
+        ));
+
+        const { error } = await supabase
+            .from("produtos")
+            .update({ disponivel: !current })
+            .eq("id", produtoId);
+
+        if (error) {
+            console.error("Erro ao toggle disponibilidade:", error);
+            fetchStock();
+        }
+    }
+
+    const filterButtons: { key: FilterType; label: string; count: number; icon: React.ElementType; activeColor: string }[] = [
+        { key: "todos", label: "Todos", count: counts.total, icon: Package, activeColor: "text-white" },
+        { key: "ok", label: "OK", count: counts.ok, icon: CheckCircle2, activeColor: "text-emerald-400" },
+        { key: "baixo", label: "Baixo", count: counts.baixo, icon: AlertTriangle, activeColor: "text-amber-400" },
+        { key: "esgotado", label: "Esgotado", count: counts.esgotado, icon: XCircle, activeColor: "text-red-400" },
+        { key: "ilimitado", label: "Ilimitado", count: items.filter(i => i.estoque === -1).length, icon: Infinity, activeColor: "text-[#888]" },
+    ];
+
+    if (loading) {
+        return (
+            <div className="flex-1 flex items-center justify-center h-[60vh]">
+                <Loader2 className="h-6 w-6 animate-spin text-[#666]" />
+            </div>
+        );
+    }
+
     return (
         <div className="flex-1 w-full space-y-6 p-8">
+            {/* Header */}
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-semibold tracking-tight">Estoque</h1>
-                <div className="flex gap-2">
-                    <div className="relative">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            type="search"
-                            placeholder="Buscar produto..."
-                            className="w-64 pl-8 bg-background shadow-none"
-                        />
-                    </div>
+                <div>
+                    <h1 className="text-xl font-semibold tracking-tight text-white">Controle de Estoque</h1>
+                    <p className="text-[13px] text-[#666] mt-0.5">{counts.total} variações cadastradas</p>
+                </div>
+                <div className="relative">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-[#555]" />
+                    <Input
+                        type="search"
+                        placeholder="Buscar produto..."
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        className="w-64 pl-8 bg-[#1a1a1a] border-[#333] text-[13px] h-9 focus:border-[#555] placeholder:text-[#444]"
+                    />
                 </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-4">
-                {/* Metric 1 */}
-                <Card className="shadow-none rounded-md">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">OK</CardTitle>
+            {/* Summary Cards */}
+            <div className="grid gap-3 grid-cols-4">
+                <Card className="bg-[#111] border-[#222] shadow-none">
+                    <CardHeader className="flex flex-row items-center justify-between pb-1 pt-4 px-4">
+                        <CardTitle className="text-[11px] font-medium text-[#666] uppercase tracking-wider">OK</CardTitle>
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500/50" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-green-500">48</div>
+                    <CardContent className="px-4 pb-4">
+                        <div className="text-2xl font-bold text-emerald-400">{counts.ok}</div>
                     </CardContent>
                 </Card>
-
-                {/* Metric 2 */}
-                <Card className="shadow-none rounded-md">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Baixo</CardTitle>
+                <Card className="bg-[#111] border-[#222] shadow-none">
+                    <CardHeader className="flex flex-row items-center justify-between pb-1 pt-4 px-4">
+                        <CardTitle className="text-[11px] font-medium text-[#666] uppercase tracking-wider">Baixo</CardTitle>
+                        <AlertTriangle className="h-3.5 w-3.5 text-amber-500/50" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-amber-500">4</div>
+                    <CardContent className="px-4 pb-4">
+                        <div className="text-2xl font-bold text-amber-400">{counts.baixo}</div>
                     </CardContent>
                 </Card>
-
-                {/* Metric 3 */}
-                <Card className="shadow-none rounded-md">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Esgotados</CardTitle>
+                <Card className="bg-[#111] border-[#222] shadow-none">
+                    <CardHeader className="flex flex-row items-center justify-between pb-1 pt-4 px-4">
+                        <CardTitle className="text-[11px] font-medium text-[#666] uppercase tracking-wider">Esgotados</CardTitle>
+                        <XCircle className="h-3.5 w-3.5 text-red-500/50" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold text-destructive">2</div>
+                    <CardContent className="px-4 pb-4">
+                        <div className="text-2xl font-bold text-red-400">{counts.esgotado}</div>
                     </CardContent>
                 </Card>
-
-                {/* Metric 4 */}
-                <Card className="shadow-none rounded-md">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Total</CardTitle>
+                <Card className="bg-[#111] border-[#222] shadow-none">
+                    <CardHeader className="flex flex-row items-center justify-between pb-1 pt-4 px-4">
+                        <CardTitle className="text-[11px] font-medium text-[#666] uppercase tracking-wider">Total</CardTitle>
+                        <Package className="h-3.5 w-3.5 text-[#555]" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">66</div>
+                    <CardContent className="px-4 pb-4">
+                        <div className="text-2xl font-bold text-white">{counts.total}</div>
                     </CardContent>
                 </Card>
             </div>
 
-            <Tabs defaultValue="todos" className="w-full">
-                <TabsList className="bg-transparent border-b w-full justify-start rounded-none h-auto p-0 mb-4 space-x-6">
-                    <TabsTrigger value="todos" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 pb-2 pt-1 font-medium">Todos</TabsTrigger>
-                    <TabsTrigger value="baixo" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 pb-2 pt-1 font-medium text-amber-500 data-[state=active]:text-amber-500">🟡 Baixo (4)</TabsTrigger>
-                    <TabsTrigger value="esgotado" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 pb-2 pt-1 font-medium text-destructive data-[state=active]:text-destructive">🔴 Esgotado (2)</TabsTrigger>
-                    <TabsTrigger value="ilimitado" className="data-[state=active]:bg-transparent data-[state=active]:shadow-none data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-0 pb-2 pt-1 font-medium">∞ Ilimitado</TabsTrigger>
-                </TabsList>
+            {/* Filter Tabs */}
+            <div className="flex gap-1 border-b border-[#222] pb-0">
+                {filterButtons.map(fb => (
+                    <button
+                        key={fb.key}
+                        onClick={() => setFilter(fb.key)}
+                        className={cn(
+                            "flex items-center gap-1.5 px-3 py-2 text-[12px] font-medium transition-colors border-b-2 -mb-[1px]",
+                            filter === fb.key
+                                ? `${fb.activeColor} border-current`
+                                : "text-[#555] border-transparent hover:text-[#888]"
+                        )}
+                    >
+                        <fb.icon className="h-3.5 w-3.5" />
+                        {fb.label}
+                        <span className={cn(
+                            "text-[10px] px-1.5 py-0.5 rounded-full",
+                            filter === fb.key ? "bg-white/10" : "bg-[#1a1a1a] text-[#555]"
+                        )}>
+                            {fb.count}
+                        </span>
+                    </button>
+                ))}
+            </div>
 
-                <Card className="shadow-none rounded-md overflow-hidden">
-                    <Table>
-                        <TableHeader className="bg-muted/50">
-                            <TableRow className="hover:bg-transparent">
-                                <TableHead className="w-[60px]"></TableHead>
-                                <TableHead>Produto</TableHead>
-                                <TableHead>Categoria</TableHead>
-                                <TableHead className="text-center">Estoque</TableHead>
-                                <TableHead className="text-center">Status</TableHead>
-                                <TableHead className="text-center">Preço</TableHead>
-                                <TableHead className="text-right">Ações Rápidas</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {/* Row 1 - Amber (Low) */}
+            {/* Table */}
+            <div className="rounded-lg border border-[#222] overflow-hidden bg-[#111]">
+                <Table>
+                    <TableHeader>
+                        <TableRow className="hover:bg-transparent border-[#222]">
+                            <TableHead className="w-[50px] text-[#555] text-[11px] font-medium uppercase"></TableHead>
+                            <TableHead className="text-[#555] text-[11px] font-medium uppercase">Produto</TableHead>
+                            <TableHead className="text-[#555] text-[11px] font-medium uppercase">Variação</TableHead>
+                            <TableHead className="text-[#555] text-[11px] font-medium uppercase">Categoria</TableHead>
+                            <TableHead className="text-center text-[#555] text-[11px] font-medium uppercase">Estoque</TableHead>
+                            <TableHead className="text-center text-[#555] text-[11px] font-medium uppercase">Status</TableHead>
+                            <TableHead className="text-center text-[#555] text-[11px] font-medium uppercase">App</TableHead>
+                            <TableHead className="text-right text-[#555] text-[11px] font-medium uppercase">Preço</TableHead>
+                            <TableHead className="text-right text-[#555] text-[11px] font-medium uppercase">Ação</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {filtered.length === 0 ? (
                             <TableRow>
-                                <TableCell>
-                                    <div className="h-10 w-10 relative rounded-md overflow-hidden bg-muted">
-                                        {/* Placeholder for product image */}
-                                        <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground">Img</div>
-                                    </div>
-                                </TableCell>
-                                <TableCell>
-                                    <div className="font-medium">Heineken</div>
-                                    <div className="text-xs text-muted-foreground">600ml</div>
-                                </TableCell>
-                                <TableCell>
-                                    <span className="text-xs text-muted-foreground">Bebidas</span>
-                                </TableCell>
-                                <TableCell className="text-center">
-                                    <div className="font-bold text-lg">3</div>
-                                    <div className="text-[10px] text-muted-foreground">Min: 10</div>
-                                </TableCell>
-                                <TableCell className="text-center">
-                                    <Badge variant="outline" className="text-amber-500 border-amber-500/20 bg-amber-500/10 font-normal">Baixo</Badge>
-                                </TableCell>
-                                <TableCell className="text-center">R$ 17,00</TableCell>
-                                <TableCell className="text-right">
-                                    <div className="flex items-center justify-end gap-1">
-                                        <Button variant="outline" size="icon" className="h-8 w-8 rounded-md"><Minus className="h-3 w-3" /></Button>
-                                        <Input className="w-12 h-8 text-center" defaultValue="3" />
-                                        <Button variant="outline" size="icon" className="h-8 w-8 rounded-md"><Plus className="h-3 w-3" /></Button>
-                                    </div>
+                                <TableCell colSpan={9} className="text-center text-[#555] py-12">
+                                    Nenhum produto encontrado
                                 </TableCell>
                             </TableRow>
+                        ) : (
+                            filtered.map((item, idx) => {
+                                const status = getStatus(item.estoque, item.estoque_minimo);
+                                const isUpdating = updatingIds.has(item.variacao_id);
+                                return (
+                                    <TableRow
+                                        key={item.variacao_id}
+                                        className={cn(
+                                            "border-[#1a1a1a] hover:bg-[#1a1a1a]/50 transition-colors",
+                                            idx % 2 === 1 && "bg-[#0d0d0d]/50",
+                                            item.estoque === 0 && "opacity-60"
+                                        )}
+                                    >
+                                        {/* Thumbnail */}
+                                        <TableCell className="py-2">
+                                            <div className="h-9 w-9 relative rounded-md overflow-hidden bg-[#1a1a1a] border border-[#222]">
+                                                {item.imagem_url ? (
+                                                    <Image
+                                                        src={item.imagem_url}
+                                                        alt={item.produto_nome}
+                                                        fill
+                                                        className="object-cover"
+                                                        sizes="36px"
+                                                    />
+                                                ) : (
+                                                    <div className="absolute inset-0 flex items-center justify-center text-[8px] text-[#444]">
+                                                        <Package className="h-3.5 w-3.5" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </TableCell>
 
-                            {/* Row 2 - Red (Out of Stock) */}
-                            <TableRow className="bg-muted/20">
-                                <TableCell>
-                                    <div className="h-10 w-10 relative rounded-md overflow-hidden bg-muted">
-                                        <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground">Img</div>
-                                    </div>
-                                </TableCell>
-                                <TableCell>
-                                    <div className="font-medium text-muted-foreground">Pastel de Queijo</div>
-                                    <div className="text-xs text-muted-foreground">Unidade</div>
-                                </TableCell>
-                                <TableCell>
-                                    <span className="text-xs text-muted-foreground">Porções</span>
-                                </TableCell>
-                                <TableCell className="text-center opacity-50">
-                                    <div className="font-bold text-lg">0</div>
-                                    <div className="text-[10px] text-muted-foreground">Min: 20</div>
-                                </TableCell>
-                                <TableCell className="text-center">
-                                    <Badge variant="outline" className="text-destructive border-destructive/20 bg-destructive/10 font-normal">Esgotado</Badge>
-                                </TableCell>
-                                <TableCell className="text-center text-muted-foreground">R$ 12,00</TableCell>
-                                <TableCell className="text-right">
-                                    <div className="flex items-center justify-end gap-1">
-                                        <Button variant="outline" size="icon" className="h-8 w-8 rounded-md" disabled><Minus className="h-3 w-3" /></Button>
-                                        <Input className="w-12 h-8 text-center text-muted-foreground" defaultValue="0" disabled />
-                                        <Button variant="outline" size="icon" className="h-8 w-8 rounded-md"><Plus className="h-3 w-3" /></Button>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
+                                        {/* Produto */}
+                                        <TableCell className="py-2">
+                                            <span className="text-[13px] font-medium text-[#eee]">{item.produto_nome}</span>
+                                        </TableCell>
 
-                            {/* Row 3 - Gray (Infinity) */}
-                            <TableRow>
-                                <TableCell>
-                                    <div className="h-10 w-10 relative rounded-md overflow-hidden bg-muted">
-                                        <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground">Img</div>
-                                    </div>
-                                </TableCell>
-                                <TableCell>
-                                    <div className="font-medium">Picanha Grelhada</div>
-                                    <div className="text-xs text-muted-foreground">Porção 500g</div>
-                                </TableCell>
-                                <TableCell>
-                                    <span className="text-xs text-muted-foreground">Pratos</span>
-                                </TableCell>
-                                <TableCell className="text-center">
-                                    <Infinity className="h-5 w-5 mx-auto text-muted-foreground" />
-                                </TableCell>
-                                <TableCell className="text-center">
-                                    <Badge variant="outline" className="text-muted-foreground border-border bg-muted font-normal">Ilimitado</Badge>
-                                </TableCell>
-                                <TableCell className="text-center">R$ 89,00</TableCell>
-                                <TableCell className="text-right">
-                                    <div className="flex items-center justify-end gap-1">
-                                        <span className="text-xs text-muted-foreground italic px-2">Gerenciado no cardápio</span>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
+                                        {/* Variação */}
+                                        <TableCell className="py-2">
+                                            <span className="text-[12px] text-[#888]">{item.variacao_nome}</span>
+                                        </TableCell>
 
-                            {/* Row 4 - Green (OK) */}
-                            <TableRow className="bg-muted/20">
-                                <TableCell>
-                                    <div className="h-10 w-10 relative rounded-md overflow-hidden bg-muted">
-                                        <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground">Img</div>
-                                    </div>
-                                </TableCell>
-                                <TableCell>
-                                    <div className="font-medium">Coca-Cola</div>
-                                    <div className="text-xs text-muted-foreground">Lata 350ml</div>
-                                </TableCell>
-                                <TableCell>
-                                    <span className="text-xs text-muted-foreground">Bebidas</span>
-                                </TableCell>
-                                <TableCell className="text-center">
-                                    <div className="font-bold text-lg">45</div>
-                                    <div className="text-[10px] text-muted-foreground">Min: 24</div>
-                                </TableCell>
-                                <TableCell className="text-center">
-                                    <Badge variant="outline" className="text-green-500 border-green-500/20 bg-green-500/10 font-normal">OK</Badge>
-                                </TableCell>
-                                <TableCell className="text-center">R$ 6,00</TableCell>
-                                <TableCell className="text-right">
-                                    <div className="flex items-center justify-end gap-1">
-                                        <Button variant="outline" size="icon" className="h-8 w-8 rounded-md"><Minus className="h-3 w-3" /></Button>
-                                        <Input className="w-12 h-8 text-center" defaultValue="45" />
-                                        <Button variant="outline" size="icon" className="h-8 w-8 rounded-md"><Plus className="h-3 w-3" /></Button>
-                                    </div>
-                                </TableCell>
-                            </TableRow>
+                                        {/* Categoria */}
+                                        <TableCell className="py-2">
+                                            <span className="text-[11px] text-[#555] px-2 py-0.5 rounded bg-[#1a1a1a]">{item.categoria_nome}</span>
+                                        </TableCell>
 
-                        </TableBody>
-                    </Table>
-                </Card>
-            </Tabs>
+                                        {/* Estoque */}
+                                        <TableCell className="text-center py-2">
+                                            {item.estoque === -1 ? (
+                                                <Infinity className="h-4 w-4 mx-auto text-[#555]" />
+                                            ) : (
+                                                <div>
+                                                    <span className={cn(
+                                                        "text-base font-bold",
+                                                        status.type === "ok" && "text-emerald-400",
+                                                        status.type === "baixo" && "text-amber-400",
+                                                        status.type === "esgotado" && "text-red-400"
+                                                    )}>
+                                                        {item.estoque}
+                                                    </span>
+                                                    <div className="text-[9px] text-[#444]">min: {item.estoque_minimo}</div>
+                                                </div>
+                                            )}
+                                        </TableCell>
+
+                                        {/* Status Badge */}
+                                        <TableCell className="text-center py-2">
+                                            <Badge variant="outline" className={cn("text-[10px] font-normal px-2 py-0.5", status.color)}>
+                                                {status.label}
+                                            </Badge>
+                                        </TableCell>
+
+                                        {/* Toggle App */}
+                                        <TableCell className="text-center py-2">
+                                            <button
+                                                onClick={() => toggleDisponivel(item.produto_id, item.disponivel)}
+                                                className={cn(
+                                                    "w-8 h-4 rounded-full relative transition-colors",
+                                                    item.disponivel ? "bg-emerald-500/30" : "bg-[#333]"
+                                                )}
+                                            >
+                                                <div className={cn(
+                                                    "absolute top-0.5 h-3 w-3 rounded-full transition-all",
+                                                    item.disponivel ? "left-4 bg-emerald-400" : "left-0.5 bg-[#666]"
+                                                )} />
+                                            </button>
+                                        </TableCell>
+
+                                        {/* Preço */}
+                                        <TableCell className="text-right py-2">
+                                            <span className="text-[13px] text-[#aaa] font-mono">
+                                                R$ {item.preco.toFixed(2).replace(".", ",")}
+                                            </span>
+                                        </TableCell>
+
+                                        {/* Ação Rápida */}
+                                        <TableCell className="text-right py-2">
+                                            {item.estoque === -1 ? (
+                                                <span className="text-[10px] text-[#444] italic">—</span>
+                                            ) : (
+                                                <div className="flex items-center justify-end gap-0.5">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="icon"
+                                                        className="h-7 w-7 rounded bg-[#1a1a1a] border-[#333] hover:bg-[#222] text-[#888]"
+                                                        onClick={() => adjustStock(item.variacao_id, -1)}
+                                                        disabled={item.estoque === 0 || isUpdating}
+                                                    >
+                                                        <Minus className="h-3 w-3" />
+                                                    </Button>
+                                                    <div className="w-9 h-7 flex items-center justify-center text-[12px] font-mono text-[#aaa] bg-[#1a1a1a] rounded border border-[#333]">
+                                                        {isUpdating ? <Loader2 className="h-3 w-3 animate-spin" /> : item.estoque}
+                                                    </div>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="icon"
+                                                        className="h-7 w-7 rounded bg-[#1a1a1a] border-[#333] hover:bg-[#222] text-[#888]"
+                                                        onClick={() => adjustStock(item.variacao_id, 1)}
+                                                        disabled={isUpdating}
+                                                    >
+                                                        <Plus className="h-3 w-3" />
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })
+                        )}
+                    </TableBody>
+                </Table>
+            </div>
         </div>
     );
 }
