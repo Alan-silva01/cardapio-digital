@@ -1,36 +1,8 @@
 {
-    "builds": [
+    "rewrites": [
         {
-            "src": "admin/package.json",
-            "use": "@vercel/next"
-        },
-        {
-            "src": "package.json",
-            "use": "@vercel/static-build",
-            "config": {
-                "distDir": "dist"
-            }
-        }
-    ],
-    "routes": [
-        {
-            "src": "/admin/_next/(.*)",
-            "dest": "admin/_next/$1"
-        },
-        {
-            "src": "/admin/(.*)",
-            "dest": "admin/$1"
-        },
-        {
-            "src": "/admin",
-            "dest": "admin"
-        },
-        {
-            "handle": "filesystem"
-        },
-        {
-            "src": "/(.*)",
-            "dest": "/index.html"
+            "source": "/((?!admin).*)",
+            "destination": "/index.html"
         }
     ]
 }
