@@ -270,8 +270,8 @@ export default function DashboardPage() {
                         <CardTitle className="text-xs font-semibold">Top Mais Vendidos</CardTitle>
                         <CardDescription className="text-[11px]">Ranking de saída hoje</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex-1 flex flex-col min-h-0 px-4 pb-3">
-                        <ScrollArea className="flex-1 w-full rounded-md">
+                    <CardContent className="flex-1 flex flex-col min-h-0 px-4 pb-3 overflow-hidden">
+                        <ScrollArea className="flex-1 w-full min-h-[120px]">
                             <div className="space-y-1.5 pr-4 py-1">
                                 {topProducts.map((product) => (
                                     <div key={product.name} className="flex items-center justify-between">
@@ -293,8 +293,8 @@ export default function DashboardPage() {
                                 ))}
                             </div>
                         </ScrollArea>
-                        <div className="pt-2 shrink-0">
-                            <Button variant="outline" className="w-full text-xs font-normal" render={<Link href="/estoque" />}>
+                        <div className="pt-3 border-t mt-auto shrink-0">
+                            <Button variant="outline" className="w-full text-xs font-normal h-8" render={<Link href="/estoque" />}>
                                 Ver ranking completo <ArrowRight className="ml-2 h-3 w-3" />
                             </Button>
                         </div>
@@ -356,8 +356,8 @@ export default function DashboardPage() {
                             <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
                         </div>
                     </CardHeader>
-                    <CardContent className="flex-1 flex flex-col min-h-0 px-4 pb-3">
-                        <ScrollArea className="flex-1 w-full rounded-md">
+                    <CardContent className="flex-1 flex flex-col min-h-0 px-4 pb-3 overflow-hidden">
+                        <ScrollArea className="flex-1 w-full min-h-[120px]">
                             <div className="space-y-1.5 pr-4 py-1">
                                 {lowStockProducts.map((product) => (
                                     <div key={product.name} className="flex items-center justify-between">
@@ -378,8 +378,8 @@ export default function DashboardPage() {
                                 ))}
                             </div>
                         </ScrollArea>
-                        <div className="pt-2 shrink-0">
-                            <Button variant="outline" className="w-full text-xs font-normal" render={<Link href="/estoque" />}>
+                        <div className="pt-3 border-t mt-auto shrink-0">
+                            <Button variant="outline" className="w-full text-xs font-normal h-8" render={<Link href="/estoque" />}>
                                 Ver todos os alertas <ArrowRight className="ml-2 h-3 w-3" />
                             </Button>
                         </div>
