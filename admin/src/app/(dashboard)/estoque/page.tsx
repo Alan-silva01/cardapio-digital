@@ -35,6 +35,7 @@ interface StockItem {
     imagem_url: string | null;
     disponivel: boolean;
     categoria_nome: string;
+    tipo_vinho: string | null;
 }
 
 function getStatus(estoque: number, estoque_minimo: number): { label: string; color: string; type: string } {
@@ -52,6 +53,13 @@ function EstoqueContent() {
     const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
 
     async function fetchStock() {
+        // Fetch wine types for glass image mapping
+        const { data: wineTypesData } = await supabase
+            .from("tipos_vinho")
+            .select("tipo, imagem_taca_url");
+
+        const wineGlassMap = new Map((wineTypesData || []).map(tw => [tw.tipo, tw.imagem_taca_url]));
+
         const { data, error } = await supabase
             .from("variacoes_produto")
             .select(`
@@ -66,6 +74,7 @@ function EstoqueContent() {
                     nome,
                     imagem_url,
                     disponivel,
+                    tipo_vinho,
                     categorias (
                         nome
                     )
@@ -80,18 +89,28 @@ function EstoqueContent() {
             return;
         }
 
-        const mapped: StockItem[] = (data || []).map((v: any) => ({
-            variacao_id: v.id,
-            variacao_nome: v.nome,
-            preco: Number(v.preco),
-            estoque: v.estoque,
-            estoque_minimo: v.estoque_minimo,
-            produto_id: v.produtos.id,
-            produto_nome: v.produtos.nome,
-            imagem_url: v.produtos.imagem_url,
-            disponivel: v.produtos.disponivel,
-            categoria_nome: v.produtos.categorias?.nome || "Sem Categoria",
-        }));
+        const mapped: StockItem[] = (data || []).map((v: any) => {
+            let finalImageUrl = v.produtos.imagem_url;
+
+            // If it's a "Taça" (Glass) variation and has a wine type, use the specific glass image
+            if (v.nome === "Taça" && v.produtos.tipo_vinho && wineGlassMap.has(v.produtos.tipo_vinho)) {
+                finalImageUrl = wineGlassMap.get(v.produtos.tipo_vinho);
+            }
+
+            return {
+                variacao_id: v.id,
+                variacao_nome: v.nome,
+                preco: Number(v.preco),
+                estoque: v.estoque,
+                estoque_minimo: v.estoque_minimo,
+                produto_id: v.produtos.id,
+                produto_nome: v.produtos.nome,
+                imagem_url: finalImageUrl,
+                disponivel: v.produtos.disponivel,
+                categoria_nome: v.produtos.categorias?.nome || "Sem Categoria",
+                tipo_vinho: v.produtos.tipo_vinho,
+            };
+        });
 
         setItems(mapped);
         setLoading(false);
