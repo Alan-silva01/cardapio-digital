@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, ShoppingCart, ArrowLeft, Loader2, Heart, Users, Droplet } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ShoppingCart, ArrowLeft, Loader2, Heart, Users, Droplet, Plus, Minus, Trash2, X } from 'lucide-react';
 import { supabase } from './lib/supabase';
 
 // Cloudinary URL optimizer: injects format/quality/width transforms
@@ -75,6 +75,7 @@ const App = () => {
     const [flyingItems, setFlyingItems] = useState([]); // for fly-to-cart animation
     const [heartParticles, setHeartParticles] = useState([]); // for heart burst effect
     const [wineGlassImages, setWineGlassImages] = useState({}); // { tinto: url, branco: url, rose: url }
+    const [isCartOpen, setIsCartOpen] = useState(false); // Controls the cart overlay
     const cartIconRef = useRef(null);
 
     const totalCartItems = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
@@ -380,7 +381,7 @@ const App = () => {
             <div className="top-nav">
                 <ArrowLeft className="icon" />
                 <div className="page-title">{currentProduct.category}</div>
-                <div ref={cartIconRef} style={{ position: 'relative' }}>
+                <div ref={cartIconRef} style={{ position: 'relative', cursor: 'pointer' }} onClick={() => setIsCartOpen(true)}>
                     <ShoppingCart className="icon" />
                     {totalCartItems > 0 && (
                         <div style={{
@@ -940,6 +941,132 @@ const App = () => {
                     onComplete={() => setHeartParticles(prev => prev.filter(p => p.id !== particle.id))}
                 />
             ))}
+
+            {/* CART OVERLAY / MODAL */}
+            <AnimatePresence>
+                {isCartOpen && (
+                    <motion.div
+                        className="cart-overlay"
+                        initial={{ y: '100%' }}
+                        animate={{ y: 0 }}
+                        exit={{ y: '100%' }}
+                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                    >
+                        <div className="cart-header">
+                            <span className="cart-title">Carrinho</span>
+                            <button
+                                onClick={() => setIsCartOpen(false)}
+                                style={{ background: 'transparent', border: 'none', color: '#FFF', cursor: 'pointer', padding: '4px' }}
+                            >
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        <div className="cart-items-container">
+                            {Object.entries(cart).length === 0 ? (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.5, marginTop: '40px' }}>
+                                    <ShoppingCart size={48} color="#888" style={{ marginBottom: '16px' }} />
+                                    <p style={{ color: '#FFF', fontSize: '14px', textAlign: 'center' }}>Seu carrinho está vazio.</p>
+                                </div>
+                            ) : (
+                                Object.entries(cart).map(([key, qty]) => {
+                                    // key might be "productId" or "productId-variationName" 
+                                    const hasVariation = key.includes('-');
+                                    let pid = key;
+                                    let varName = null;
+
+                                    if (hasVariation) {
+                                        const parts = key.split('-');
+                                        pid = parts[0];
+                                        varName = parts.slice(1).join('-'); // re-join in case variation name has hyphens
+                                    }
+
+                                    const pModel = products.find(p => p.id === pid);
+                                    if (!pModel) return null;
+
+                                    // Deduce price and image based on variation if applying
+                                    let itemPrice = pModel.price;
+                                    let itemImage = pModel.imageUrl;
+                                    let displayVarName = null;
+
+                                    if (hasVariation && pModel.variations && pModel.variations[varName]) {
+                                        itemPrice = pModel.variations[varName].price;
+                                        displayVarName = varName;
+                                        const isTaca = varName.toLowerCase().includes('taça') || varName.toLowerCase().includes('taca');
+                                        if (pModel.tipo_vinho && isTaca && wineGlassImages[pModel.tipo_vinho]) {
+                                            itemImage = wineGlassImages[pModel.tipo_vinho];
+                                        }
+                                    }
+
+                                    return (
+                                        <div key={key} className="cart-item">
+                                            <div className="cart-item-image">
+                                                <img src={itemImage} alt={pModel.name} />
+                                            </div>
+                                            <div className="cart-item-info">
+                                                <div className="cart-item-title">{pModel.name}</div>
+                                                {displayVarName && <div className="cart-item-meta">{displayVarName}</div>}
+                                                <div className="cart-item-price">
+                                                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(itemPrice)}
+                                                </div>
+                                            </div>
+                                            <div className="cart-item-actions">
+                                                <button className="cart-trash-btn" onClick={() => {
+                                                    setCart(prev => {
+                                                        const newC = { ...prev };
+                                                        delete newC[key];
+                                                        return newC;
+                                                    });
+                                                }}>
+                                                    <Trash2 size={16} />
+                                                </button>
+                                                <div className="cart-qty-controls">
+                                                    <button className="cart-qty-btn" onClick={() => {
+                                                        setCart(prev => ({ ...prev, [key]: Math.max(1, prev[key] - 1) }));
+                                                    }}>
+                                                        <Minus size={14} />
+                                                    </button>
+                                                    <span className="cart-qty-val">{qty}</span>
+                                                    <button className="cart-qty-btn" onClick={() => {
+                                                        setCart(prev => ({ ...prev, [key]: prev[key] + 1 }));
+                                                    }}>
+                                                        <Plus size={14} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
+
+                        <div className="cart-footer">
+                            <div className="cart-subtotal-row">
+                                <span className="cart-subtotal-label">Total</span>
+                                <span className="cart-subtotal-value">
+                                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                                        Object.entries(cart).reduce((sum, [key, qty]) => {
+                                            const hasVariation = key.includes('-');
+                                            const pid = hasVariation ? key.split('-')[0] : key;
+                                            const varName = hasVariation ? key.split('-').slice(1).join('-') : null;
+                                            const pModel = products.find(p => p.id === pid);
+                                            if (!pModel) return sum;
+                                            let currentPrice = pModel.price;
+                                            if (hasVariation && pModel.variations && pModel.variations[varName]) {
+                                                currentPrice = pModel.variations[varName].price;
+                                            }
+                                            return sum + (currentPrice * qty);
+                                        }, 0)
+                                    )}
+                                </span>
+                            </div>
+                            <button className="checkout-btn">
+                                FINALIZAR PEDIDO <ChevronRight size={18} />
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

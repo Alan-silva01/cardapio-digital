@@ -150,3 +150,39 @@
         font-feature-settings: "cv02", "cv05", "cv11";
     }
 }
+
+/* --- PRINT RULES FOR QR CODES --- */
+@media print {
+
+    /* Hide the entire sidebar */
+    aside {
+        display: none !important;
+    }
+
+    /* Hide top nav header if there is one */
+    header {
+        display: none !important;
+    }
+
+    /* Reset background colors to save ink and ensure contrast */
+    body {
+        background-color: white !important;
+        color: black !important;
+    }
+
+    /* Ensure exactly A4 or Letter formatting generally works */
+    @page {
+        margin: 1cm;
+    }
+
+    /* Enforce grid printing */
+    .print\:grid-cols-4 {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+
+    /* Prevent cutting cards in half */
+    .break-inside-avoid {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+}
