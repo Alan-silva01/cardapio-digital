@@ -86,8 +86,8 @@ export function Sidebar() {
                             className={cn(
                                 "flex items-center rounded-md transition-colors duration-200 overflow-hidden mx-2 h-8 w-full",
                                 isActive
-                                    ? "bg-[#1A1A1A] text-white"
-                                    : "text-[#888] hover:bg-[#1A1A1A] hover:text-[#eee]"
+                                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                             )}
                         >
                             {/* Icon Container - Always 32px and centered to stay stationary */}
@@ -127,7 +127,7 @@ export function Sidebar() {
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
                 className={cn(
-                    "fixed inset-y-0 left-0 z-40 mt-11 flex flex-col border-r bg-[#111111] border-[#222] transition-all duration-150 ease-out shadow-2xl overflow-hidden",
+                    "fixed inset-y-0 left-0 z-40 mt-11 flex flex-col border-r bg-sidebar border-sidebar-border transition-all duration-150 ease-out shadow-2xl overflow-hidden",
                     isExpanded ? "w-48 shadow-[10px_0_30px_-10px_rgba(0,0,0,0.5)]" : "w-[48px]"
                 )}
             >
@@ -137,7 +137,7 @@ export function Sidebar() {
                         {navigationGroups.map((group) => (
                             <div key={group.label} className="w-full mb-6">
                                 <h3 className={cn(
-                                    "px-4 text-[10px] font-bold text-[#444] tracking-widest transition-all duration-150 ease-out uppercase mb-2",
+                                    "px-4 text-[10px] font-bold text-sidebar-foreground/70 tracking-widest transition-all duration-150 ease-out uppercase mb-2",
                                     isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2"
                                 )}>
                                     {group.label}
@@ -149,12 +149,12 @@ export function Sidebar() {
                 </ScrollArea>
 
                 {/* Footer */}
-                <div className="flex flex-col gap-1 border-t border-[#222] p-1 bg-[#111]">
+                <div className="flex flex-col gap-1 border-t border-sidebar-border p-1 bg-sidebar">
                     {/* Pin Menu */}
                     <button
                         onClick={() => setIsPinned(!isPinned)}
                         className={cn(
-                            "flex h-8 items-center rounded-md hover:bg-[#1A1A1A] transition-colors text-[#666] hover:text-white mx-2",
+                            "flex h-8 items-center rounded-md hover:bg-sidebar-accent transition-colors text-sidebar-foreground hover:text-sidebar-accent-foreground mx-2",
                         )}
                     >
                         <div className="w-8 h-8 shrink-0 flex items-center justify-center">
@@ -173,12 +173,12 @@ export function Sidebar() {
                         "flex h-8 items-center transition-all duration-200 mx-2",
                     )}>
                         <div className="w-8 h-8 shrink-0 flex items-center justify-center">
-                            <Avatar className="h-5 w-5 border border-[#222]">
-                                <AvatarFallback className="bg-[#1A1A1A] text-[#666] text-[8px]">AD</AvatarFallback>
+                            <Avatar className="h-5 w-5 border border-sidebar-border">
+                                <AvatarFallback className="bg-sidebar-accent text-sidebar-foreground text-[8px]">AD</AvatarFallback>
                             </Avatar>
                         </div>
                         <span className={cn(
-                            "text-[11px] text-[#555] font-medium pl-2 transition-all duration-200",
+                            "text-[11px] text-sidebar-foreground font-medium pl-2 transition-all duration-200",
                             isExpanded ? "opacity-100" : "opacity-0 w-0"
                         )}>
                             Admin v0.1
