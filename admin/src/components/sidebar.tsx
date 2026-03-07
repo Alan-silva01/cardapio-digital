@@ -38,8 +38,8 @@ const navigationGroups: SidebarGroup[] = [
         label: "OPERACIONAL",
         items: [
             { icon: Home, label: "Dashboard", href: "/" },
-            { icon: UtensilsCrossed, label: "Pedidos (Kanban)", href: "/pedidos" },
-            { icon: LayoutDashboard, label: "Mesas (Monitor)", href: "/mesas" },
+            { icon: UtensilsCrossed, label: "Pedidos", href: "/pedidos" },
+            { icon: LayoutDashboard, label: "Mesas", href: "/mesas" },
             { icon: Menu, label: "Layout Visual", href: "/layout" },
         ]
     },
