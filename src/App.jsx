@@ -118,8 +118,11 @@ const App = () => {
         cartText += `\n*TOTAL: ${totalFormatted}*`;
 
         const whatsappMsg = encodeURIComponent(cartText);
-        const phoneStr = '5511999999999'; // Replace with real number
-        window.open(`https://wa.me/${phoneStr}?text=${whatsappMsg}`, '_blank');
+        const phoneStr = '5511999999999'; // Substitua pelo número real
+        const finalUrl = `https://wa.me/${phoneStr}?text=${whatsappMsg}`;
+
+        console.log("Redirecionando para WhatsApp:", finalUrl);
+        window.location.href = finalUrl;
     };
 
     // Fetch Products and their Variants from Supabase
