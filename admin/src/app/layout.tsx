@@ -13,6 +13,9 @@ export const metadata: Metadata = {
   description: "Painel Administrativo do restaurante Seu Manel",
 };
 
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
+import NextTopLoader from 'nextjs-toploader';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -23,7 +26,15 @@ export default function RootLayout({
       <body
         className={`${inter.variable} font-sans antialiased`}
       >
-        <TooltipProvider>{children}</TooltipProvider>
+        <NextTopLoader
+          color="#f97316"
+          height={3}
+          showSpinner={false}
+          shadow="0 0 10px #f97316,0 0 5px #f97316"
+        />
+        <NuqsAdapter>
+          <TooltipProvider>{children}</TooltipProvider>
+        </NuqsAdapter>
       </body>
     </html>
   );

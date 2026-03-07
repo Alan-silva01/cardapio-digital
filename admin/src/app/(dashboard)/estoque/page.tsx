@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, Suspense } from "react";
+import { useQueryState, parseAsString } from "nuqs";
 import { supabase } from "@/lib/supabase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +15,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { Search, Plus, Minus, InfinityIcon as Infinity, Package, AlertTriangle, XCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { Search, Plus, Minus, InfinityIcon as Infinity, Package, AlertTriangle, XCircle, CheckCircle2, Loader2, Tag } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import {
@@ -36,20 +37,18 @@ interface StockItem {
     categoria_nome: string;
 }
 
-type FilterType = "todos" | "ok" | "baixo" | "esgotado" | "ilimitado";
-
-function getStatus(estoque: number, estoque_minimo: number): { label: string; color: string; type: FilterType } {
+function getStatus(estoque: number, estoque_minimo: number): { label: string; color: string; type: string } {
     if (estoque === -1) return { label: "Ilimitado", color: "text-[#666] border-[#333] bg-[#1a1a1a]", type: "ilimitado" };
     if (estoque === 0) return { label: "Esgotado", color: "text-red-400 border-red-500/20 bg-red-500/10", type: "esgotado" };
     if (estoque <= estoque_minimo) return { label: "Baixo", color: "text-amber-400 border-amber-500/20 bg-amber-500/10", type: "baixo" };
     return { label: "OK", color: "text-emerald-400 border-emerald-500/20 bg-emerald-500/10", type: "ok" };
 }
 
-export default function EstoquePage() {
+function EstoqueContent() {
     const [items, setItems] = useState<StockItem[]>([]);
     const [loading, setLoading] = useState(true);
-    const [search, setSearch] = useState("");
-    const [filter, setFilter] = useState<FilterType>("todos");
+    const [search, setSearch] = useQueryState("search", parseAsString.withDefault("").withOptions({ shallow: false }));
+    const [filter, setFilter] = useQueryState("categoria", parseAsString.withDefault("todos").withOptions({ shallow: false }));
     const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
 
     async function fetchStock() {
@@ -110,6 +109,12 @@ export default function EstoquePage() {
         return { ok, baixo, esgotado, total: items.length };
     }, [items]);
 
+    // Categories calculation
+    const categories = useMemo(() => {
+        const cats = new Set(items.map(i => i.categoria_nome));
+        return Array.from(cats).sort();
+    }, [items]);
+
     // Filtered items
     const filtered = useMemo(() => {
         let result = items;
@@ -124,7 +129,7 @@ export default function EstoquePage() {
         }
 
         if (filter !== "todos") {
-            result = result.filter(i => getStatus(i.estoque, i.estoque_minimo).type === filter);
+            result = result.filter(i => i.categoria_nome === filter);
         }
 
         return result;
@@ -177,13 +182,18 @@ export default function EstoquePage() {
         }
     }
 
-    const filterButtons: { key: FilterType; label: string; count: number; icon: React.ElementType; activeColor: string }[] = [
-        { key: "todos", label: "Todos", count: counts.total, icon: Package, activeColor: "text-white" },
-        { key: "ok", label: "OK", count: counts.ok, icon: CheckCircle2, activeColor: "text-emerald-400" },
-        { key: "baixo", label: "Baixo", count: counts.baixo, icon: AlertTriangle, activeColor: "text-amber-400" },
-        { key: "esgotado", label: "Esgotado", count: counts.esgotado, icon: XCircle, activeColor: "text-red-400" },
-        { key: "ilimitado", label: "Ilimitado", count: items.filter(i => i.estoque === -1).length, icon: Infinity, activeColor: "text-[#888]" },
-    ];
+    const filterButtons = useMemo(() => {
+        return [
+            { key: "todos", label: "Todos", count: counts.total, icon: Package, activeColor: "text-white" },
+            ...categories.map(cat => ({
+                key: cat,
+                label: cat,
+                count: items.filter(i => i.categoria_nome === cat).length,
+                icon: Tag,
+                activeColor: "text-white"
+            }))
+        ];
+    }, [counts.total, categories, items]);
 
     if (loading) {
         return (
@@ -206,7 +216,7 @@ export default function EstoquePage() {
                     <Input
                         type="search"
                         placeholder="Buscar produto..."
-                        value={search}
+                        value={search || ""}
                         onChange={e => setSearch(e.target.value)}
                         className="w-64 pl-8 bg-[#1a1a1a] border-[#333] text-[13px] h-9 focus:border-[#555] placeholder:text-[#444]"
                     />
@@ -254,19 +264,19 @@ export default function EstoquePage() {
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex gap-1 border-b border-[#222] pb-0">
+            <div className="flex gap-1 border-b border-[#222] pb-0 overflow-x-auto scrollbar-none">
                 {filterButtons.map(fb => (
                     <button
                         key={fb.key}
                         onClick={() => setFilter(fb.key)}
                         className={cn(
-                            "flex items-center gap-1.5 px-3 py-2 text-[12px] font-medium transition-colors border-b-2 -mb-[1px]",
+                            "flex items-center gap-1.5 px-3 py-2 text-[12px] font-medium transition-colors border-b-2 -mb-[1px] whitespace-nowrap",
                             filter === fb.key
                                 ? `${fb.activeColor} border-current`
                                 : "text-[#555] border-transparent hover:text-[#888]"
                         )}
                     >
-                        <fb.icon className="h-3.5 w-3.5" />
+                        {fb.icon && <fb.icon className="h-3.5 w-3.5" />}
                         {fb.label}
                         <span className={cn(
                             "text-[10px] px-1.5 py-0.5 rounded-full",
@@ -374,99 +384,96 @@ export default function EstoquePage() {
                                             </HoverCard>
                                         </TableCell>
 
-                                        {/* Produto */}
-                                        <TableCell className="py-2">
-                                            <span className="text-[13px] font-medium text-[#eee]">{item.produto_nome}</span>
+                                        <TableCell>
+                                            <div className="font-medium text-white/90 text-sm">{item.produto_nome}</div>
                                         </TableCell>
-
-                                        {/* Variação */}
-                                        <TableCell className="py-2">
-                                            <span className="text-[12px] text-[#888]">{item.variacao_nome}</span>
+                                        <TableCell className="text-[#888] text-sm">
+                                            {item.variacao_nome}
                                         </TableCell>
-
-                                        {/* Categoria */}
-                                        <TableCell className="py-2">
-                                            <span className="text-[11px] text-[#555] px-2 py-0.5 rounded bg-[#1a1a1a]">{item.categoria_nome}</span>
-                                        </TableCell>
-
-                                        {/* Estoque */}
-                                        <TableCell className="text-center py-2">
-                                            {item.estoque === -1 ? (
-                                                <Infinity className="h-4 w-4 mx-auto text-[#555]" />
-                                            ) : (
-                                                <div>
-                                                    <span className={cn(
-                                                        "text-base font-bold",
-                                                        status.type === "ok" && "text-emerald-400",
-                                                        status.type === "baixo" && "text-amber-400",
-                                                        status.type === "esgotado" && "text-red-400"
-                                                    )}>
-                                                        {item.estoque}
-                                                    </span>
-                                                    <div className="text-[9px] text-[#444]">min: {item.estoque_minimo}</div>
-                                                </div>
-                                            )}
-                                        </TableCell>
-
-                                        {/* Status Badge */}
-                                        <TableCell className="text-center py-2">
-                                            <Badge variant="outline" className={cn("text-[10px] font-normal px-2 py-0.5", status.color)}>
-                                                {status.label}
+                                        <TableCell>
+                                            <Badge variant="outline" className="text-[10px] font-medium bg-[#1a1a1a] border-[#333] text-[#888] rounded-md px-2 py-0.5">
+                                                {item.categoria_nome}
                                             </Badge>
                                         </TableCell>
 
-                                        {/* Toggle App */}
-                                        <TableCell className="text-center py-2">
-                                            <button
-                                                onClick={() => toggleDisponivel(item.produto_id, item.disponivel)}
-                                                className={cn(
-                                                    "w-8 h-4 rounded-full relative transition-colors",
-                                                    item.disponivel ? "bg-emerald-500/30" : "bg-[#333]"
+                                        <TableCell className="text-center">
+                                            <div className="inline-flex items-center justify-center min-w-[3rem]">
+                                                {item.estoque === -1 ? (
+                                                    <Infinity className="h-4 w-4 text-[#666]" />
+                                                ) : (
+                                                    <span className={cn(
+                                                        "font-mono text-[13px] font-medium",
+                                                        item.estoque === 0 ? "text-red-400" :
+                                                            item.estoque <= item.estoque_minimo ? "text-amber-400" : "text-emerald-400"
+                                                    )}>
+                                                        {item.estoque}
+                                                    </span>
                                                 )}
-                                            >
-                                                <div className={cn(
-                                                    "absolute top-0.5 h-3 w-3 rounded-full transition-all",
-                                                    item.disponivel ? "left-4 bg-emerald-400" : "left-0.5 bg-[#666]"
-                                                )} />
-                                            </button>
+                                            </div>
                                         </TableCell>
 
-                                        {/* Preço */}
-                                        <TableCell className="text-right py-2">
-                                            <span className="text-[13px] text-[#aaa] font-mono">
-                                                R$ {item.preco.toFixed(2).replace(".", ",")}
-                                            </span>
+                                        <TableCell>
+                                            <div className="flex justify-center">
+                                                <Badge
+                                                    variant="outline"
+                                                    className={cn(
+                                                        "text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full border",
+                                                        status.color
+                                                    )}
+                                                >
+                                                    {status.label}
+                                                </Badge>
+                                            </div>
                                         </TableCell>
 
-                                        {/* Ação Rápida */}
-                                        <TableCell className="text-right py-2">
-                                            {item.estoque === -1 ? (
-                                                <span className="text-[10px] text-[#444] italic">—</span>
-                                            ) : (
-                                                <div className="flex items-center justify-end gap-0.5">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="icon"
-                                                        className="h-7 w-7 rounded bg-[#1a1a1a] border-[#333] hover:bg-[#222] text-[#888]"
-                                                        onClick={() => adjustStock(item.variacao_id, -1)}
-                                                        disabled={item.estoque === 0 || isUpdating}
-                                                    >
-                                                        <Minus className="h-3 w-3" />
-                                                    </Button>
-                                                    <div className="w-9 h-7 flex items-center justify-center text-[12px] font-mono text-[#aaa] bg-[#1a1a1a] rounded border border-[#333]">
-                                                        {isUpdating ? <Loader2 className="h-3 w-3 animate-spin" /> : item.estoque}
-                                                    </div>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="icon"
-                                                        className="h-7 w-7 rounded bg-[#1a1a1a] border-[#333] hover:bg-[#222] text-[#888]"
-                                                        onClick={() => adjustStock(item.variacao_id, 1)}
-                                                        disabled={isUpdating}
-                                                    >
-                                                        <Plus className="h-3 w-3" />
-                                                    </Button>
-                                                </div>
-                                            )}
+                                        {/* Availability Toggle */}
+                                        <TableCell>
+                                            <div className="flex justify-center">
+                                                <button
+                                                    onClick={() => toggleDisponivel(item.produto_id, item.disponivel)}
+                                                    className={cn(
+                                                        "relative inline-flex h-4 w-7 cursor-pointer items-center rounded-full transition-colors focus:outline-hidden",
+                                                        item.disponivel ? "bg-emerald-500/80" : "bg-[#333]"
+                                                    )}
+                                                    role="switch"
+                                                    aria-checked={item.disponivel}
+                                                >
+                                                    <span className="sr-only">Toggle disponibilidade</span>
+                                                    <span
+                                                        className={cn(
+                                                            "inline-block h-3 w-3 transform rounded-full bg-white transition-transform",
+                                                            item.disponivel ? "translate-x-3.5" : "translate-x-0.5"
+                                                        )}
+                                                    />
+                                                </button>
+                                            </div>
+                                        </TableCell>
+
+                                        <TableCell className="text-right font-mono text-sm text-[#888]">
+                                            R$ {item.preco.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                                        </TableCell>
+
+                                        <TableCell className="text-right">
+                                            <div className="flex items-center justify-end gap-1">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-7 w-7 rounded-full text-[#666] hover:text-white hover:bg-[#222]"
+                                                    onClick={() => adjustStock(item.variacao_id, -1)}
+                                                    disabled={isUpdating || item.estoque <= 0}
+                                                >
+                                                    <Minus className="h-3 w-3" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-7 w-7 rounded-full text-[#666] hover:text-white hover:bg-[#222]"
+                                                    onClick={() => adjustStock(item.variacao_id, 1)}
+                                                    disabled={isUpdating || item.estoque === -1}
+                                                >
+                                                    <Plus className="h-3 w-3" />
+                                                </Button>
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 );
@@ -476,5 +483,17 @@ export default function EstoquePage() {
                 </Table>
             </div>
         </div>
+    );
+}
+
+export default function EstoquePage() {
+    return (
+        <Suspense fallback={
+            <div className="flex-1 flex items-center justify-center h-[60vh]">
+                <Loader2 className="h-6 w-6 animate-spin text-[#666]" />
+            </div>
+        }>
+            <EstoqueContent />
+        </Suspense>
     );
 }
