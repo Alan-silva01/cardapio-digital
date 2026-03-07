@@ -13,7 +13,6 @@ import {
     Package
 } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 import {
     Bar,
     BarChart,
@@ -30,8 +29,6 @@ import {
     ChartContainer,
     ChartTooltip,
     ChartTooltipContent,
-    ChartLegend,
-    ChartLegendContent,
 } from "@/components/ui/chart";
 
 // --- MOCK DATA --- 
@@ -64,6 +61,22 @@ const trafficData = [
     { time: "00:00", active: 20 },
 ];
 
+const topProducts = [
+    { name: "Heineken 600ml", category: "Cervejas", qty: 42, revenue: "R$ 630", img: "https://images.unsplash.com/photo-1618885472179-5e474019f2a2?q=80&w=128&auto=format&fit=crop" },
+    { name: "Smash Double", category: "Entradas", qty: 38, revenue: "R$ 1.520", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=128&auto=format&fit=crop" },
+    { name: "Aperol Spritz", category: "Drinks", qty: 22, revenue: "R$ 770", img: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=128&auto=format&fit=crop" },
+    { name: "Malbec Reserva", category: "Vinhos", qty: 18, revenue: "R$ 2.160", img: "https://images.unsplash.com/photo-1546171753-97d7676e4602?q=80&w=128&auto=format&fit=crop" },
+    { name: "Bruschetta", category: "Entradas", qty: 15, revenue: "R$ 450", img: "https://images.unsplash.com/photo-1572695157366-5e585ab2b69f?q=80&w=128&auto=format&fit=crop" },
+];
+
+const lowStockProducts = [
+    { name: "Heineken 600ml", category: "Cervejas", stock: 5, img: "https://images.unsplash.com/photo-1618885472179-5e474019f2a2?q=80&w=128&auto=format&fit=crop" },
+    { name: "Malbec Reserva", category: "Vinhos", stock: 3, img: "https://images.unsplash.com/photo-1546171753-97d7676e4602?q=80&w=128&auto=format&fit=crop" },
+    { name: "Gin Tanqueray", category: "Destilados", stock: 2, img: "https://images.unsplash.com/photo-1551024709-8f23befc6f87?q=80&w=128&auto=format&fit=crop" },
+    { name: "Azeite Trufado", category: "Ingredientes", stock: 4, img: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?q=80&w=128&auto=format&fit=crop" },
+    { name: "Água Tônica", category: "Bebidas", stock: 8, img: "https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?q=80&w=128&auto=format&fit=crop" },
+];
+
 // --- CHART CONFIGS ---
 const ordersChartConfig = {
     pedidos: { label: "Pedidos", color: "#EC662D" },
@@ -86,8 +99,9 @@ export default function DashboardPage() {
     const totalCategories = categoryData.reduce((acc, curr) => acc + curr.visitors, 0);
 
     return (
-        <div className="flex-1 w-full space-y-2.5 px-6 py-4">
-            <div className="flex items-center justify-between">
+        <div className="flex flex-col h-[calc(100vh-3.5rem)] w-full px-6 py-4 gap-2.5 overflow-hidden">
+            {/* HEADER */}
+            <div className="flex items-center justify-between shrink-0">
                 <div>
                     <h1 className="text-xl font-semibold tracking-tight">Dashboard General</h1>
                     <p className="text-sm text-muted-foreground">Visão geral da operação hoje</p>
@@ -103,54 +117,54 @@ export default function DashboardPage() {
             </div>
 
             {/* --- METRICS CARDS --- */}
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-2.5 md:grid-cols-2 lg:grid-cols-4 shrink-0">
                 <Card className="shadow-none rounded-xl border border-border">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Faturamento Hoje</CardTitle>
-                        <DollarSign className="h-4 w-4 text-emerald-500" />
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 pt-3 px-4">
+                        <CardTitle className="text-xs font-medium text-muted-foreground">Faturamento Hoje</CardTitle>
+                        <DollarSign className="h-3.5 w-3.5 text-emerald-500" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold tracking-tight">R$ 5.847,50</div>
-                        <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                    <CardContent className="px-4 pb-3">
+                        <div className="text-xl font-bold tracking-tight">R$ 5.847,50</div>
+                        <p className="text-[11px] text-muted-foreground flex items-center gap-1">
                             <span className="text-emerald-500 font-medium flex items-center"><TrendingUp className="h-3 w-3 mr-0.5" /> +14.5%</span> em relação a ontem
                         </p>
                     </CardContent>
                 </Card>
 
                 <Card className="shadow-none rounded-xl border border-border">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Pedidos (Hoje)</CardTitle>
-                        <UtensilsCrossed className="h-4 w-4 text-muted-foreground" />
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 pt-3 px-4">
+                        <CardTitle className="text-xs font-medium text-muted-foreground">Pedidos (Hoje)</CardTitle>
+                        <UtensilsCrossed className="h-3.5 w-3.5 text-muted-foreground" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold tracking-tight">142</div>
-                        <p className="text-xs text-muted-foreground mt-1">
+                    <CardContent className="px-4 pb-3">
+                        <div className="text-xl font-bold tracking-tight">142</div>
+                        <p className="text-[11px] text-muted-foreground">
                             <span className="font-medium text-foreground">18</span> produzindo agora
                         </p>
                     </CardContent>
                 </Card>
 
                 <Card className="shadow-none rounded-xl border border-border">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Ticket Médio</CardTitle>
-                        <Armchair className="h-4 w-4 text-muted-foreground" />
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 pt-3 px-4">
+                        <CardTitle className="text-xs font-medium text-muted-foreground">Ticket Médio</CardTitle>
+                        <Armchair className="h-3.5 w-3.5 text-muted-foreground" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold tracking-tight">R$ 41,17</div>
-                        <p className="text-xs text-muted-foreground mt-1">
+                    <CardContent className="px-4 pb-3">
+                        <div className="text-xl font-bold tracking-tight">R$ 41,17</div>
+                        <p className="text-[11px] text-muted-foreground">
                             Por pedido finalizado
                         </p>
                     </CardContent>
                 </Card>
 
                 <Card className="shadow-none rounded-xl border border-border">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium text-muted-foreground">Alertas de Estoque</CardTitle>
-                        <AlertTriangle className="h-4 w-4 text-amber-500" />
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5 pt-3 px-4">
+                        <CardTitle className="text-xs font-medium text-muted-foreground">Alertas de Estoque</CardTitle>
+                        <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold tracking-tight text-amber-500">6 itens</div>
-                        <p className="text-xs text-muted-foreground mt-1">
+                    <CardContent className="px-4 pb-3">
+                        <div className="text-xl font-bold tracking-tight text-amber-500">6 itens</div>
+                        <p className="text-[11px] text-muted-foreground">
                             Precisam de reposição urgente
                         </p>
                     </CardContent>
@@ -158,30 +172,30 @@ export default function DashboardPage() {
             </div>
 
             {/* --- ROW 2: Charts + Top Vendidos --- */}
-            <div className="grid gap-3 lg:grid-cols-10">
+            <div className="grid gap-2.5 lg:grid-cols-10 flex-1 min-h-0">
 
                 {/* BAR CHART: Orders per Day */}
                 <Card className="lg:col-span-3 shadow-none rounded-xl border border-border flex flex-col">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-semibold">Pedidos por Dia</CardTitle>
-                        <CardDescription className="text-xs">Volume semanal</CardDescription>
+                    <CardHeader className="pb-1 pt-3 px-4">
+                        <CardTitle className="text-xs font-semibold">Pedidos por Dia</CardTitle>
+                        <CardDescription className="text-[11px]">Volume semanal</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex-1">
-                        <ChartContainer config={ordersChartConfig} className="h-[140px] w-full">
-                            <BarChart data={ordersData} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+                    <CardContent className="flex-1 px-4 pb-3">
+                        <ChartContainer config={ordersChartConfig} className="h-full w-full">
+                            <BarChart data={ordersData} margin={{ top: 8, right: 0, left: 0, bottom: 0 }}>
                                 <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.3} />
                                 <XAxis
                                     dataKey="day"
                                     tickLine={false}
-                                    tickMargin={8}
+                                    tickMargin={6}
                                     axisLine={false}
-                                    fontSize={11}
+                                    fontSize={10}
                                 />
                                 <ChartTooltip
                                     cursor={{ fill: 'var(--accent)', opacity: 0.2 }}
                                     content={<ChartTooltipContent indicator="dot" separator=": " />}
                                 />
-                                <Bar dataKey="pedidos" fill="#EC662D" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="pedidos" fill="#EC662D" radius={[3, 3, 0, 0]} />
                             </BarChart>
                         </ChartContainer>
                     </CardContent>
@@ -189,14 +203,14 @@ export default function DashboardPage() {
 
                 {/* PIE CHART: Categories */}
                 <Card className="lg:col-span-3 shadow-none rounded-xl border border-border flex flex-col">
-                    <CardHeader className="items-center pb-0">
-                        <CardTitle className="text-sm font-semibold">Top Categorias</CardTitle>
-                        <CardDescription className="text-xs">Janeiro - Junho 2026</CardDescription>
+                    <CardHeader className="items-center pb-0 pt-3 px-4">
+                        <CardTitle className="text-xs font-semibold">Top Categorias</CardTitle>
+                        <CardDescription className="text-[11px]">Janeiro - Junho 2026</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex-1 pb-0">
+                    <CardContent className="flex-1 pb-2 px-4 flex items-center justify-center">
                         <ChartContainer
                             config={categoryChartConfig}
-                            className="mx-auto aspect-square max-h-[160px]"
+                            className="aspect-square w-full max-h-full"
                         >
                             <PieChart>
                                 <ChartTooltip
@@ -207,8 +221,8 @@ export default function DashboardPage() {
                                     data={categoryData}
                                     dataKey="visitors"
                                     nameKey="category"
-                                    innerRadius={50}
-                                    outerRadius={68}
+                                    innerRadius={45}
+                                    outerRadius={65}
                                     strokeWidth={3}
                                     paddingAngle={2}
                                 >
@@ -225,14 +239,14 @@ export default function DashboardPage() {
                                                         <tspan
                                                             x={viewBox.cx}
                                                             y={viewBox.cy}
-                                                            className="fill-foreground text-2xl font-bold"
+                                                            className="fill-foreground text-xl font-bold"
                                                         >
                                                             {totalCategories.toLocaleString()}
                                                         </tspan>
                                                         <tspan
                                                             x={viewBox.cx}
-                                                            y={(viewBox.cy || 0) + 20}
-                                                            className="fill-muted-foreground text-[10px]"
+                                                            y={(viewBox.cy || 0) + 16}
+                                                            className="fill-muted-foreground text-[9px]"
                                                         >
                                                             Vendas
                                                         </tspan>
@@ -249,84 +263,45 @@ export default function DashboardPage() {
 
                 {/* TOP MAIS VENDIDOS */}
                 <Card className="lg:col-span-4 shadow-none rounded-xl border border-border flex flex-col">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-semibold">Top Mais Vendidos</CardTitle>
-                        <CardDescription className="text-xs">Ranking de saída hoje</CardDescription>
+                    <CardHeader className="pb-1 pt-3 px-4">
+                        <CardTitle className="text-xs font-semibold">Top Mais Vendidos</CardTitle>
+                        <CardDescription className="text-[11px]">Ranking de saída hoje</CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-2.5">
-                        {/* Product 1 */}
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2.5">
-                                <div className="h-9 w-9 relative rounded-lg bg-muted overflow-hidden border border-border shrink-0">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src="https://images.unsplash.com/photo-1618885472179-5e474019f2a2?q=80&w=128&auto=format&fit=crop" alt="Heineken" className="h-full w-full object-cover" loading="lazy" />
+                    <CardContent className="flex-1 space-y-1.5 px-4 pb-3 overflow-auto">
+                        {topProducts.map((product) => (
+                            <div key={product.name} className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="h-8 w-8 relative rounded-md bg-muted overflow-hidden border border-border shrink-0">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={product.img} alt={product.name} className="h-full w-full object-cover" loading="lazy" />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-[13px] font-medium leading-tight">{product.name}</span>
+                                        <span className="text-[10px] text-muted-foreground">{product.category}</span>
+                                    </div>
                                 </div>
-                                <div className="flex flex-col">
-                                    <span className="text-sm font-medium leading-tight">Heineken 600ml</span>
-                                    <span className="text-[11px] text-muted-foreground">Cervejas</span>
-                                </div>
-                            </div>
-                            <div className="flex flex-col items-end">
-                                <span className="text-sm font-bold">42 un</span>
-                                <span className="text-[11px] text-muted-foreground">R$ 630</span>
-                            </div>
-                        </div>
-
-                        {/* Product 2 */}
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2.5">
-                                <div className="h-9 w-9 relative rounded-lg bg-muted overflow-hidden border border-border shrink-0">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=128&auto=format&fit=crop" alt="Burger" className="h-full w-full object-cover" loading="lazy" />
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-sm font-medium leading-tight">Smash Double</span>
-                                    <span className="text-[11px] text-muted-foreground">Entradas</span>
+                                <div className="flex flex-col items-end">
+                                    <span className="text-[13px] font-bold">{product.qty} un</span>
+                                    <span className="text-[10px] text-muted-foreground">{product.revenue}</span>
                                 </div>
                             </div>
-                            <div className="flex flex-col items-end">
-                                <span className="text-sm font-bold">38 un</span>
-                                <span className="text-[11px] text-muted-foreground">R$ 1.520</span>
-                            </div>
-                        </div>
-
-                        {/* Product 3 */}
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2.5">
-                                <div className="h-9 w-9 relative rounded-lg bg-muted overflow-hidden border border-border shrink-0">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src="https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=128&auto=format&fit=crop" alt="Aperol Spritz" className="h-full w-full object-cover" loading="lazy" />
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-sm font-medium leading-tight">Aperol Spritz</span>
-                                    <span className="text-[11px] text-muted-foreground">Drinks</span>
-                                </div>
-                            </div>
-                            <div className="flex flex-col items-end">
-                                <span className="text-sm font-bold">22 un</span>
-                                <span className="text-[11px] text-muted-foreground">R$ 770</span>
-                            </div>
-                        </div>
-
-                        <Button variant="outline" className="w-full text-xs font-normal" render={<Link href="/estoque" />}>
-                            Ver ranking completo <ArrowRight className="ml-2 h-3 w-3" />
-                        </Button>
+                        ))}
                     </CardContent>
                 </Card>
             </div>
 
             {/* --- ROW 3: Traffic + Low Stock --- */}
-            <div className="grid gap-3 lg:grid-cols-10">
+            <div className="grid gap-2.5 lg:grid-cols-10 flex-1 min-h-0">
 
                 {/* AREA CHART: Hourly Traffic */}
                 <Card className="lg:col-span-6 shadow-none rounded-xl border border-border flex flex-col">
-                    <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-semibold">Pico de Movimento (Hoje)</CardTitle>
-                        <CardDescription className="text-xs">Volume de pedidos por hora</CardDescription>
+                    <CardHeader className="pb-1 pt-3 px-4">
+                        <CardTitle className="text-xs font-semibold">Pico de Movimento (Hoje)</CardTitle>
+                        <CardDescription className="text-[11px]">Volume de pedidos por hora</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex-1">
-                        <ChartContainer config={trafficChartConfig} className="h-[140px] w-full">
-                            <AreaChart data={trafficData} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+                    <CardContent className="flex-1 px-4 pb-3">
+                        <ChartContainer config={trafficChartConfig} className="h-full w-full">
+                            <AreaChart data={trafficData} margin={{ top: 8, right: 0, left: 0, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="colorActive" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#EC662D" stopOpacity={0.3} />
@@ -338,8 +313,8 @@ export default function DashboardPage() {
                                     dataKey="time"
                                     tickLine={false}
                                     axisLine={false}
-                                    tickMargin={8}
-                                    fontSize={11}
+                                    tickMargin={6}
+                                    fontSize={10}
                                 />
                                 <ChartTooltip
                                     cursor={{ stroke: 'var(--accent)', strokeWidth: 1, strokeDasharray: '4 4' }}
@@ -360,70 +335,33 @@ export default function DashboardPage() {
 
                 {/* ESTOQUE BAIXO */}
                 <Card className="lg:col-span-4 shadow-none rounded-xl border border-border flex flex-col">
-                    <CardHeader className="pb-2">
+                    <CardHeader className="pb-1 pt-3 px-4">
                         <div className="flex items-center justify-between w-full">
                             <div>
-                                <CardTitle className="text-sm font-semibold">Estoque Baixo</CardTitle>
-                                <CardDescription className="text-xs">Produtos que precisam reposição</CardDescription>
+                                <CardTitle className="text-xs font-semibold">Estoque Baixo</CardTitle>
+                                <CardDescription className="text-[11px]">Produtos que precisam reposição</CardDescription>
                             </div>
-                            <AlertTriangle className="h-4 w-4 text-amber-500" />
+                            <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
                         </div>
                     </CardHeader>
-                    <CardContent className="space-y-2.5">
-                        {/* Low Stock 1 */}
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2.5">
-                                <div className="h-9 w-9 relative rounded-lg bg-muted overflow-hidden border border-border shrink-0">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src="https://images.unsplash.com/photo-1618885472179-5e474019f2a2?q=80&w=128&auto=format&fit=crop" alt="Heineken" className="h-full w-full object-cover" loading="lazy" />
+                    <CardContent className="flex-1 space-y-1.5 px-4 pb-3 overflow-auto">
+                        {lowStockProducts.map((product) => (
+                            <div key={product.name} className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="h-8 w-8 relative rounded-md bg-muted overflow-hidden border border-border shrink-0">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={product.img} alt={product.name} className="h-full w-full object-cover" loading="lazy" />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-[13px] font-medium leading-tight">{product.name}</span>
+                                        <span className="text-[10px] text-muted-foreground">{product.category}</span>
+                                    </div>
                                 </div>
-                                <div className="flex flex-col">
-                                    <span className="text-sm font-medium leading-tight">Heineken 600ml</span>
-                                    <span className="text-[11px] text-muted-foreground">Cervejas</span>
-                                </div>
+                                <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5 font-medium shrink-0">
+                                    <AlertTriangle className="w-2.5 h-2.5 mr-0.5" /> {product.stock} un
+                                </Badge>
                             </div>
-                            <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5 font-medium">
-                                <AlertTriangle className="w-3 h-3 mr-1" /> 5 un
-                            </Badge>
-                        </div>
-
-                        {/* Low Stock 2 */}
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2.5">
-                                <div className="h-9 w-9 relative rounded-lg bg-muted overflow-hidden border border-border shrink-0">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src="https://images.unsplash.com/photo-1546171753-97d7676e4602?q=80&w=128&auto=format&fit=crop" alt="Vinho" className="h-full w-full object-cover" loading="lazy" />
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-sm font-medium leading-tight">Malbec Reserva</span>
-                                    <span className="text-[11px] text-muted-foreground">Vinhos</span>
-                                </div>
-                            </div>
-                            <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5 font-medium">
-                                <AlertTriangle className="w-3 h-3 mr-1" /> 3 un
-                            </Badge>
-                        </div>
-
-                        {/* Low Stock 3 */}
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2.5">
-                                <div className="h-9 w-9 relative rounded-lg bg-muted overflow-hidden border border-border shrink-0">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src="https://images.unsplash.com/photo-1551024709-8f23befc6f87?q=80&w=128&auto=format&fit=crop" alt="Gin" className="h-full w-full object-cover" loading="lazy" />
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-sm font-medium leading-tight">Gin Tanqueray</span>
-                                    <span className="text-[11px] text-muted-foreground">Destilados</span>
-                                </div>
-                            </div>
-                            <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5 font-medium">
-                                <AlertTriangle className="w-3 h-3 mr-1" /> 2 un
-                            </Badge>
-                        </div>
-
-                        <Button variant="outline" className="w-full text-xs font-normal" render={<Link href="/estoque" />}>
-                            Ver todos os alertas <ArrowRight className="ml-2 h-3 w-3" />
-                        </Button>
+                        ))}
                     </CardContent>
                 </Card>
             </div>
