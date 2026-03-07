@@ -602,16 +602,16 @@ function EstoqueContent() {
                                         <TableCell className="text-center text-muted-foreground text-sm">
                                             {item.variacao_nome}
                                         </TableCell>
-                                        <TableCell className="text-center">
+                                        <TableCell>
                                             <Badge variant="outline" className="text-[10px] font-medium bg-muted border text-muted-foreground rounded-md px-2 py-0.5">
                                                 {item.categoria_nome}
                                             </Badge>
                                         </TableCell>
 
                                         {/* Origin with flag */}
-                                        <TableCell className="text-center">
+                                        <TableCell>
                                             {item.pais_origem ? (
-                                                <div className="inline-flex items-center justify-center gap-1.5">
+                                                <div className="flex items-center gap-1.5">
                                                     {flagUrl && (
                                                         <img
                                                             src={flagUrl}
@@ -683,7 +683,7 @@ function EstoqueContent() {
                                             </div>
                                         </TableCell>
 
-                                        <TableCell className="text-center font-mono text-sm text-muted-foreground">
+                                        <TableCell className="font-mono text-sm text-muted-foreground">
                                             R$ {item.preco.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                                         </TableCell>
 
