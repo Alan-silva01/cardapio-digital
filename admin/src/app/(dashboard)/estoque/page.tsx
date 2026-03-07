@@ -345,14 +345,14 @@ export default function EstoquePage() {
                                                     </div>
                                                 </HoverCardTrigger>
                                                 {item.imagem_url && (
-                                                    <HoverCardContent side="right" className="w-64 p-0 rounded-xl overflow-hidden border-[#333] bg-[#111] shadow-2xl">
-                                                        <div className="relative aspect-square w-full">
+                                                    <HoverCardContent side="right" className="w-64 p-0 rounded-xl overflow-hidden border-[#333] bg-[#111] shadow-2xl flex flex-col">
+                                                        <div className="relative w-full aspect-[5/6] bg-black/40">
                                                             <Image
                                                                 src={item.imagem_url}
                                                                 alt={item.produto_nome}
                                                                 fill
                                                                 className={cn(
-                                                                    "object-cover",
+                                                                    "object-contain p-4 transition-all",
                                                                     !item.disponivel && "blur-sm opacity-60 grayscale-[0.5]"
                                                                 )}
                                                                 sizes="256px"
@@ -365,9 +365,9 @@ export default function EstoquePage() {
                                                                 </div>
                                                             )}
                                                         </div>
-                                                        <div className="p-3 bg-gradient-to-t from-black/80 to-transparent absolute bottom-0 left-0 right-0">
-                                                            <p className="text-white font-medium text-sm drop-shadow-md">{item.produto_nome}</p>
-                                                            <p className="text-white/70 text-xs drop-shadow-md">{item.variacao_nome}</p>
+                                                        <div className="p-4 bg-[#111] border-t border-[#222]">
+                                                            <p className="text-white font-medium text-sm leading-tight">{item.produto_nome}</p>
+                                                            <p className="text-[#888] text-xs mt-1">{item.variacao_nome}</p>
                                                         </div>
                                                     </HoverCardContent>
                                                 )}
