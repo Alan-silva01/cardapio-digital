@@ -35,14 +35,14 @@ import {
 } from "@/components/ui/chart";
 
 // --- MOCK DATA --- 
-const salesData = [
-    { day: "Seg", revenue: 1200, costs: 800 },
-    { day: "Ter", revenue: 1500, costs: 1000 },
-    { day: "Qua", revenue: 2200, costs: 1100 },
-    { day: "Qui", revenue: 2800, costs: 1500 },
-    { day: "Sex", revenue: 4500, costs: 2200 },
-    { day: "Sáb", revenue: 5800, costs: 2500 },
-    { day: "Dom", revenue: 3800, costs: 1800 },
+const ordersData = [
+    { day: "Seg", pedidos: 18 },
+    { day: "Ter", pedidos: 24 },
+    { day: "Qua", pedidos: 35 },
+    { day: "Qui", pedidos: 42 },
+    { day: "Sex", pedidos: 68 },
+    { day: "Sáb", pedidos: 85 },
+    { day: "Dom", pedidos: 55 },
 ];
 
 const categoryData = [
@@ -65,9 +65,8 @@ const trafficData = [
 ];
 
 // --- CHART CONFIGS ---
-const salesChartConfig = {
-    revenue: { label: "Faturamento", color: "#EC662D" },
-    costs: { label: "Custos", color: "#838585" },
+const ordersChartConfig = {
+    pedidos: { label: "Pedidos", color: "#EC662D" },
 } satisfies ChartConfig;
 
 const categoryChartConfig = {
@@ -161,15 +160,15 @@ export default function DashboardPage() {
             {/* --- CHARTS ROW 1 --- */}
             <div className="grid gap-4 md:grid-cols-7 lg:grid-cols-10">
 
-                {/* BAR CHART: Weekly Sales */}
+                {/* BAR CHART: Orders per Day */}
                 <Card className="md:col-span-4 lg:col-span-6 shadow-none rounded-xl border border-border flex flex-col">
                     <CardHeader>
-                        <CardTitle className="text-base font-semibold">Faturamento da Semana</CardTitle>
-                        <CardDescription>Receita vs Custos Diários</CardDescription>
+                        <CardTitle className="text-base font-semibold">Pedidos por Dia</CardTitle>
+                        <CardDescription>Volume semanal de pedidos</CardDescription>
                     </CardHeader>
                     <CardContent className="flex-1">
-                        <ChartContainer config={salesChartConfig} className="h-[250px] w-full">
-                            <BarChart data={salesData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
+                        <ChartContainer config={ordersChartConfig} className="h-[250px] w-full">
+                            <BarChart data={ordersData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
                                 <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.3} />
                                 <XAxis
                                     dataKey="day"
@@ -182,9 +181,7 @@ export default function DashboardPage() {
                                     cursor={{ fill: 'var(--accent)', opacity: 0.2 }}
                                     content={<ChartTooltipContent indicator="dot" />}
                                 />
-                                <Bar dataKey="revenue" fill="var(--color-revenue)" radius={[4, 4, 0, 0]} />
-                                <Bar dataKey="costs" fill="var(--color-costs)" radius={[4, 4, 0, 0]} opacity={0.6} />
-                                <ChartLegend content={<ChartLegendContent />} />
+                                <Bar dataKey="pedidos" fill="#EC662D" radius={[4, 4, 0, 0]} />
                             </BarChart>
                         </ChartContainer>
                     </CardContent>
@@ -294,66 +291,87 @@ export default function DashboardPage() {
                     </CardContent>
                 </Card>
 
-                {/* BEST SELLERS LIST */}
+                {/* TOP MAIS VENDIDOS */}
                 <Card className="md:col-span-3 lg:col-span-4 shadow-none rounded-xl border border-border flex flex-col">
                     <CardHeader>
-                        <CardTitle className="text-base font-semibold">Mais Vendidos & Baixo Estoque</CardTitle>
-                        <CardDescription>Visão operacional rápida</CardDescription>
+                        <CardTitle className="text-base font-semibold">Top Mais Vendidos</CardTitle>
+                        <CardDescription>Ranking de saída hoje</CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-6">
-                        {/* Best Seller 1 */}
+                    <CardContent className="space-y-5">
+                        {/* Product 1 */}
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 relative rounded-md bg-muted overflow-hidden border border-border shrink-0">
-                                    <Image src="https://images.unsplash.com/photo-1618885472179-5e474019f2a2?q=80&w=128&auto=format&fit=crop" alt="Heineken" fill className="object-cover" sizes="40px" />
+                                <div className="h-10 w-10 relative rounded-lg bg-muted overflow-hidden border border-border shrink-0">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src="https://images.unsplash.com/photo-1618885472179-5e474019f2a2?q=80&w=128&auto=format&fit=crop" alt="Heineken" className="h-full w-full object-cover" loading="lazy" />
                                 </div>
                                 <div className="flex flex-col">
                                     <span className="text-sm font-medium">Heineken 600ml</span>
-                                    <span className="text-xs text-muted-foreground">42 un sold</span>
+                                    <span className="text-xs text-muted-foreground">Cervejas</span>
                                 </div>
                             </div>
                             <div className="flex flex-col items-end">
-                                <span className="text-sm font-bold">R$ 630</span>
-                                <span className="text-[10px] text-destructive bg-destructive/10 px-1.5 py-0.5 rounded flex items-center mt-0.5 font-medium"><AlertTriangle className="w-3 h-3 mr-1" /> Low (5 un)</span>
+                                <span className="text-sm font-bold">42 un</span>
+                                <span className="text-xs text-muted-foreground">R$ 630</span>
                             </div>
                         </div>
 
-                        {/* Best Seller 2 */}
+                        {/* Product 2 */}
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 relative rounded-md bg-muted overflow-hidden border border-border shrink-0">
-                                    <Image src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=128&auto=format&fit=crop" alt="Burger" fill className="object-cover" sizes="40px" />
+                                <div className="h-10 w-10 relative rounded-lg bg-muted overflow-hidden border border-border shrink-0">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=128&auto=format&fit=crop" alt="Burger" className="h-full w-full object-cover" loading="lazy" />
                                 </div>
                                 <div className="flex flex-col">
                                     <span className="text-sm font-medium">Smash Double</span>
-                                    <span className="text-xs text-muted-foreground">38 un sold</span>
+                                    <span className="text-xs text-muted-foreground">Entradas</span>
                                 </div>
                             </div>
                             <div className="flex flex-col items-end">
-                                <span className="text-sm font-bold">R$ 1.520</span>
-                                <span className="text-[10px] text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded flex items-center mt-0.5 font-medium">OK (80 un)</span>
+                                <span className="text-sm font-bold">38 un</span>
+                                <span className="text-xs text-muted-foreground">R$ 1.520</span>
                             </div>
                         </div>
 
-                        {/* Best Seller 3 */}
+                        {/* Product 3 */}
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 relative rounded-md bg-muted overflow-hidden border border-border shrink-0">
-                                    <Image src="https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=128&auto=format&fit=crop" alt="Aperol Spritz" fill className="object-cover" sizes="40px" />
+                                <div className="h-10 w-10 relative rounded-lg bg-muted overflow-hidden border border-border shrink-0">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src="https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=128&auto=format&fit=crop" alt="Aperol Spritz" className="h-full w-full object-cover" loading="lazy" />
                                 </div>
                                 <div className="flex flex-col">
                                     <span className="text-sm font-medium">Aperol Spritz</span>
-                                    <span className="text-xs text-muted-foreground">22 un sold</span>
+                                    <span className="text-xs text-muted-foreground">Drinks</span>
                                 </div>
                             </div>
                             <div className="flex flex-col items-end">
-                                <span className="text-sm font-bold">R$ 770</span>
-                                <span className="text-[10px] text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded flex items-center mt-0.5 font-medium">OK (112 un)</span>
+                                <span className="text-sm font-bold">22 un</span>
+                                <span className="text-xs text-muted-foreground">R$ 770</span>
+                            </div>
+                        </div>
+
+                        {/* Product 4 */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="h-10 w-10 relative rounded-lg bg-muted overflow-hidden border border-border shrink-0">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src="https://images.unsplash.com/photo-1546171753-97d7676e4602?q=80&w=128&auto=format&fit=crop" alt="Vinho" className="h-full w-full object-cover" loading="lazy" />
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-sm font-medium">Malbec Reserva</span>
+                                    <span className="text-xs text-muted-foreground">Vinhos</span>
+                                </div>
+                            </div>
+                            <div className="flex flex-col items-end">
+                                <span className="text-sm font-bold">18 un</span>
+                                <span className="text-xs text-muted-foreground">R$ 2.160</span>
                             </div>
                         </div>
 
                         <Button variant="outline" className="w-full text-xs font-normal" render={<Link href="/estoque" />}>
-                            Ver lista completa <ArrowRight className="ml-2 h-3 w-3" />
+                            Ver ranking completo <ArrowRight className="ml-2 h-3 w-3" />
                         </Button>
                     </CardContent>
                 </Card>
