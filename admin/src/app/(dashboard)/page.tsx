@@ -99,7 +99,7 @@ export default function DashboardPage() {
     const totalCategories = categoryData.reduce((acc, curr) => acc + curr.visitors, 0);
 
     return (
-        <div className="flex flex-col h-[calc(100vh-3.5rem)] w-full px-6 py-4 gap-2.5 overflow-hidden">
+        <div className="flex flex-col h-[calc(100vh-3.5rem)] w-full px-6 py-4 gap-2.5">
             {/* HEADER */}
             <div className="flex items-center justify-between shrink-0">
                 <div>
@@ -207,12 +207,12 @@ export default function DashboardPage() {
                         <CardTitle className="text-xs font-semibold">Top Categorias</CardTitle>
                         <CardDescription className="text-[11px]">Janeiro - Junho 2026</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex-1 pb-2 px-4 flex items-center justify-center">
+                    <CardContent className="flex-1 pb-3 px-4 flex items-center justify-center">
                         <ChartContainer
                             config={categoryChartConfig}
-                            className="mx-auto aspect-square max-h-[150px]"
+                            className="mx-auto aspect-square max-h-[160px]"
                         >
-                            <PieChart>
+                            <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 10 }}>
                                 <ChartTooltip
                                     cursor={false}
                                     content={<ChartTooltipContent hideLabel separator=": " />}
@@ -286,6 +286,9 @@ export default function DashboardPage() {
                                 </div>
                             </div>
                         ))}
+                        <Button variant="outline" className="w-full text-xs font-normal mt-1" render={<Link href="/estoque" />}>
+                            Ver ranking completo <ArrowRight className="ml-2 h-3 w-3" />
+                        </Button>
                     </CardContent>
                 </Card>
             </div>
@@ -362,6 +365,9 @@ export default function DashboardPage() {
                                 </Badge>
                             </div>
                         ))}
+                        <Button variant="outline" className="w-full text-xs font-normal mt-1" render={<Link href="/estoque" />}>
+                            Ver todos os alertas <ArrowRight className="ml-2 h-3 w-3" />
+                        </Button>
                     </CardContent>
                 </Card>
             </div>
