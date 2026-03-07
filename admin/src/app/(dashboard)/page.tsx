@@ -220,8 +220,8 @@ export default function DashboardPage() {
                                         data={categoryData}
                                         dataKey="visitors"
                                         nameKey="category"
-                                        innerRadius={45}
-                                        outerRadius={65}
+                                        innerRadius={55}
+                                        outerRadius={80}
                                         strokeWidth={3}
                                         paddingAngle={2}
                                     >
