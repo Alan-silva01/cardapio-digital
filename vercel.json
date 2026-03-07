@@ -15,11 +15,15 @@
     "routes": [
         {
             "src": "/admin/_next/(.*)",
-            "dest": "/admin/_next/$1"
+            "dest": "admin/_next/$1"
         },
         {
-            "src": "/admin(.*)",
-            "dest": "/admin$1"
+            "src": "/admin/(.*)",
+            "dest": "admin/$1"
+        },
+        {
+            "src": "/admin",
+            "dest": "admin"
         },
         {
             "handle": "filesystem"
