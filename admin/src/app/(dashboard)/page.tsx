@@ -46,11 +46,11 @@ const salesData = [
 ];
 
 const categoryData = [
-    { category: "Vinhos", visitors: 420, fill: "var(--chart-1)" },
-    { category: "Entradas", visitors: 310, fill: "var(--chart-2)" },
-    { category: "Destilados", visitors: 250, fill: "var(--chart-3)" },
-    { category: "Carnes", visitors: 180, fill: "var(--chart-4)" },
-    { category: "Outros", visitors: 90, fill: "var(--chart-5)" },
+    { category: "Vinhos", visitors: 420, fill: "#EC662D" },
+    { category: "Entradas", visitors: 310, fill: "#2F3232" },
+    { category: "Destilados", visitors: 250, fill: "#838585" },
+    { category: "Carnes", visitors: 180, fill: "#D9D3D1" },
+    { category: "Outros", visitors: 90, fill: "#0B120E" },
 ];
 
 const trafficData = [
@@ -66,20 +66,20 @@ const trafficData = [
 
 // --- CHART CONFIGS ---
 const salesChartConfig = {
-    revenue: { label: "Faturamento", color: "var(--chart-1)" },
-    costs: { label: "Custos", color: "var(--chart-2)" },
+    revenue: { label: "Faturamento", color: "#EC662D" },
+    costs: { label: "Custos", color: "#838585" },
 } satisfies ChartConfig;
 
 const categoryChartConfig = {
-    vinhos: { label: "Vinhos", color: "var(--chart-1)" },
-    entradas: { label: "Entradas", color: "var(--chart-2)" },
-    destilados: { label: "Destilados", color: "var(--chart-3)" },
-    carnes: { label: "Carnes", color: "var(--chart-4)" },
-    outros: { label: "Outros", color: "var(--chart-5)" },
+    vinhos: { label: "Vinhos", color: "#EC662D" },
+    entradas: { label: "Entradas", color: "#2F3232" },
+    destilados: { label: "Destilados", color: "#838585" },
+    carnes: { label: "Carnes", color: "#D9D3D1" },
+    outros: { label: "Outros", color: "#0B120E" },
 } satisfies ChartConfig;
 
 const trafficChartConfig = {
-    active: { label: "Pedidos Ativos", color: "var(--brand-orange)" },
+    active: { label: "Pedidos Ativos", color: "#EC662D" },
 } satisfies ChartConfig;
 
 
@@ -305,9 +305,7 @@ export default function DashboardPage() {
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="h-10 w-10 relative rounded-md bg-muted overflow-hidden border border-border shrink-0">
-                                    <div className="absolute inset-0 flex items-center justify-center bg-emerald-500/10 dark:bg-emerald-500/20">
-                                        <Package className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                                    </div>
+                                    <Image src="https://images.unsplash.com/photo-1618885472179-5e474019f2a2?q=80&w=128&auto=format&fit=crop" alt="Heineken" fill className="object-cover" sizes="40px" />
                                 </div>
                                 <div className="flex flex-col">
                                     <span className="text-sm font-medium">Heineken 600ml</span>
@@ -324,9 +322,7 @@ export default function DashboardPage() {
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="h-10 w-10 relative rounded-md bg-muted overflow-hidden border border-border shrink-0">
-                                    <div className="absolute inset-0 flex items-center justify-center bg-amber-500/10 dark:bg-amber-500/20">
-                                        <Package className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                                    </div>
+                                    <Image src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=128&auto=format&fit=crop" alt="Burger" fill className="object-cover" sizes="40px" />
                                 </div>
                                 <div className="flex flex-col">
                                     <span className="text-sm font-medium">Smash Double</span>
@@ -343,9 +339,7 @@ export default function DashboardPage() {
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
                                 <div className="h-10 w-10 relative rounded-md bg-muted overflow-hidden border border-border shrink-0">
-                                    <div className="absolute inset-0 flex items-center justify-center bg-brand/10 dark:bg-brand/20">
-                                        <Package className="h-4 w-4 text-brand dark:text-brand" />
-                                    </div>
+                                    <Image src="https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=128&auto=format&fit=crop" alt="Aperol Spritz" fill className="object-cover" sizes="40px" />
                                 </div>
                                 <div className="flex flex-col">
                                     <span className="text-sm font-medium">Aperol Spritz</span>
