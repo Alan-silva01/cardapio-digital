@@ -507,14 +507,14 @@ function EstoqueContent() {
                         <TableRow className="hover:bg-transparent border-border">
                             <TableHead className="w-[50px] text-muted-foreground text-[11px] font-semibold uppercase"></TableHead>
                             <TableHead className="text-muted-foreground text-[11px] font-semibold uppercase">Produto</TableHead>
-                            <TableHead className="text-muted-foreground text-[11px] font-semibold uppercase">Variação</TableHead>
-                            <TableHead className="text-muted-foreground text-[11px] font-semibold uppercase">Categoria</TableHead>
-                            <TableHead className="text-muted-foreground text-[11px] font-semibold uppercase">Origem</TableHead>
-                            <TableHead className="text-muted-foreground text-[11px] font-semibold uppercase">Estoque</TableHead>
-                            <TableHead className="text-muted-foreground text-[11px] font-semibold uppercase">Status</TableHead>
-                            <TableHead className="text-muted-foreground text-[11px] font-semibold uppercase">App</TableHead>
-                            <TableHead className="text-muted-foreground text-[11px] font-semibold uppercase">Preço</TableHead>
-                            <TableHead className="text-right text-muted-foreground text-[11px] font-semibold uppercase">Ação</TableHead>
+                            <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">Variação</TableHead>
+                            <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">Categoria</TableHead>
+                            <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">Origem</TableHead>
+                            <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">Estoque</TableHead>
+                            <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">Status</TableHead>
+                            <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">App</TableHead>
+                            <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">Preço</TableHead>
+                            <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">Ação</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -599,19 +599,19 @@ function EstoqueContent() {
                                         <TableCell>
                                             <div className="font-semibold text-foreground text-sm">{item.produto_nome}</div>
                                         </TableCell>
-                                        <TableCell className="text-muted-foreground text-sm">
+                                        <TableCell className="text-center text-muted-foreground text-sm">
                                             {item.variacao_nome}
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell className="text-center">
                                             <Badge variant="outline" className="text-[10px] font-medium bg-muted border text-muted-foreground rounded-md px-2 py-0.5">
                                                 {item.categoria_nome}
                                             </Badge>
                                         </TableCell>
 
                                         {/* Origin with flag */}
-                                        <TableCell>
+                                        <TableCell className="text-center">
                                             {item.pais_origem ? (
-                                                <div className="flex items-center gap-1.5">
+                                                <div className="inline-flex items-center justify-center gap-1.5">
                                                     {flagUrl && (
                                                         <img
                                                             src={flagUrl}
@@ -630,8 +630,8 @@ function EstoqueContent() {
                                             )}
                                         </TableCell>
 
-                                        <TableCell>
-                                            <div className="inline-flex items-center">
+                                        <TableCell className="text-center">
+                                            <div className="inline-flex items-center justify-center min-w-[3rem]">
                                                 {item.estoque === -1 ? (
                                                     <Infinity className="h-4 w-4 text-muted-foreground" />
                                                 ) : (
@@ -646,8 +646,8 @@ function EstoqueContent() {
                                             </div>
                                         </TableCell>
 
-                                        <TableCell>
-                                            <div className="flex">
+                                        <TableCell className="text-center">
+                                            <div className="flex justify-center">
                                                 <Badge
                                                     variant="outline"
                                                     className={cn(
@@ -661,7 +661,7 @@ function EstoqueContent() {
                                         </TableCell>
 
                                         {/* Availability Toggle */}
-                                        <TableCell>
+                                        <TableCell className="text-center">
                                             <div className="flex justify-center">
                                                 <button
                                                     onClick={() => toggleDisponivel(item.produto_id, item.disponivel)}
@@ -683,12 +683,12 @@ function EstoqueContent() {
                                             </div>
                                         </TableCell>
 
-                                        <TableCell className="font-mono text-sm text-muted-foreground">
+                                        <TableCell className="text-center font-mono text-sm text-muted-foreground">
                                             R$ {item.preco.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                                         </TableCell>
 
-                                        <TableCell className="text-right">
-                                            <div className="flex items-center justify-end gap-1">
+                                        <TableCell className="text-center">
+                                            <div className="flex items-center justify-center gap-1">
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
