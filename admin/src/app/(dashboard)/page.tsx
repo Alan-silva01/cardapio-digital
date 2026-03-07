@@ -3,6 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
     Armchair,
     UtensilsCrossed,
@@ -269,27 +270,29 @@ export default function DashboardPage() {
                         <CardTitle className="text-xs font-semibold">Top Mais Vendidos</CardTitle>
                         <CardDescription className="text-[11px]">Ranking de saída hoje</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex-1 space-y-1.5 px-4 pb-2 min-h-0 flex flex-col justify-between">
-                        <div className="flex-1 space-y-1.5 overflow-hidden">
-                            {topProducts.map((product) => (
-                                <div key={product.name} className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <div className="h-9 w-8 relative rounded-md bg-muted/60 overflow-hidden border border-border shrink-0 flex items-center justify-center">
-                                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img src={product.img} alt={product.name} className="h-full w-full object-contain p-0.5" loading="lazy" />
+                    <CardContent className="flex-1 px-4 pb-2 min-h-0 flex flex-col">
+                        <ScrollArea className="flex-1 pr-4">
+                            <div className="space-y-1.5 py-1">
+                                {topProducts.map((product) => (
+                                    <div key={product.name} className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-9 w-8 relative rounded-md bg-muted/60 overflow-hidden border border-border shrink-0 flex items-center justify-center">
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img src={product.img} alt={product.name} className="h-full w-full object-contain p-0.5" loading="lazy" />
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-[13px] font-medium leading-tight">{product.name}</span>
+                                                <span className="text-[10px] text-muted-foreground">{product.category}</span>
+                                            </div>
                                         </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-[13px] font-medium leading-tight">{product.name}</span>
-                                            <span className="text-[10px] text-muted-foreground">{product.category}</span>
+                                        <div className="flex flex-col items-end">
+                                            <span className="text-[13px] font-bold">{product.qty} un</span>
+                                            <span className="text-[10px] text-muted-foreground">{product.revenue}</span>
                                         </div>
                                     </div>
-                                    <div className="flex flex-col items-end">
-                                        <span className="text-[13px] font-bold">{product.qty} un</span>
-                                        <span className="text-[10px] text-muted-foreground">{product.revenue}</span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
+                        </ScrollArea>
                         <Button variant="outline" className="w-full text-xs font-normal mt-1 shrink-0" render={<Link href="/estoque" />}>
                             Ver ranking completo <ArrowRight className="ml-2 h-3 w-3" />
                         </Button>
@@ -351,26 +354,28 @@ export default function DashboardPage() {
                             <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
                         </div>
                     </CardHeader>
-                    <CardContent className="flex-1 space-y-1.5 px-4 pb-2 min-h-0 flex flex-col justify-between">
-                        <div className="flex-1 space-y-1.5 overflow-hidden">
-                            {lowStockProducts.map((product) => (
-                                <div key={product.name} className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <div className="h-9 w-8 relative rounded-md bg-muted/60 overflow-hidden border border-border shrink-0 flex items-center justify-center">
-                                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                                            <img src={product.img} alt={product.name} className="h-full w-full object-contain p-0.5" loading="lazy" />
+                    <CardContent className="flex-1 px-4 pb-2 min-h-0 flex flex-col">
+                        <ScrollArea className="flex-1 pr-4">
+                            <div className="space-y-1.5 py-1">
+                                {lowStockProducts.map((product) => (
+                                    <div key={product.name} className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-9 w-8 relative rounded-md bg-muted/60 overflow-hidden border border-border shrink-0 flex items-center justify-center">
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img src={product.img} alt={product.name} className="h-full w-full object-contain p-0.5" loading="lazy" />
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-[13px] font-medium leading-tight">{product.name}</span>
+                                                <span className="text-[10px] text-muted-foreground">{product.category}</span>
+                                            </div>
                                         </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-[13px] font-medium leading-tight">{product.name}</span>
-                                            <span className="text-[10px] text-muted-foreground">{product.category}</span>
-                                        </div>
+                                        <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5 font-medium shrink-0">
+                                            <AlertTriangle className="w-2.5 h-2.5 mr-0.5" /> {product.stock} un
+                                        </Badge>
                                     </div>
-                                    <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5 font-medium shrink-0">
-                                        <AlertTriangle className="w-2.5 h-2.5 mr-0.5" /> {product.stock} un
-                                    </Badge>
-                                </div>
-                            ))}
-                        </div>
+                                ))}
+                            </div>
+                        </ScrollArea>
                         <Button variant="outline" className="w-full text-xs font-normal mt-1 shrink-0" render={<Link href="/estoque" />}>
                             Ver todos os alertas <ArrowRight className="ml-2 h-3 w-3" />
                         </Button>
