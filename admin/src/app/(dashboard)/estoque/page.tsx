@@ -507,13 +507,13 @@ function EstoqueContent() {
                         <TableRow className="hover:bg-transparent border-border">
                             <TableHead className="w-[50px] text-muted-foreground text-[11px] font-semibold uppercase"></TableHead>
                             <TableHead className="text-muted-foreground text-[11px] font-semibold uppercase">Produto</TableHead>
-                            <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">Variação</TableHead>
-                            <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">Categoria</TableHead>
-                            <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">Origem</TableHead>
-                            <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">Estoque</TableHead>
-                            <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">Status</TableHead>
-                            <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">App</TableHead>
-                            <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">Preço</TableHead>
+                            <TableHead className="text-muted-foreground text-[11px] font-semibold uppercase">Variação</TableHead>
+                            <TableHead className="text-muted-foreground text-[11px] font-semibold uppercase">Categoria</TableHead>
+                            <TableHead className="text-muted-foreground text-[11px] font-semibold uppercase">Origem</TableHead>
+                            <TableHead className="text-muted-foreground text-[11px] font-semibold uppercase">Estoque</TableHead>
+                            <TableHead className="text-muted-foreground text-[11px] font-semibold uppercase">Status</TableHead>
+                            <TableHead className="text-muted-foreground text-[11px] font-semibold uppercase">App</TableHead>
+                            <TableHead className="text-muted-foreground text-[11px] font-semibold uppercase">Preço</TableHead>
                             <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">Ação</TableHead>
                         </TableRow>
                     </TableHeader>
