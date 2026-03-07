@@ -295,12 +295,12 @@ function EstoqueContent() {
                         <TableRow className="hover:bg-transparent border-border">
                             <TableHead className="w-[50px] text-muted-foreground text-[11px] font-medium uppercase"></TableHead>
                             <TableHead className="text-muted-foreground text-[11px] font-medium uppercase">Produto</TableHead>
-                            <TableHead className="text-muted-foreground text-[11px] font-medium uppercase">Variação</TableHead>
-                            <TableHead className="text-muted-foreground text-[11px] font-medium uppercase">Categoria</TableHead>
+                            <TableHead className="text-center text-muted-foreground text-[11px] font-medium uppercase">Variação</TableHead>
+                            <TableHead className="text-center text-muted-foreground text-[11px] font-medium uppercase">Categoria</TableHead>
                             <TableHead className="text-center text-muted-foreground text-[11px] font-medium uppercase">Estoque</TableHead>
                             <TableHead className="text-center text-muted-foreground text-[11px] font-medium uppercase">Status</TableHead>
                             <TableHead className="text-center text-muted-foreground text-[11px] font-medium uppercase">App</TableHead>
-                            <TableHead className="text-right text-muted-foreground text-[11px] font-medium uppercase">Preço</TableHead>
+                            <TableHead className="text-center text-muted-foreground text-[11px] font-medium uppercase">Preço</TableHead>
                             <TableHead className="text-right text-muted-foreground text-[11px] font-medium uppercase">Ação</TableHead>
                         </TableRow>
                     </TableHeader>
@@ -391,10 +391,10 @@ function EstoqueContent() {
                                         <TableCell>
                                             <div className="font-medium text-foreground text-sm">{item.produto_nome}</div>
                                         </TableCell>
-                                        <TableCell className="text-muted-foreground text-sm">
+                                        <TableCell className="text-center text-muted-foreground text-sm">
                                             {item.variacao_nome}
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell className="text-center">
                                             <Badge variant="outline" className="text-[10px] font-medium bg-muted border text-muted-foreground rounded-md px-2 py-0.5">
                                                 {item.categoria_nome}
                                             </Badge>
@@ -453,7 +453,7 @@ function EstoqueContent() {
                                             </div>
                                         </TableCell>
 
-                                        <TableCell className="text-right font-mono text-sm text-muted-foreground">
+                                        <TableCell className="text-center font-mono text-sm text-muted-foreground">
                                             R$ {item.preco.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                                         </TableCell>
 
