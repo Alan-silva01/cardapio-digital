@@ -14,9 +14,14 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { Search, Plus, Minus, Infinity, Package, AlertTriangle, XCircle, CheckCircle2, Loader2 } from "lucide-react";
+import { Search, Plus, Minus, InfinityIcon as Infinity, Package, AlertTriangle, XCircle, CheckCircle2, Loader2 } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import {
+    HoverCard,
+    HoverCardContent,
+    HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 interface StockItem {
     variacao_id: string;
@@ -311,21 +316,62 @@ export default function EstoquePage() {
                                     >
                                         {/* Thumbnail */}
                                         <TableCell className="py-2">
-                                            <div className="h-9 w-9 relative rounded-md overflow-hidden bg-[#1a1a1a] border border-[#222]">
-                                                {item.imagem_url ? (
-                                                    <Image
-                                                        src={item.imagem_url}
-                                                        alt={item.produto_nome}
-                                                        fill
-                                                        className="object-cover"
-                                                        sizes="36px"
-                                                    />
-                                                ) : (
-                                                    <div className="absolute inset-0 flex items-center justify-center text-[8px] text-[#444]">
-                                                        <Package className="h-3.5 w-3.5" />
+                                            <HoverCard openDelay={200}>
+                                                <HoverCardTrigger asChild>
+                                                    <div className="h-9 w-9 relative rounded-md overflow-hidden bg-[#1a1a1a] border border-[#222] cursor-pointer group">
+                                                        {item.imagem_url ? (
+                                                            <>
+                                                                <Image
+                                                                    src={item.imagem_url}
+                                                                    alt={item.produto_nome}
+                                                                    fill
+                                                                    className={cn(
+                                                                        "object-cover transition-all",
+                                                                        !item.disponivel && "blur-[2px] opacity-40 grayscale-[0.8]"
+                                                                    )}
+                                                                    sizes="36px"
+                                                                />
+                                                                {!item.disponivel && (
+                                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                                                                        <span className="text-[6px] font-bold text-white uppercase tracking-wider rotate-[-15deg]">Inativo</span>
+                                                                    </div>
+                                                                )}
+                                                            </>
+                                                        ) : (
+                                                            <div className="absolute inset-0 flex items-center justify-center text-[8px] text-[#444]">
+                                                                <Package className="h-3.5 w-3.5" />
+                                                            </div>
+                                                        )}
                                                     </div>
+                                                </HoverCardTrigger>
+                                                {item.imagem_url && (
+                                                    <HoverCardContent side="right" className="w-64 p-0 rounded-xl overflow-hidden border-[#333] bg-[#111] shadow-2xl">
+                                                        <div className="relative aspect-square w-full">
+                                                            <Image
+                                                                src={item.imagem_url}
+                                                                alt={item.produto_nome}
+                                                                fill
+                                                                className={cn(
+                                                                    "object-cover",
+                                                                    !item.disponivel && "blur-sm opacity-60 grayscale-[0.5]"
+                                                                )}
+                                                                sizes="256px"
+                                                            />
+                                                            {!item.disponivel && (
+                                                                <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+                                                                    <div className="border border-red-500/50 bg-red-500/20 text-red-100 px-3 py-1 rounded backdrop-blur-md text-xs font-medium uppercase tracking-widest rotate-[-10deg]">
+                                                                        Produto Inativo
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        <div className="p-3 bg-gradient-to-t from-black/80 to-transparent absolute bottom-0 left-0 right-0">
+                                                            <p className="text-white font-medium text-sm drop-shadow-md">{item.produto_nome}</p>
+                                                            <p className="text-white/70 text-xs drop-shadow-md">{item.variacao_nome}</p>
+                                                        </div>
+                                                    </HoverCardContent>
                                                 )}
-                                            </div>
+                                            </HoverCard>
                                         </TableCell>
 
                                         {/* Produto */}
