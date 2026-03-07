@@ -157,29 +157,29 @@ export default function DashboardPage() {
                 </Card>
             </div>
 
-            {/* --- CHARTS ROW 1 --- */}
-            <div className="grid gap-3 md:grid-cols-7 lg:grid-cols-10">
+            {/* --- ROW 2: Charts + Top Vendidos --- */}
+            <div className="grid gap-3 lg:grid-cols-10">
 
                 {/* BAR CHART: Orders per Day */}
-                <Card className="md:col-span-4 lg:col-span-6 shadow-none rounded-xl border border-border flex flex-col">
-                    <CardHeader>
-                        <CardTitle className="text-base font-semibold">Pedidos por Dia</CardTitle>
-                        <CardDescription>Volume semanal de pedidos</CardDescription>
+                <Card className="lg:col-span-3 shadow-none rounded-xl border border-border flex flex-col">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-semibold">Pedidos por Dia</CardTitle>
+                        <CardDescription className="text-xs">Volume semanal</CardDescription>
                     </CardHeader>
                     <CardContent className="flex-1">
-                        <ChartContainer config={ordersChartConfig} className="h-[160px] w-full">
-                            <BarChart data={ordersData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
+                        <ChartContainer config={ordersChartConfig} className="h-[140px] w-full">
+                            <BarChart data={ordersData} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
                                 <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.3} />
                                 <XAxis
                                     dataKey="day"
                                     tickLine={false}
-                                    tickMargin={10}
+                                    tickMargin={8}
                                     axisLine={false}
-                                    fontSize={12}
+                                    fontSize={11}
                                 />
                                 <ChartTooltip
                                     cursor={{ fill: 'var(--accent)', opacity: 0.2 }}
-                                    content={<ChartTooltipContent indicator="dot" />}
+                                    content={<ChartTooltipContent indicator="dot" separator=": " />}
                                 />
                                 <Bar dataKey="pedidos" fill="#EC662D" radius={[4, 4, 0, 0]} />
                             </BarChart>
@@ -188,28 +188,28 @@ export default function DashboardPage() {
                 </Card>
 
                 {/* PIE CHART: Categories */}
-                <Card className="md:col-span-3 lg:col-span-4 shadow-none rounded-xl border border-border flex flex-col">
+                <Card className="lg:col-span-3 shadow-none rounded-xl border border-border flex flex-col">
                     <CardHeader className="items-center pb-0">
-                        <CardTitle className="text-base font-semibold">Top Categorias</CardTitle>
-                        <CardDescription>Janeiro - Junho 2026</CardDescription>
+                        <CardTitle className="text-sm font-semibold">Top Categorias</CardTitle>
+                        <CardDescription className="text-xs">Janeiro - Junho 2026</CardDescription>
                     </CardHeader>
                     <CardContent className="flex-1 pb-0">
                         <ChartContainer
                             config={categoryChartConfig}
-                            className="mx-auto aspect-square max-h-[180px]"
+                            className="mx-auto aspect-square max-h-[160px]"
                         >
                             <PieChart>
                                 <ChartTooltip
                                     cursor={false}
-                                    content={<ChartTooltipContent hideLabel />}
+                                    content={<ChartTooltipContent hideLabel separator=": " />}
                                 />
                                 <Pie
                                     data={categoryData}
                                     dataKey="visitors"
                                     nameKey="category"
-                                    innerRadius={60}
-                                    outerRadius={80}
-                                    strokeWidth={4}
+                                    innerRadius={50}
+                                    outerRadius={68}
+                                    strokeWidth={3}
                                     paddingAngle={2}
                                 >
                                     <Label
@@ -225,14 +225,14 @@ export default function DashboardPage() {
                                                         <tspan
                                                             x={viewBox.cx}
                                                             y={viewBox.cy}
-                                                            className="fill-foreground text-3xl font-bold"
+                                                            className="fill-foreground text-2xl font-bold"
                                                         >
                                                             {totalCategories.toLocaleString()}
                                                         </tspan>
                                                         <tspan
                                                             x={viewBox.cx}
-                                                            y={(viewBox.cy || 0) + 24}
-                                                            className="fill-muted-foreground text-xs"
+                                                            y={(viewBox.cy || 0) + 20}
+                                                            className="fill-muted-foreground text-[10px]"
                                                         >
                                                             Vendas
                                                         </tspan>
@@ -246,24 +246,91 @@ export default function DashboardPage() {
                         </ChartContainer>
                     </CardContent>
                 </Card>
+
+                {/* TOP MAIS VENDIDOS */}
+                <Card className="lg:col-span-4 shadow-none rounded-xl border border-border flex flex-col">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-semibold">Top Mais Vendidos</CardTitle>
+                        <CardDescription className="text-xs">Ranking de saída hoje</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-2.5">
+                        {/* Product 1 */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2.5">
+                                <div className="h-9 w-9 relative rounded-lg bg-muted overflow-hidden border border-border shrink-0">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src="https://images.unsplash.com/photo-1618885472179-5e474019f2a2?q=80&w=128&auto=format&fit=crop" alt="Heineken" className="h-full w-full object-cover" loading="lazy" />
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-sm font-medium leading-tight">Heineken 600ml</span>
+                                    <span className="text-[11px] text-muted-foreground">Cervejas</span>
+                                </div>
+                            </div>
+                            <div className="flex flex-col items-end">
+                                <span className="text-sm font-bold">42 un</span>
+                                <span className="text-[11px] text-muted-foreground">R$ 630</span>
+                            </div>
+                        </div>
+
+                        {/* Product 2 */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2.5">
+                                <div className="h-9 w-9 relative rounded-lg bg-muted overflow-hidden border border-border shrink-0">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=128&auto=format&fit=crop" alt="Burger" className="h-full w-full object-cover" loading="lazy" />
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-sm font-medium leading-tight">Smash Double</span>
+                                    <span className="text-[11px] text-muted-foreground">Entradas</span>
+                                </div>
+                            </div>
+                            <div className="flex flex-col items-end">
+                                <span className="text-sm font-bold">38 un</span>
+                                <span className="text-[11px] text-muted-foreground">R$ 1.520</span>
+                            </div>
+                        </div>
+
+                        {/* Product 3 */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2.5">
+                                <div className="h-9 w-9 relative rounded-lg bg-muted overflow-hidden border border-border shrink-0">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src="https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=128&auto=format&fit=crop" alt="Aperol Spritz" className="h-full w-full object-cover" loading="lazy" />
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-sm font-medium leading-tight">Aperol Spritz</span>
+                                    <span className="text-[11px] text-muted-foreground">Drinks</span>
+                                </div>
+                            </div>
+                            <div className="flex flex-col items-end">
+                                <span className="text-sm font-bold">22 un</span>
+                                <span className="text-[11px] text-muted-foreground">R$ 770</span>
+                            </div>
+                        </div>
+
+                        <Button variant="outline" className="w-full text-xs font-normal" render={<Link href="/estoque" />}>
+                            Ver ranking completo <ArrowRight className="ml-2 h-3 w-3" />
+                        </Button>
+                    </CardContent>
+                </Card>
             </div>
 
-            {/* --- CHARTS & LISTS ROW 2 --- */}
-            <div className="grid gap-4 md:grid-cols-7 lg:grid-cols-10">
+            {/* --- ROW 3: Traffic + Low Stock --- */}
+            <div className="grid gap-3 lg:grid-cols-10">
 
                 {/* AREA CHART: Hourly Traffic */}
-                <Card className="md:col-span-4 lg:col-span-6 shadow-none rounded-xl border border-border flex flex-col">
-                    <CardHeader>
-                        <CardTitle className="text-base font-semibold">Pico de Movimento (Hoje)</CardTitle>
-                        <CardDescription>Volume de pedidos por hora</CardDescription>
+                <Card className="lg:col-span-6 shadow-none rounded-xl border border-border flex flex-col">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-semibold">Pico de Movimento (Hoje)</CardTitle>
+                        <CardDescription className="text-xs">Volume de pedidos por hora</CardDescription>
                     </CardHeader>
                     <CardContent className="flex-1">
-                        <ChartContainer config={trafficChartConfig} className="h-[160px] w-full">
-                            <AreaChart data={trafficData} margin={{ top: 20, right: 0, left: 0, bottom: 0 }}>
+                        <ChartContainer config={trafficChartConfig} className="h-[140px] w-full">
+                            <AreaChart data={trafficData} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
                                 <defs>
                                     <linearGradient id="colorActive" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="var(--color-active)" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="var(--color-active)" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="#EC662D" stopOpacity={0.3} />
+                                        <stop offset="95%" stopColor="#EC662D" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.3} />
@@ -271,17 +338,17 @@ export default function DashboardPage() {
                                     dataKey="time"
                                     tickLine={false}
                                     axisLine={false}
-                                    tickMargin={10}
-                                    fontSize={12}
+                                    tickMargin={8}
+                                    fontSize={11}
                                 />
                                 <ChartTooltip
                                     cursor={{ stroke: 'var(--accent)', strokeWidth: 1, strokeDasharray: '4 4' }}
-                                    content={<ChartTooltipContent indicator="line" />}
+                                    content={<ChartTooltipContent indicator="line" separator=": " />}
                                 />
                                 <Area
                                     type="monotone"
                                     dataKey="active"
-                                    stroke="var(--color-active)"
+                                    stroke="#EC662D"
                                     fillOpacity={1}
                                     fill="url(#colorActive)"
                                     strokeWidth={2}
@@ -291,87 +358,71 @@ export default function DashboardPage() {
                     </CardContent>
                 </Card>
 
-                {/* TOP MAIS VENDIDOS */}
-                <Card className="md:col-span-3 lg:col-span-4 shadow-none rounded-xl border border-border flex flex-col">
-                    <CardHeader>
-                        <CardTitle className="text-base font-semibold">Top Mais Vendidos</CardTitle>
-                        <CardDescription>Ranking de saída hoje</CardDescription>
+                {/* ESTOQUE BAIXO */}
+                <Card className="lg:col-span-4 shadow-none rounded-xl border border-border flex flex-col">
+                    <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between w-full">
+                            <div>
+                                <CardTitle className="text-sm font-semibold">Estoque Baixo</CardTitle>
+                                <CardDescription className="text-xs">Produtos que precisam reposição</CardDescription>
+                            </div>
+                            <AlertTriangle className="h-4 w-4 text-amber-500" />
+                        </div>
                     </CardHeader>
-                    <CardContent className="space-y-3">
-                        {/* Product 1 */}
+                    <CardContent className="space-y-2.5">
+                        {/* Low Stock 1 */}
                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 relative rounded-lg bg-muted overflow-hidden border border-border shrink-0">
+                            <div className="flex items-center gap-2.5">
+                                <div className="h-9 w-9 relative rounded-lg bg-muted overflow-hidden border border-border shrink-0">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img src="https://images.unsplash.com/photo-1618885472179-5e474019f2a2?q=80&w=128&auto=format&fit=crop" alt="Heineken" className="h-full w-full object-cover" loading="lazy" />
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="text-sm font-medium">Heineken 600ml</span>
-                                    <span className="text-xs text-muted-foreground">Cervejas</span>
+                                    <span className="text-sm font-medium leading-tight">Heineken 600ml</span>
+                                    <span className="text-[11px] text-muted-foreground">Cervejas</span>
                                 </div>
                             </div>
-                            <div className="flex flex-col items-end">
-                                <span className="text-sm font-bold">42 un</span>
-                                <span className="text-xs text-muted-foreground">R$ 630</span>
-                            </div>
+                            <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5 font-medium">
+                                <AlertTriangle className="w-3 h-3 mr-1" /> 5 un
+                            </Badge>
                         </div>
 
-                        {/* Product 2 */}
+                        {/* Low Stock 2 */}
                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 relative rounded-lg bg-muted overflow-hidden border border-border shrink-0">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=128&auto=format&fit=crop" alt="Burger" className="h-full w-full object-cover" loading="lazy" />
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-sm font-medium">Smash Double</span>
-                                    <span className="text-xs text-muted-foreground">Entradas</span>
-                                </div>
-                            </div>
-                            <div className="flex flex-col items-end">
-                                <span className="text-sm font-bold">38 un</span>
-                                <span className="text-xs text-muted-foreground">R$ 1.520</span>
-                            </div>
-                        </div>
-
-                        {/* Product 3 */}
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 relative rounded-lg bg-muted overflow-hidden border border-border shrink-0">
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src="https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=128&auto=format&fit=crop" alt="Aperol Spritz" className="h-full w-full object-cover" loading="lazy" />
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-sm font-medium">Aperol Spritz</span>
-                                    <span className="text-xs text-muted-foreground">Drinks</span>
-                                </div>
-                            </div>
-                            <div className="flex flex-col items-end">
-                                <span className="text-sm font-bold">22 un</span>
-                                <span className="text-xs text-muted-foreground">R$ 770</span>
-                            </div>
-                        </div>
-
-                        {/* Product 4 */}
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 relative rounded-lg bg-muted overflow-hidden border border-border shrink-0">
+                            <div className="flex items-center gap-2.5">
+                                <div className="h-9 w-9 relative rounded-lg bg-muted overflow-hidden border border-border shrink-0">
                                     {/* eslint-disable-next-line @next/next/no-img-element */}
                                     <img src="https://images.unsplash.com/photo-1546171753-97d7676e4602?q=80&w=128&auto=format&fit=crop" alt="Vinho" className="h-full w-full object-cover" loading="lazy" />
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="text-sm font-medium">Malbec Reserva</span>
-                                    <span className="text-xs text-muted-foreground">Vinhos</span>
+                                    <span className="text-sm font-medium leading-tight">Malbec Reserva</span>
+                                    <span className="text-[11px] text-muted-foreground">Vinhos</span>
                                 </div>
                             </div>
-                            <div className="flex flex-col items-end">
-                                <span className="text-sm font-bold">18 un</span>
-                                <span className="text-xs text-muted-foreground">R$ 2.160</span>
+                            <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5 font-medium">
+                                <AlertTriangle className="w-3 h-3 mr-1" /> 3 un
+                            </Badge>
+                        </div>
+
+                        {/* Low Stock 3 */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2.5">
+                                <div className="h-9 w-9 relative rounded-lg bg-muted overflow-hidden border border-border shrink-0">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src="https://images.unsplash.com/photo-1551024709-8f23befc6f87?q=80&w=128&auto=format&fit=crop" alt="Gin" className="h-full w-full object-cover" loading="lazy" />
+                                </div>
+                                <div className="flex flex-col">
+                                    <span className="text-sm font-medium leading-tight">Gin Tanqueray</span>
+                                    <span className="text-[11px] text-muted-foreground">Destilados</span>
+                                </div>
                             </div>
+                            <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5 font-medium">
+                                <AlertTriangle className="w-3 h-3 mr-1" /> 2 un
+                            </Badge>
                         </div>
 
                         <Button variant="outline" className="w-full text-xs font-normal" render={<Link href="/estoque" />}>
-                            Ver ranking completo <ArrowRight className="ml-2 h-3 w-3" />
+                            Ver todos os alertas <ArrowRight className="ml-2 h-3 w-3" />
                         </Button>
                     </CardContent>
                 </Card>
