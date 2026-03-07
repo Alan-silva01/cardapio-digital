@@ -62,17 +62,17 @@ const trafficData = [
 ];
 
 const topProducts = [
-    { name: "Heineken 600ml", category: "Cervejas", qty: 42, revenue: "R$ 630", img: "https://images.unsplash.com/photo-1618885472179-5e474019f2a2?q=80&w=128&auto=format&fit=crop" },
-    { name: "Smash Double", category: "Entradas", qty: 38, revenue: "R$ 1.520", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=128&auto=format&fit=crop" },
-    { name: "Aperol Spritz", category: "Drinks", qty: 22, revenue: "R$ 770", img: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=128&auto=format&fit=crop" },
-    { name: "Malbec Reserva", category: "Vinhos", qty: 18, revenue: "R$ 2.160", img: "https://images.unsplash.com/photo-1546171753-97d7676e4602?q=80&w=128&auto=format&fit=crop" },
+    { name: "Caipirinha", category: "Drinks", qty: 42, revenue: "R$ 630", img: "https://res.cloudinary.com/ddhlqymvf/image/upload/v1771605684/App_Bar_50Acorona_50kb_23_z6gxst.png" },
+    { name: "Stella Gold", category: "Cervejas", qty: 38, revenue: "R$ 1.520", img: "https://res.cloudinary.com/ddhlqymvf/image/upload/v1772140661/App_Bar_50Acorona_50kb_1_mstuq1.png" },
+    { name: "Pérgola Tinto", category: "Vinhos", qty: 22, revenue: "R$ 770", img: "https://res.cloudinary.com/ddhlqymvf/image/upload/v1772733834/Bebida_500x600_5_umkpav.png" },
+    { name: "Skol", category: "Cervejas", qty: 18, revenue: "R$ 2.160", img: "https://res.cloudinary.com/ddhlqymvf/image/upload/v1772140662/App_Bar_50Acorona_50kb_3_bpkyvq.png" },
 ];
 
 const lowStockProducts = [
-    { name: "Heineken 600ml", category: "Cervejas", stock: 5, img: "https://images.unsplash.com/photo-1618885472179-5e474019f2a2?q=80&w=128&auto=format&fit=crop" },
-    { name: "Malbec Reserva", category: "Vinhos", stock: 3, img: "https://images.unsplash.com/photo-1546171753-97d7676e4602?q=80&w=128&auto=format&fit=crop" },
-    { name: "Gin Tanqueray", category: "Destilados", stock: 2, img: "https://images.unsplash.com/photo-1551024709-8f23befc6f87?q=80&w=128&auto=format&fit=crop" },
-    { name: "Azeite Trufado", category: "Ingredientes", stock: 4, img: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?q=80&w=128&auto=format&fit=crop" },
+    { name: "Vodka Grey Goose", category: "Destilados", stock: 5, img: "https://res.cloudinary.com/ddhlqymvf/image/upload/v1771541227/App_Bar_50Acorona_50kb_11_rirvjo.png" },
+    { name: "Casal Garcia Branco", category: "Vinhos", stock: 3, img: "https://res.cloudinary.com/ddhlqymvf/image/upload/v1772673377/Bebida_Canva_wyzaek.png" },
+    { name: "Gin Tanqueray", category: "Destilados", stock: 2, img: "https://res.cloudinary.com/ddhlqymvf/image/upload/v1771541223/App_Bar_50Acorona_50kb_7_akzpmv.png" },
+    { name: "Drink Melancita", category: "Drinks", stock: 4, img: "https://res.cloudinary.com/ddhlqymvf/image/upload/v1771585718/App_Bar_50Acorona_50kb_15_mpfjzn.png" },
 ];
 
 // --- CHART CONFIGS ---
@@ -271,9 +271,9 @@ export default function DashboardPage() {
                         {topProducts.map((product) => (
                             <div key={product.name} className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <div className="h-8 w-8 relative rounded-md bg-muted overflow-hidden border border-border shrink-0">
+                                    <div className="h-9 w-8 relative rounded-md bg-muted/60 overflow-hidden border border-border shrink-0 flex items-center justify-center">
                                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={product.img} alt={product.name} className="h-full w-full object-cover" loading="lazy" />
+                                        <img src={product.img} alt={product.name} className="h-full w-full object-contain p-0.5" loading="lazy" />
                                     </div>
                                     <div className="flex flex-col">
                                         <span className="text-[13px] font-medium leading-tight">{product.name}</span>
@@ -351,9 +351,9 @@ export default function DashboardPage() {
                         {lowStockProducts.map((product) => (
                             <div key={product.name} className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                    <div className="h-8 w-8 relative rounded-md bg-muted overflow-hidden border border-border shrink-0">
+                                    <div className="h-9 w-8 relative rounded-md bg-muted/60 overflow-hidden border border-border shrink-0 flex items-center justify-center">
                                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={product.img} alt={product.name} className="h-full w-full object-cover" loading="lazy" />
+                                        <img src={product.img} alt={product.name} className="h-full w-full object-contain p-0.5" loading="lazy" />
                                     </div>
                                     <div className="flex flex-col">
                                         <span className="text-[13px] font-medium leading-tight">{product.name}</span>
