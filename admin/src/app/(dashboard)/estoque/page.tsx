@@ -198,7 +198,7 @@ function EstoqueContent() {
     if (loading) {
         return (
             <div className="flex-1 flex items-center justify-center h-[60vh]">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <Loader2 className="h-6 w-6 animate-spin text-brand" />
             </div>
         );
     }
@@ -494,7 +494,7 @@ export default function EstoquePage() {
     return (
         <Suspense fallback={
             <div className="flex-1 flex items-center justify-center h-[60vh]">
-                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                <Loader2 className="h-6 w-6 animate-spin text-brand" />
             </div>
         }>
             <EstoqueContent />

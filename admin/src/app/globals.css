@@ -42,6 +42,8 @@
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
 
+    --color-brand: var(--brand-orange);
+
     --radius-sm: calc(var(--radius) - 4px);
     --radius-md: calc(var(--radius) - 2px);
     --radius-lg: var(--radius);
@@ -78,6 +80,8 @@
         --border: #DFDFDF;
         --input: #DFDFDF;
         --ring: #242424;
+
+        --brand-orange: #ff5e1e;
 
         --chart-1: #ff5e1e;
         --chart-2: #2D7D46;
@@ -116,6 +120,8 @@
         --border: #27272a;
         --input: #27272a;
         --ring: #ededed;
+
+        --brand-orange: #ff5e1e;
 
         --chart-1: #ff5e1e;
         --chart-2: #2D7D46;
