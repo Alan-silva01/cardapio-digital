@@ -316,8 +316,8 @@ export default function EstoquePage() {
                                     >
                                         {/* Thumbnail */}
                                         <TableCell className="py-2">
-                                            <HoverCard openDelay={200}>
-                                                <HoverCardTrigger asChild>
+                                            <HoverCard>
+                                                <HoverCardTrigger>
                                                     <div className="h-9 w-9 relative rounded-md overflow-hidden bg-[#1a1a1a] border border-[#222] cursor-pointer group">
                                                         {item.imagem_url ? (
                                                             <>
