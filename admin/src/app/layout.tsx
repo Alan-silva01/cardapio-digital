@@ -14,7 +14,6 @@ export const metadata: Metadata = {
 };
 
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
-import NextTopLoader from 'nextjs-toploader';
 
 export default function RootLayout({
   children,
@@ -26,12 +25,6 @@ export default function RootLayout({
       <body
         className={`${inter.variable} font-sans antialiased`}
       >
-        <NextTopLoader
-          color="#f97316"
-          height={3}
-          showSpinner={false}
-          shadow="0 0 10px #f97316,0 0 5px #f97316"
-        />
         <NuqsAdapter>
           <TooltipProvider>{children}</TooltipProvider>
         </NuqsAdapter>

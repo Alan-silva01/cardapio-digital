@@ -335,6 +335,8 @@ function EstoqueContent() {
                                                                     src={item.imagem_url}
                                                                     alt={item.produto_nome}
                                                                     fill
+                                                                    priority={idx < 10}
+                                                                    unoptimized={true}
                                                                     className={cn(
                                                                         "object-cover transition-all",
                                                                         !item.disponivel && "blur-[2px] opacity-40 grayscale-[0.8]"
@@ -361,6 +363,8 @@ function EstoqueContent() {
                                                                 src={item.imagem_url}
                                                                 alt={item.produto_nome}
                                                                 fill
+                                                                priority={idx < 10}
+                                                                unoptimized={true}
                                                                 className={cn(
                                                                     "object-contain p-4 transition-all",
                                                                     !item.disponivel && "blur-sm opacity-60 grayscale-[0.5]"
