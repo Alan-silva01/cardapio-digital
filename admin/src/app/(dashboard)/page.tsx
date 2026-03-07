@@ -172,7 +172,7 @@ export default function DashboardPage() {
             </div>
 
             {/* --- ROW 2: Charts + Top Vendidos --- */}
-            <div className="grid gap-2.5 lg:grid-cols-10 flex-1 min-h-0">
+            <div className="grid gap-2.5 lg:grid-cols-10">
 
                 {/* BAR CHART: Orders per Day */}
                 <Card className="lg:col-span-3 shadow-none rounded-xl border border-border flex flex-col">
@@ -181,8 +181,8 @@ export default function DashboardPage() {
                         <CardDescription className="text-[11px]">Volume semanal</CardDescription>
                     </CardHeader>
                     <CardContent className="flex-1 px-4 pb-3">
-                        <ChartContainer config={ordersChartConfig} className="h-full w-full">
-                            <BarChart data={ordersData} margin={{ top: 8, right: 0, left: 0, bottom: 0 }}>
+                        <ChartContainer config={ordersChartConfig} className="h-[150px] w-full">
+                            <BarChart data={ordersData} margin={{ top: 8, right: 0, left: 0, bottom: 4 }}>
                                 <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.3} />
                                 <XAxis
                                     dataKey="day"
@@ -210,7 +210,7 @@ export default function DashboardPage() {
                     <CardContent className="flex-1 pb-2 px-4 flex items-center justify-center">
                         <ChartContainer
                             config={categoryChartConfig}
-                            className="aspect-square w-full max-h-full"
+                            className="mx-auto aspect-square max-h-[150px]"
                         >
                             <PieChart>
                                 <ChartTooltip
@@ -291,7 +291,7 @@ export default function DashboardPage() {
             </div>
 
             {/* --- ROW 3: Traffic + Low Stock --- */}
-            <div className="grid gap-2.5 lg:grid-cols-10 flex-1 min-h-0">
+            <div className="grid gap-2.5 lg:grid-cols-10">
 
                 {/* AREA CHART: Hourly Traffic */}
                 <Card className="lg:col-span-6 shadow-none rounded-xl border border-border flex flex-col">
@@ -300,8 +300,8 @@ export default function DashboardPage() {
                         <CardDescription className="text-[11px]">Volume de pedidos por hora</CardDescription>
                     </CardHeader>
                     <CardContent className="flex-1 px-4 pb-3">
-                        <ChartContainer config={trafficChartConfig} className="h-full w-full">
-                            <AreaChart data={trafficData} margin={{ top: 8, right: 0, left: 0, bottom: 0 }}>
+                        <ChartContainer config={trafficChartConfig} className="h-[150px] w-full">
+                            <AreaChart data={trafficData} margin={{ top: 8, right: 0, left: 0, bottom: 4 }}>
                                 <defs>
                                     <linearGradient id="colorActive" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#EC662D" stopOpacity={0.3} />
