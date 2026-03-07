@@ -31,6 +31,8 @@ import {
     Loader2,
     Tag,
     Pencil,
+    Check,
+    ChevronsUpDown,
 } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
@@ -67,6 +69,98 @@ const COUNTRY_FLAGS: Record<string, string> = {
     'Suíça': '/flags/Suica 100x60.png',
 };
 
+// --- Custom Select Component ---
+function SearchableSelect({
+    options,
+    value,
+    onChange,
+    placeholder,
+    allowCreate,
+    createPrefix = "Criar: ",
+}: {
+    options: { label: string; value: string }[];
+    value: string;
+    onChange: (val: string, isNew?: boolean) => void;
+    placeholder: string;
+    allowCreate?: boolean;
+    createPrefix?: string;
+}) {
+    const [open, setOpen] = useState(false);
+    const [search, setSearch] = useState("");
+
+    // Simplistic click-outside since we don't have popover
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            const target = event.target as HTMLElement;
+            if (!target.closest('.searchable-select-container')) {
+                setOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const filteredOptions = options.filter(o => o.label.toLowerCase().includes(search.toLowerCase()));
+    const exactMatch = options.find(o => o.label.toLowerCase() === search.toLowerCase());
+    const showCreate = allowCreate && search.trim() !== "" && !exactMatch;
+
+    return (
+        <div className="relative w-full searchable-select-container">
+            <div
+                className="flex items-center justify-between min-h-9 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm hover:border-foreground/30 cursor-pointer text-foreground transition-colors"
+                onClick={() => { setOpen(!open); setSearch(""); }}
+            >
+                <span className="truncate">
+                    {value ? (options.find(o => o.value === value)?.label || value) : <span className="text-muted-foreground">{placeholder}</span>}
+                </span>
+                <ChevronsUpDown className="h-4 w-4 opacity-50 ml-2 shrink-0" />
+            </div>
+
+            {open && (
+                <div className="absolute top-[calc(100%+4px)] left-0 w-full z-[100] rounded-md border border-border bg-popover text-popover-foreground shadow-md animate-in fade-in-0 flex flex-col max-h-[220px]">
+                    <div className="p-2 border-b border-border">
+                        <Input
+                            autoFocus
+                            placeholder="Pesquisar..."
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            className="h-8 bg-background focus-visible:ring-1 focus-visible:ring-foreground/30 border-none px-2"
+                        />
+                    </div>
+                    <div className="overflow-y-auto p-1 py-1.5 flex-1">
+                        {filteredOptions.length === 0 && !showCreate && (
+                            <div className="py-4 text-center text-sm text-muted-foreground">Nenhum resultado.</div>
+                        )}
+                        {filteredOptions.map(opt => (
+                            <div
+                                key={opt.value}
+                                className={cn(
+                                    "flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground transition-colors relative",
+                                    value === opt.value && "bg-accent/50 font-medium"
+                                )}
+                                onClick={() => { onChange(opt.value); setOpen(false); }}
+                            >
+                                <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+                                    {value === opt.value && <Check className="h-4 w-4" />}
+                                </span>
+                                {opt.label}
+                            </div>
+                        ))}
+                        {showCreate && (
+                            <div
+                                className="flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-2 pr-2 text-sm outline-none hover:bg-emerald-500/10 hover:text-emerald-500 font-medium text-emerald-500/80 transition-colors mt-1"
+                                onClick={() => { onChange(search.trim(), true); setOpen(false); }}
+                            >
+                                <Plus className="mr-2 h-4 w-4" /> {createPrefix} "{search.trim()}"
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
 interface StockItem {
     variacao_id: string;
     variacao_nome: string;
@@ -77,6 +171,7 @@ interface StockItem {
     produto_nome: string;
     imagem_url: string | null;
     disponivel: boolean;
+    categoria_id: string | null;
     categoria_nome: string;
     tipo_vinho: string | null;
     pais_origem: string | null;
@@ -96,17 +191,33 @@ function EditProductModal({
     open,
     onClose,
     onSave,
+    categoriesList,
+    originsList,
 }: {
     item: StockItem | null;
     open: boolean;
     onClose: () => void;
-    onSave: (data: { nome: string; descricao: string; preco: number; estoque: number; imagem_url: string }) => Promise<void>;
+    onSave: (data: {
+        nome: string;
+        descricao: string;
+        preco: number;
+        estoque: number;
+        imagem_url: string;
+        categoria_id: string | null;
+        categoria_nova: string | null;
+        pais_origem: string | null;
+    }) => Promise<void>;
+    categoriesList: { label: string; value: string }[];
+    originsList: string[];
 }) {
     const [nome, setNome] = useState("");
     const [descricao, setDescricao] = useState("");
     const [preco, setPreco] = useState("");
     const [estoque, setEstoque] = useState("");
     const [imagemUrl, setImagemUrl] = useState("");
+    const [categoriaId, setCategoriaId] = useState("");
+    const [categoriaNova, setCategoriaNova] = useState("");
+    const [paisOrigem, setPaisOrigem] = useState("");
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
@@ -116,6 +227,9 @@ function EditProductModal({
             setPreco(item.preco.toFixed(2));
             setEstoque(item.estoque === -1 ? "-1" : String(item.estoque));
             setImagemUrl(item.imagem_url || "");
+            setCategoriaId(item.categoria_id || "");
+            setCategoriaNova("");
+            setPaisOrigem(item.pais_origem || "");
         }
     }, [item]);
 
@@ -128,6 +242,9 @@ function EditProductModal({
                 preco: parseFloat(preco),
                 estoque: parseInt(estoque),
                 imagem_url: imagemUrl,
+                categoria_id: categoriaId && !categoriaNova ? categoriaId : null,
+                categoria_nova: categoriaNova || null,
+                pais_origem: paisOrigem || null,
             });
             onClose();
         } catch (err) {
@@ -187,6 +304,39 @@ function EditProductModal({
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1.5 z-50">
+                            <Label className="text-xs font-medium text-muted-foreground">Categoria</Label>
+                            <SearchableSelect
+                                options={categoriesList}
+                                value={categoriaNova ? `NEW_CAT_${categoriaNova}` : categoriaId}
+                                onChange={(val, isNew) => {
+                                    if (isNew) {
+                                        setCategoriaNova(val);
+                                        setCategoriaId(`NEW_CAT_${val}`);
+                                    } else {
+                                        setCategoriaNova("");
+                                        setCategoriaId(val);
+                                    }
+                                }}
+                                placeholder="Selecione ou crie..."
+                                allowCreate={true}
+                                createPrefix="Criar categoria"
+                            />
+                        </div>
+                        <div className="space-y-1.5 z-40">
+                            <Label className="text-xs font-medium text-muted-foreground">País de Origem</Label>
+                            <SearchableSelect
+                                options={originsList.map(o => ({ label: o, value: o }))}
+                                value={paisOrigem}
+                                onChange={(val) => setPaisOrigem(val)}
+                                placeholder="Nenhum"
+                                allowCreate={true}
+                                createPrefix="Adicionar origem"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
                             <Label className="text-xs font-medium text-muted-foreground">Preço (R$)</Label>
                             <Input
@@ -240,9 +390,12 @@ function EstoqueContent() {
     const [filter, setFilter] = useQueryState("categoria", parseAsString.withDefault("todos").withOptions({ shallow: false }));
     const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
     const [editingItem, setEditingItem] = useState<StockItem | null>(null);
+    const [allCategories, setAllCategories] = useState<{ label: string, value: string }[]>([]);
     const supabase = createClient();
 
     const fetchStock = useCallback(async () => {
+        const { data: catData } = await supabase.from("categorias").select("id, nome").order("nome");
+        if (catData) setAllCategories(catData.map(c => ({ label: c.nome, value: c.id })));
         const { data: wineTypesData } = await supabase
             .from("tipos_vinho")
             .select("tipo, imagem_taca_url");
@@ -266,6 +419,7 @@ function EstoqueContent() {
                     tipo_vinho,
                     pais_origem,
                     descricao,
+                    categoria_id,
                     categorias (
                         nome
                     )
@@ -296,6 +450,7 @@ function EstoqueContent() {
                 produto_nome: v.produtos.nome,
                 imagem_url: finalImageUrl,
                 disponivel: v.produtos.disponivel,
+                categoria_id: v.produtos.categoria_id,
                 categoria_nome: v.produtos.categorias?.nome || "Sem Categoria",
                 tipo_vinho: v.produtos.tipo_vinho,
                 pais_origem: v.produtos.pais_origem,
@@ -321,6 +476,12 @@ function EstoqueContent() {
     const categories = useMemo(() => {
         const cats = new Set(items.map(i => i.categoria_nome));
         return Array.from(cats).sort();
+    }, [items]);
+
+    const allOrigins = useMemo(() => {
+        const origs = new Set(Object.keys(COUNTRY_FLAGS));
+        items.forEach(i => { if (i.pais_origem) origs.add(i.pais_origem); });
+        return Array.from(origs).sort();
     }, [items]);
 
     // Filter
@@ -388,8 +549,29 @@ function EstoqueContent() {
     }
 
     // Save edit
-    async function handleSaveEdit(data: { nome: string; descricao: string; preco: number; estoque: number; imagem_url: string }) {
+    async function handleSaveEdit(data: {
+        nome: string;
+        descricao: string;
+        preco: number;
+        estoque: number;
+        imagem_url: string;
+        categoria_id: string | null;
+        categoria_nova: string | null;
+        pais_origem: string | null;
+    }) {
         if (!editingItem) return;
+
+        let finalCatId = data.categoria_id;
+
+        if (data.categoria_nova) {
+            const { data: newCat, error: catError } = await supabase
+                .from("categorias")
+                .insert({ nome: data.categoria_nova, ativo: true })
+                .select("id")
+                .single();
+            if (newCat) finalCatId = newCat.id;
+            else console.error("Erro ao criar categoria", catError);
+        }
 
         const { error: prodError } = await supabase
             .from("produtos")
@@ -397,6 +579,8 @@ function EstoqueContent() {
                 nome: data.nome,
                 descricao: data.descricao,
                 imagem_url: data.imagem_url,
+                categoria_id: finalCatId,
+                pais_origem: data.pais_origem,
             })
             .eq("id", editingItem.produto_id);
 
@@ -731,6 +915,8 @@ function EstoqueContent() {
                 open={!!editingItem}
                 onClose={() => setEditingItem(null)}
                 onSave={handleSaveEdit}
+                categoriesList={allCategories}
+                originsList={allOrigins}
             />
         </div>
     );
