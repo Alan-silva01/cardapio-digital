@@ -86,11 +86,11 @@ export default function DashboardPage() {
     const totalCategories = categoryData.reduce((acc, curr) => acc + curr.visitors, 0);
 
     return (
-        <div className="flex-1 w-full space-y-3 p-6">
+        <div className="flex-1 w-full space-y-2.5 px-6 py-4">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-xl font-semibold tracking-tight">Dashboard General</h1>
-                    <p className="text-sm text-muted-foreground mt-1">Visão geral da operação hoje</p>
+                    <p className="text-sm text-muted-foreground">Visão geral da operação hoje</p>
                 </div>
                 <div className="flex items-center gap-2">
                     <Button variant="outline" size="sm" render={<Link href="/pedidos" />}>
