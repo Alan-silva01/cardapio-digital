@@ -829,21 +829,29 @@ const App = () => {
                 {(() => {
                     const itemTotal = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(displayPrice * pendingQty);
 
+                    let currentStock = -1; // Default -1 means unlimited
+                    if (currentProduct.variations && selectedVariation && currentProduct.variations[selectedVariation]) {
+                        currentStock = currentProduct.variations[selectedVariation].stock;
+                    }
+
+                    const isOutOfStock = currentStock === 0;
+
                     return (
                         <div className="sheet-footer">
                             <div className="super-pill">
-                                <div className="qty-controls-integrated">
+                                <div className="qty-controls-integrated" style={{ opacity: isOutOfStock ? 0.5 : 1 }}>
                                     <button
-                                        className={`qty-ball ${pendingQty <= 1 ? 'disabled' : ''}`}
+                                        className={`qty-ball ${pendingQty <= 1 || isOutOfStock ? 'disabled' : ''}`}
                                         onClick={() => setPendingQty(q => Math.max(1, q - 1))}
-                                        disabled={pendingQty <= 1}
+                                        disabled={pendingQty <= 1 || isOutOfStock}
                                     >
                                         −
                                     </button>
                                     <span className="qty-number">{pendingQty}</span>
                                     <button
-                                        className="qty-ball"
+                                        className={`qty-ball ${(currentStock !== -1 && pendingQty >= currentStock) || isOutOfStock ? 'disabled' : ''}`}
                                         onClick={() => setPendingQty(q => q + 1)}
+                                        disabled={(currentStock !== -1 && pendingQty >= currentStock) || isOutOfStock}
                                     >
                                         +
                                     </button>
@@ -852,6 +860,7 @@ const App = () => {
                                 <button
                                     className="add-btn"
                                     onClick={(e) => {
+                                        if (isOutOfStock) return;
                                         const addQty = pendingQty;
                                         const btnRect = e.currentTarget.getBoundingClientRect();
                                         const cartEl = cartIconRef.current;
@@ -880,9 +889,19 @@ const App = () => {
                                         }
                                         setPendingQty(1);
                                     }}
+                                    disabled={isOutOfStock}
+                                    style={{
+                                        background: isOutOfStock ? '#333' : undefined,
+                                        color: isOutOfStock ? '#888' : undefined,
+                                        cursor: isOutOfStock ? 'not-allowed' : 'pointer',
+                                    }}
                                 >
-                                    <span style={{ fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>ADICIONAR</span>
-                                    <span style={{ fontWeight: '900', fontSize: '14px', marginLeft: '8px', whiteSpace: 'nowrap' }}>{itemTotal}</span>
+                                    <span style={{ fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>
+                                        {isOutOfStock ? 'ESGOTADO' : 'ADICIONAR'}
+                                    </span>
+                                    {!isOutOfStock && (
+                                        <span style={{ fontWeight: '900', fontSize: '14px', marginLeft: '8px', whiteSpace: 'nowrap' }}>{itemTotal}</span>
+                                    )}
                                 </button>
                             </div>
                         </div>
