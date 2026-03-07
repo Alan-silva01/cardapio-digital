@@ -66,7 +66,6 @@ const topProducts = [
     { name: "Smash Double", category: "Entradas", qty: 38, revenue: "R$ 1.520", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?q=80&w=128&auto=format&fit=crop" },
     { name: "Aperol Spritz", category: "Drinks", qty: 22, revenue: "R$ 770", img: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?q=80&w=128&auto=format&fit=crop" },
     { name: "Malbec Reserva", category: "Vinhos", qty: 18, revenue: "R$ 2.160", img: "https://images.unsplash.com/photo-1546171753-97d7676e4602?q=80&w=128&auto=format&fit=crop" },
-    { name: "Bruschetta", category: "Entradas", qty: 15, revenue: "R$ 450", img: "https://images.unsplash.com/photo-1572695157366-5e585ab2b69f?q=80&w=128&auto=format&fit=crop" },
 ];
 
 const lowStockProducts = [
@@ -74,7 +73,6 @@ const lowStockProducts = [
     { name: "Malbec Reserva", category: "Vinhos", stock: 3, img: "https://images.unsplash.com/photo-1546171753-97d7676e4602?q=80&w=128&auto=format&fit=crop" },
     { name: "Gin Tanqueray", category: "Destilados", stock: 2, img: "https://images.unsplash.com/photo-1551024709-8f23befc6f87?q=80&w=128&auto=format&fit=crop" },
     { name: "Azeite Trufado", category: "Ingredientes", stock: 4, img: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?q=80&w=128&auto=format&fit=crop" },
-    { name: "Água Tônica", category: "Bebidas", stock: 8, img: "https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?q=80&w=128&auto=format&fit=crop" },
 ];
 
 // --- CHART CONFIGS ---
@@ -99,7 +97,7 @@ export default function DashboardPage() {
     const totalCategories = categoryData.reduce((acc, curr) => acc + curr.visitors, 0);
 
     return (
-        <div className="flex flex-col h-[calc(100vh-3.5rem)] w-full px-6 py-4 gap-2.5">
+        <div className="flex flex-col h-[calc(100vh-3.5rem)] w-full px-6 py-4 gap-2.5 overflow-hidden">
             {/* HEADER */}
             <div className="flex items-center justify-between shrink-0">
                 <div>
@@ -172,16 +170,16 @@ export default function DashboardPage() {
             </div>
 
             {/* --- ROW 2: Charts + Top Vendidos --- */}
-            <div className="grid gap-2.5 lg:grid-cols-10">
+            <div className="grid gap-2.5 lg:grid-cols-10 min-h-0 flex-1">
 
                 {/* BAR CHART: Orders per Day */}
-                <Card className="lg:col-span-3 shadow-none rounded-xl border border-border flex flex-col">
-                    <CardHeader className="pb-1 pt-3 px-4">
+                <Card className="lg:col-span-3 shadow-none rounded-xl border border-border flex flex-col min-h-0 h-full">
+                    <CardHeader className="pb-1 pt-3 px-4 shrink-0">
                         <CardTitle className="text-xs font-semibold">Pedidos por Dia</CardTitle>
                         <CardDescription className="text-[11px]">Volume semanal</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex-1 px-4 pb-3 flex flex-col justify-end">
-                        <ChartContainer config={ordersChartConfig} className="h-[190px] w-full">
+                    <CardContent className="flex-1 px-4 pb-3 flex flex-col min-h-0 relative">
+                        <ChartContainer config={ordersChartConfig} className="absolute inset-0 px-4 pb-4 w-full h-full">
                             <BarChart data={ordersData} margin={{ top: 8, right: 0, left: 0, bottom: 4 }}>
                                 <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.3} />
                                 <XAxis
@@ -202,72 +200,74 @@ export default function DashboardPage() {
                 </Card>
 
                 {/* PIE CHART: Categories */}
-                <Card className="lg:col-span-3 shadow-none rounded-xl border border-border flex flex-col">
-                    <CardHeader className="items-center pb-0 pt-3 px-4">
+                <Card className="lg:col-span-3 shadow-none rounded-xl border border-border flex flex-col min-h-0 h-full">
+                    <CardHeader className="items-center pb-0 pt-3 px-4 shrink-0">
                         <CardTitle className="text-xs font-semibold">Top Categorias</CardTitle>
                         <CardDescription className="text-[11px]">Janeiro - Junho 2026</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex-1 pb-3 px-4 flex items-center justify-center">
-                        <ChartContainer
-                            config={categoryChartConfig}
-                            className="h-[180px] w-[180px]"
-                        >
-                            <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 10 }}>
-                                <ChartTooltip
-                                    cursor={false}
-                                    content={<ChartTooltipContent hideLabel separator=": " />}
-                                />
-                                <Pie
-                                    data={categoryData}
-                                    dataKey="visitors"
-                                    nameKey="category"
-                                    innerRadius={45}
-                                    outerRadius={65}
-                                    strokeWidth={3}
-                                    paddingAngle={2}
-                                >
-                                    <Label
-                                        content={({ viewBox }) => {
-                                            if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                                                return (
-                                                    <text
-                                                        x={viewBox.cx}
-                                                        y={viewBox.cy}
-                                                        textAnchor="middle"
-                                                        dominantBaseline="middle"
-                                                    >
-                                                        <tspan
+                    <CardContent className="flex-1 pb-3 px-4 flex items-center justify-center min-h-0 relative">
+                        <div className="absolute inset-0 flex items-center justify-center px-4 pb-4">
+                            <ChartContainer
+                                config={categoryChartConfig}
+                                className="mx-auto aspect-square h-full max-h-[160px] pb-0"
+                            >
+                                <PieChart>
+                                    <ChartTooltip
+                                        cursor={false}
+                                        content={<ChartTooltipContent hideLabel separator=": " />}
+                                    />
+                                    <Pie
+                                        data={categoryData}
+                                        dataKey="visitors"
+                                        nameKey="category"
+                                        innerRadius={45}
+                                        outerRadius={65}
+                                        strokeWidth={3}
+                                        paddingAngle={2}
+                                    >
+                                        <Label
+                                            content={({ viewBox }) => {
+                                                if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                                                    return (
+                                                        <text
                                                             x={viewBox.cx}
                                                             y={viewBox.cy}
-                                                            className="fill-foreground text-xl font-bold"
+                                                            textAnchor="middle"
+                                                            dominantBaseline="middle"
                                                         >
-                                                            {totalCategories.toLocaleString()}
-                                                        </tspan>
-                                                        <tspan
-                                                            x={viewBox.cx}
-                                                            y={(viewBox.cy || 0) + 16}
-                                                            className="fill-muted-foreground text-[9px]"
-                                                        >
-                                                            Vendas
-                                                        </tspan>
-                                                    </text>
-                                                )
-                                            }
-                                        }}
-                                    />
-                                </Pie>
-                            </PieChart>
-                        </ChartContainer>
+                                                            <tspan
+                                                                x={viewBox.cx}
+                                                                y={viewBox.cy}
+                                                                className="fill-foreground text-xl font-bold"
+                                                            >
+                                                                {totalCategories.toLocaleString()}
+                                                            </tspan>
+                                                            <tspan
+                                                                x={viewBox.cx}
+                                                                y={(viewBox.cy || 0) + 16}
+                                                                className="fill-muted-foreground text-[9px]"
+                                                            >
+                                                                Vendas
+                                                            </tspan>
+                                                        </text>
+                                                    )
+                                                }
+                                            }}
+                                        />
+                                    </Pie>
+                                </PieChart>
+                            </ChartContainer>
+                        </div>
                     </CardContent>
                 </Card>
 
                 {/* TOP MAIS VENDIDOS */}
-                <Card className="lg:col-span-4 shadow-none rounded-xl border border-border flex flex-col">
-                    <CardHeader className="pb-1 pt-3 px-4">
+                <Card className="lg:col-span-4 shadow-none rounded-xl border border-border flex flex-col min-h-0 h-full">
+                    <CardHeader className="pb-1 pt-3 px-4 shrink-0">
                         <CardTitle className="text-xs font-semibold">Top Mais Vendidos</CardTitle>
                         <CardDescription className="text-[11px]">Ranking de saída hoje</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex-1 space-y-1.5 px-4 pb-3 overflow-auto">
+                    <CardContent className="flex-1 space-y-1.5 px-4 pb-3 overflow-auto min-h-0">
                         {topProducts.map((product) => (
                             <div key={product.name} className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
@@ -294,16 +294,16 @@ export default function DashboardPage() {
             </div>
 
             {/* --- ROW 3: Traffic + Low Stock --- */}
-            <div className="grid gap-2.5 lg:grid-cols-10">
+            <div className="grid gap-2.5 lg:grid-cols-10 min-h-0 flex-1">
 
                 {/* AREA CHART: Hourly Traffic */}
-                <Card className="lg:col-span-6 shadow-none rounded-xl border border-border flex flex-col">
-                    <CardHeader className="pb-1 pt-3 px-4">
+                <Card className="lg:col-span-6 shadow-none rounded-xl border border-border flex flex-col min-h-0 h-full">
+                    <CardHeader className="pb-1 pt-3 px-4 shrink-0">
                         <CardTitle className="text-xs font-semibold">Pico de Movimento (Hoje)</CardTitle>
                         <CardDescription className="text-[11px]">Volume de pedidos por hora</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex-1 px-4 pb-3 flex flex-col justify-end">
-                        <ChartContainer config={trafficChartConfig} className="h-[190px] w-full">
+                    <CardContent className="flex-1 px-4 pb-3 flex flex-col min-h-0 relative">
+                        <ChartContainer config={trafficChartConfig} className="absolute inset-0 px-4 pb-4 w-full h-full">
                             <AreaChart data={trafficData} margin={{ top: 8, right: 0, left: 0, bottom: 4 }}>
                                 <defs>
                                     <linearGradient id="colorActive" x1="0" y1="0" x2="0" y2="1">
@@ -337,8 +337,8 @@ export default function DashboardPage() {
                 </Card>
 
                 {/* ESTOQUE BAIXO */}
-                <Card className="lg:col-span-4 shadow-none rounded-xl border border-border flex flex-col">
-                    <CardHeader className="pb-1 pt-3 px-4">
+                <Card className="lg:col-span-4 shadow-none rounded-xl border border-border flex flex-col min-h-0 h-full">
+                    <CardHeader className="pb-1 pt-3 px-4 shrink-0">
                         <div className="flex items-center justify-between w-full">
                             <div>
                                 <CardTitle className="text-xs font-semibold">Estoque Baixo</CardTitle>
@@ -347,7 +347,7 @@ export default function DashboardPage() {
                             <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
                         </div>
                     </CardHeader>
-                    <CardContent className="flex-1 space-y-1.5 px-4 pb-3 overflow-auto">
+                    <CardContent className="flex-1 space-y-1.5 px-4 pb-3 overflow-auto min-h-0">
                         {lowStockProducts.map((product) => (
                             <div key={product.name} className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
