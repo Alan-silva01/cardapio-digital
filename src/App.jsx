@@ -76,53 +76,136 @@ const App = () => {
     const [heartParticles, setHeartParticles] = useState([]); // for heart burst effect
     const [wineGlassImages, setWineGlassImages] = useState({}); // { tinto: url, branco: url, rose: url }
     const [isCartOpen, setIsCartOpen] = useState(false); // Controls the cart overlay
+    const [isCheckingOut, setIsCheckingOut] = useState(false); // Loading state for checkout
+    const [orderSuccess, setOrderSuccess] = useState(false); // Success screen after order
     const cartIconRef = useRef(null);
 
     const totalCartItems = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
 
     const currentProduct = products.length > 0 ? products[currentIndex] : null;
 
-    // CHECKOUT LOGIC
-    const handleCheckout = () => {
-        if (Object.keys(cart).length === 0) return;
+    // CHECKOUT LOGIC — Creates order in Supabase
+    const handleCheckout = async () => {
+        if (Object.keys(cart).length === 0 || isCheckingOut) return;
+        setIsCheckingOut(true);
 
-        // Try getting table number from URL (ex: ?mesa=5)
-        const params = new URLSearchParams(window.location.search);
-        const mesa = params.get('mesa') || 'Não informada';
+        try {
+            // 1. Get mesa number from URL
+            const params = new URLSearchParams(window.location.search);
+            const mesaNum = parseInt(params.get('mesa'), 10) || 1;
 
-        let cartText = `*NOVO PEDIDO* 🛒\n*Mesa:* ${mesa}\n\n`;
-        let totalVal = 0;
+            // 2. Look up mesa_id by numero
+            const { data: mesaData, error: mesaError } = await supabase
+                .from('mesas')
+                .select('id')
+                .eq('numero', mesaNum)
+                .single();
 
-        Object.entries(cart).forEach(([key, qty]) => {
-            const hasVariation = key.includes('-');
-            const pid = hasVariation ? key.split('-')[0] : key;
-            const varName = hasVariation ? key.split('-').slice(1).join('-') : null;
-            const pModel = products.find(p => p.id === pid);
+            if (mesaError || !mesaData) throw new Error(`Mesa ${mesaNum} não encontrada.`);
+            const mesaId = mesaData.id;
 
-            if (pModel) {
-                let currentPrice = pModel.price;
-                let displayVar = '';
+            // 3. Find or create an open comanda for this mesa
+            let comandaId;
+            const { data: existingComanda } = await supabase
+                .from('comandas')
+                .select('id')
+                .eq('mesa_id', mesaId)
+                .eq('status', 'aberta')
+                .maybeSingle();
 
-                if (hasVariation && pModel.variations && pModel.variations[varName]) {
-                    currentPrice = pModel.variations[varName].price;
-                    displayVar = ` (${varName})`;
-                }
-
-                totalVal += currentPrice * qty;
-                const priceFormatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(currentPrice * qty);
-                cartText += `▫️ ${qty}x ${pModel.name}${displayVar} - ${priceFormatted}\n`;
+            if (existingComanda) {
+                comandaId = existingComanda.id;
+            } else {
+                const { data: newComanda, error: comandaErr } = await supabase
+                    .from('comandas')
+                    .insert({ mesa_id: mesaId, status: 'aberta', qtd_pessoas: 1 })
+                    .select('id')
+                    .single();
+                if (comandaErr) throw comandaErr;
+                comandaId = newComanda.id;
             }
-        });
 
-        const totalFormatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalVal);
-        cartText += `\n*TOTAL: ${totalFormatted}*`;
+            // 4. Create pessoa_comanda
+            const { data: pessoa, error: pessoaErr } = await supabase
+                .from('pessoas_comanda')
+                .insert({ comanda_id: comandaId, nome: 'Cliente' })
+                .select('id')
+                .single();
+            if (pessoaErr) throw pessoaErr;
 
-        const whatsappMsg = encodeURIComponent(cartText);
-        const phoneStr = '5511999999999'; // Substitua pelo número real
-        const finalUrl = `https://wa.me/${phoneStr}?text=${whatsappMsg}`;
+            // 5. Calculate total and build itens array
+            let totalVal = 0;
+            const itensList = [];
 
-        console.log("Redirecionando para WhatsApp:", finalUrl);
-        window.location.href = finalUrl;
+            Object.entries(cart).forEach(([key, qty]) => {
+                const hasVariation = key.includes('-');
+                const pid = hasVariation ? key.split('-')[0] : key;
+                const varName = hasVariation ? key.split('-').slice(1).join('-') : null;
+                const pModel = products.find(p => p.id === pid);
+
+                if (pModel) {
+                    let currentPrice = pModel.price;
+                    let varId = null;
+                    let displayVarName = null;
+
+                    if (hasVariation && pModel.variations && pModel.variations[varName]) {
+                        currentPrice = pModel.variations[varName].price;
+                        varId = pModel.variations[varName].id;
+                        displayVarName = varName;
+                    }
+
+                    totalVal += currentPrice * qty;
+
+                    itensList.push({
+                        produto_id: pid,
+                        variacao_id: varId,
+                        nome_produto: pModel.name,
+                        nome_variacao: displayVarName,
+                        quantidade: qty,
+                        preco_unitario: currentPrice,
+                        preco_total: currentPrice * qty,
+                    });
+                }
+            });
+
+            // 6. Insert pedido
+            const { data: pedido, error: pedidoErr } = await supabase
+                .from('pedidos')
+                .insert({
+                    comanda_id: comandaId,
+                    pessoa_id: pessoa.id,
+                    numero_mesa: mesaNum,
+                    nome_pessoa: 'Cliente',
+                    status: 'recebido',
+                    total: totalVal,
+                })
+                .select('id')
+                .single();
+            if (pedidoErr) throw pedidoErr;
+
+            // 7. Insert itens_pedido
+            const itensWithPedidoId = itensList.map(item => ({
+                ...item,
+                pedido_id: pedido.id,
+            }));
+
+            const { error: itensErr } = await supabase
+                .from('itens_pedido')
+                .insert(itensWithPedidoId);
+            if (itensErr) throw itensErr;
+
+            // 8. Success! Clear cart and show success screen
+            setCart({});
+            setIsCartOpen(false);
+            setOrderSuccess(true);
+            setTimeout(() => setOrderSuccess(false), 4000);
+
+        } catch (error) {
+            console.error('Erro ao criar pedido:', error);
+            alert('Erro ao enviar pedido. Tente novamente.');
+        } finally {
+            setIsCheckingOut(false);
+        }
     };
 
     // Fetch Products and their Variants from Supabase
@@ -1135,12 +1218,86 @@ const App = () => {
                             <button
                                 className="checkout-btn"
                                 onClick={handleCheckout}
-                                disabled={Object.keys(cart).length === 0}
-                                style={{ opacity: Object.keys(cart).length === 0 ? 0.5 : 1 }}
+                                disabled={Object.keys(cart).length === 0 || isCheckingOut}
+                                style={{ opacity: (Object.keys(cart).length === 0 || isCheckingOut) ? 0.5 : 1 }}
                             >
-                                FINALIZAR PEDIDO <ChevronRight size={18} />
+                                {isCheckingOut ? (
+                                    <><Loader2 size={18} className="animate-spin" style={{ marginRight: '8px' }} /> ENVIANDO...</>
+                                ) : (
+                                    <>FINALIZAR PEDIDO <ChevronRight size={18} /></>
+                                )}
                             </button>
                         </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* ORDER SUCCESS OVERLAY */}
+            <AnimatePresence>
+                {orderSuccess && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        style={{
+                            position: 'fixed',
+                            inset: 0,
+                            zIndex: 99999,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'rgba(0,0,0,0.92)',
+                            backdropFilter: 'blur(12px)',
+                            textAlign: 'center',
+                            padding: '40px',
+                        }}
+                    >
+                        <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ type: 'spring', damping: 12, stiffness: 200, delay: 0.1 }}
+                            style={{
+                                width: '80px',
+                                height: '80px',
+                                borderRadius: '50%',
+                                background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                marginBottom: '24px',
+                                boxShadow: '0 0 40px rgba(34,197,94,0.4)',
+                            }}
+                        >
+                            <span style={{ fontSize: '36px' }}>✓</span>
+                        </motion.div>
+                        <motion.h2
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3 }}
+                            style={{
+                                color: '#fff',
+                                fontSize: '22px',
+                                fontWeight: '800',
+                                marginBottom: '8px',
+                                fontFamily: 'Playfair Display, serif',
+                            }}
+                        >
+                            Pedido Enviado!
+                        </motion.h2>
+                        <motion.p
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.5 }}
+                            style={{
+                                color: '#aaa',
+                                fontSize: '14px',
+                                lineHeight: 1.5,
+                            }}
+                        >
+                            Seu pedido foi recebido pela cozinha.
+                            <br />Fique à vontade para continuar navegando.
+                        </motion.p>
                     </motion.div>
                 )}
             </AnimatePresence>
