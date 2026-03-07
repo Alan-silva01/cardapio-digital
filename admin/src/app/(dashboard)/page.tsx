@@ -180,8 +180,8 @@ export default function DashboardPage() {
                         <CardTitle className="text-xs font-semibold">Pedidos por Dia</CardTitle>
                         <CardDescription className="text-[11px]">Volume semanal</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex-1 px-4 pb-3">
-                        <ChartContainer config={ordersChartConfig} className="h-[150px] w-full">
+                    <CardContent className="flex-1 px-4 pb-3 flex flex-col justify-end">
+                        <ChartContainer config={ordersChartConfig} className="h-[190px] w-full">
                             <BarChart data={ordersData} margin={{ top: 8, right: 0, left: 0, bottom: 4 }}>
                                 <CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.3} />
                                 <XAxis
@@ -210,7 +210,7 @@ export default function DashboardPage() {
                     <CardContent className="flex-1 pb-3 px-4 flex items-center justify-center">
                         <ChartContainer
                             config={categoryChartConfig}
-                            className="mx-auto aspect-square max-h-[160px]"
+                            className="h-[180px] w-[180px]"
                         >
                             <PieChart margin={{ top: 0, right: 0, left: 0, bottom: 10 }}>
                                 <ChartTooltip
@@ -302,8 +302,8 @@ export default function DashboardPage() {
                         <CardTitle className="text-xs font-semibold">Pico de Movimento (Hoje)</CardTitle>
                         <CardDescription className="text-[11px]">Volume de pedidos por hora</CardDescription>
                     </CardHeader>
-                    <CardContent className="flex-1 px-4 pb-3">
-                        <ChartContainer config={trafficChartConfig} className="h-[150px] w-full">
+                    <CardContent className="flex-1 px-4 pb-3 flex flex-col justify-end">
+                        <ChartContainer config={trafficChartConfig} className="h-[190px] w-full">
                             <AreaChart data={trafficData} margin={{ top: 8, right: 0, left: 0, bottom: 4 }}>
                                 <defs>
                                     <linearGradient id="colorActive" x1="0" y1="0" x2="0" y2="1">
