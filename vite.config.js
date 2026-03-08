@@ -13,3 +13,5 @@ export default defineConfig({
     }
   }
 })
+
+// Triggering a minor change for GitHub push
