@@ -48,7 +48,7 @@ const categoryData = [
     { category: "Entradas", visitors: 310, fill: "#2F3232" },
     { category: "Destilados", visitors: 250, fill: "#838585" },
     { category: "Carnes", visitors: 180, fill: "#D9D3D1" },
-    { category: "Outros", visitors: 90, fill: "#0B120E" },
+    { category: "Outros", visitors: 90, fill: "#4B4E4E" },
 ];
 
 const trafficData = [
@@ -88,7 +88,7 @@ const categoryChartConfig = {
     entradas: { label: "Entradas", color: "#2F3232" },
     destilados: { label: "Destilados", color: "#838585" },
     carnes: { label: "Carnes", color: "#D9D3D1" },
-    outros: { label: "Outros", color: "#0B120E" },
+    outros: { label: "Outros", color: "#4B4E4E" },
 } satisfies ChartConfig;
 
 const trafficChartConfig = {
