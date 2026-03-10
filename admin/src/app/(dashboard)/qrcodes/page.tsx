@@ -140,6 +140,12 @@ export default function QRCodesPage() {
 
     if (error) {
       console.error("Erro ao excluir mesa:", error);
+      // Padrão de erro de Foreign Key do Postgres (23503) ou mensagem contendo 'comandas'
+      if (error.code === '23503' || error.message.includes('comandas')) {
+        alert("❌ Esta mesa não pode ser excluída pois possui pedidos ou comandas vinculadas a ela no histórico.");
+      } else {
+        alert(`Erro ao excluir mesa: ${error.message}`);
+      }
     } else {
       await fetchMesas();
     }
