@@ -11,6 +11,7 @@ import {
   GripVertical,
   Loader2,
   Volume2,
+  VolumeX,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -18,6 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { supabase } from "@/lib/supabase";
+import { useNotificationSound } from "@/hooks/useNotificationSound";
 
 interface ItemPedido {
   quantidade: number;
@@ -76,6 +78,7 @@ export default function PedidosPage() {
     pronto: [],
     entregue: [],
   });
+  const { playSound, enabled: soundEnabled, toggleSound } = useNotificationSound();
 
   const fetchPedidos = useCallback(async () => {
     const today = new Date();
@@ -111,6 +114,7 @@ export default function PedidosPage() {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "pedidos" },
         () => {
+          playSound();
           fetchPedidos();
         }
       )
@@ -126,7 +130,7 @@ export default function PedidosPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [fetchPedidos]);
+  }, [fetchPedidos, playSound]);
 
   useEffect(() => {
     setMounted(true);
@@ -250,6 +254,18 @@ export default function PedidosPage() {
           <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-none px-2 py-0 h-5 text-[10px] font-bold">
             REALTIME ON
           </Badge>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={`h-7 w-7 rounded-md transition-colors ${soundEnabled
+                ? "text-brand hover:bg-brand/10"
+                : "text-muted-foreground hover:bg-muted"
+              }`}
+            onClick={toggleSound}
+            title={soundEnabled ? "Desativar som" : "Ativar som"}
+          >
+            {soundEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+          </Button>
         </div>
       </div>
 

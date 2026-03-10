@@ -1,7 +1,13 @@
-# node_modules
+# Dependencies
 node_modules/
+
+# Build artifacts
 dist/
 dist-ssr/
+
+# Environment (secrets)
+.env
+.env.local
 *.local
 
 # IDE and System Files
@@ -13,6 +19,7 @@ dist-ssr/
 *.njsproj
 *.sln
 *.sw?
+Thumbs.db
 
 # Antigravity / AI Agent Files
 .agent/
@@ -25,12 +32,14 @@ implementation_plan.md
 task.md
 walkthrough.md
 
+# Patches and temp files
+*.patch
+
+# Large reference images (keep local, don't version)
+docs/*.PNG
+
 # Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-
-# OS Files
-.DS_Store
-Thumbs.db
