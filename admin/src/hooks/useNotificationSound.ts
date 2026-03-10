@@ -2,7 +2,7 @@
 
 import { useRef, useCallback, useState, useEffect } from "react";
 
-const AUDIO_PATH = "/audio/notification.mp3";
+const AUDIO_PATH = "/assets/audio/notification.mp3";
 const STORAGE_KEY = "notification-sound-enabled";
 
 export function useNotificationSound() {
