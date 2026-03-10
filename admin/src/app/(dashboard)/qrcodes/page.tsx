@@ -135,11 +135,13 @@ export default function QRCodesPage() {
         <div className="flex items-center gap-2">
           {/* Create Modal */}
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={handleOpenDialog} variant="outline" className="h-10 gap-2 font-semibold border-border bg-card hover:bg-muted text-foreground transition-all px-4">
-                <Plus size={18} />
-                Nova Mesa
-              </Button>
+            <DialogTrigger
+              render={
+                <Button onClick={handleOpenDialog} variant="outline" className="h-10 gap-2 font-semibold border-border bg-card hover:bg-muted text-foreground transition-all px-4" />
+              }
+            >
+              <Plus size={18} />
+              Nova Mesa
             </DialogTrigger>
             <DialogContent className="sm:max-w-md p-0 overflow-hidden rounded-xl border border-border shadow-lg">
               <div className="p-6">
