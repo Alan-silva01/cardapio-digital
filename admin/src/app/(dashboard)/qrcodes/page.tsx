@@ -248,10 +248,8 @@ export default function QRCodesPage() {
           <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
             <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden rounded-xl border border-border shadow-lg">
               <div className="p-6">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="h-10 w-10 items-center justify-center rounded-full bg-brand/10 flex border border-brand/20 shrink-0">
-                    <AlertTriangle className="h-5 w-5 text-brand" />
-                  </div>
+                <div className="flex items-center gap-4 mb-2">
+                  <AlertTriangle className="h-6 w-6 text-brand shrink-0" />
                   <div>
                     <h3 className="text-lg font-bold text-foreground">Excluir Mesa {tableToDelete}?</h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">
