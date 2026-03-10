@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,21 +13,22 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import { Printer, Download, Plus, Trash2, AlertTriangle, Info } from "lucide-react";
+import { Printer, Download, Plus, AlertTriangle, Loader2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+
+const BASE_URL = "https://menu-bar-xi.vercel.app";
+
+interface Mesa {
+  id: string;
+  numero: number;
+  qr_code_url: string | null;
+}
 
 export default function QRCodesPage() {
-  const [baseUrl, setBaseUrl] = useState("https://menu-bar-xi.vercel.app");
-  const [tables, setTables] = useState<number[]>(
-    Array.from({ length: 12 }, (_, i) => i + 1)
-  );
+  const [mesas, setMesas] = useState<Mesa[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [newTableNumber, setNewTableNumber] = useState("");
   const [rangeStart, setRangeStart] = useState("");
   const [rangeEnd, setRangeEnd] = useState("");
@@ -36,9 +37,26 @@ export default function QRCodesPage() {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [tableToDelete, setTableToDelete] = useState<number | null>(null);
 
-  const handlePrint = () => {
-    window.print();
-  };
+  // Fetch mesas from Supabase
+  const fetchMesas = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("mesas")
+      .select("id, numero, qr_code_url")
+      .order("numero", { ascending: true });
+
+    if (error) {
+      console.error("Erro ao buscar mesas:", error);
+      return;
+    }
+    if (data) setMesas(data);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchMesas();
+  }, [fetchMesas]);
+
+  const handlePrint = () => window.print();
 
   const handleOpenDialog = () => {
     setDialogStep("choice");
@@ -48,27 +66,60 @@ export default function QRCodesPage() {
     setIsDialogOpen(true);
   };
 
-  const addTable = () => {
+  // Create single mesa in Supabase
+  const addTable = async () => {
     const num = parseInt(newTableNumber);
-    if (!isNaN(num) && !tables.includes(num)) {
-      setTables([...tables, num].sort((a, b) => a - b));
-      setIsDialogOpen(false);
+    if (isNaN(num) || mesas.some((m) => m.numero === num)) return;
+
+    setSaving(true);
+    const { error } = await supabase.from("mesas").insert({
+      id: `mesa-${num}`,
+      numero: num,
+      qr_code_url: `${BASE_URL}?mesa=${num}`,
+    });
+
+    if (error) {
+      console.error("Erro ao criar mesa:", error);
+    } else {
+      await fetchMesas();
     }
+    setSaving(false);
+    setIsDialogOpen(false);
   };
 
-  const addTableRange = () => {
+  // Create range of mesas in Supabase
+  const addTableRange = async () => {
     const start = parseInt(rangeStart);
     const end = parseInt(rangeEnd);
-    if (!isNaN(start) && !isNaN(end) && start <= end) {
-      const newRange: number[] = [];
-      for (let i = start; i <= end; i++) {
-        if (!tables.includes(i)) {
-          newRange.push(i);
-        }
+    if (isNaN(start) || isNaN(end) || start > end) return;
+
+    const existingNumbers = new Set(mesas.map((m) => m.numero));
+    const newMesas = [];
+    for (let i = start; i <= end; i++) {
+      if (!existingNumbers.has(i)) {
+        newMesas.push({
+          id: `mesa-${i}`,
+          numero: i,
+          qr_code_url: `${BASE_URL}?mesa=${i}`,
+        });
       }
-      setTables([...tables, ...newRange].sort((a, b) => a - b));
-      setIsDialogOpen(false);
     }
+
+    if (newMesas.length === 0) {
+      setIsDialogOpen(false);
+      return;
+    }
+
+    setSaving(true);
+    const { error } = await supabase.from("mesas").insert(newMesas);
+
+    if (error) {
+      console.error("Erro ao criar mesas:", error);
+    } else {
+      await fetchMesas();
+    }
+    setSaving(false);
+    setIsDialogOpen(false);
   };
 
   const confirmDelete = (tableNumber: number) => {
@@ -76,44 +127,49 @@ export default function QRCodesPage() {
     setIsConfirmOpen(true);
   };
 
-  const removeTable = () => {
-    if (tableToDelete !== null) {
-      setTables((prev) => prev.filter((t) => t !== tableToDelete));
-      setTableToDelete(null);
-      setIsConfirmOpen(false);
+  // Delete mesa from Supabase
+  const removeTable = async () => {
+    if (tableToDelete === null) return;
+
+    setSaving(true);
+    const { error } = await supabase
+      .from("mesas")
+      .delete()
+      .eq("numero", tableToDelete);
+
+    if (error) {
+      console.error("Erro ao excluir mesa:", error);
+    } else {
+      await fetchMesas();
     }
+    setSaving(false);
+    setTableToDelete(null);
+    setIsConfirmOpen(false);
   };
 
   const downloadQR = async (tableNumber: number) => {
     const qrCanvas = document.getElementById(`qr-code-${tableNumber}`) as HTMLCanvasElement;
     if (!qrCanvas) return;
 
-    // Create a temporary canvas for compositing
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Setup dimensions for high resolution
     const padding = 60;
     const qrSize = 512;
     const textHeight = 100;
     canvas.width = qrSize + padding * 2;
     canvas.height = qrSize + textHeight + padding * 2;
 
-    // Background
     ctx.fillStyle = "#FFFFFF";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Draw QR Code
     ctx.drawImage(qrCanvas, padding, padding, qrSize, qrSize);
 
-    // Draw Text
     ctx.fillStyle = "#000000";
     ctx.textAlign = "center";
-    ctx.font = "bold 80px serif"; // Using native serif as fallback for premium look
+    ctx.font = "bold 80px sans-serif";
     ctx.fillText(`Mesa ${tableNumber}`, canvas.width / 2, canvas.height - padding - 20);
 
-    // Download
     const pngUrl = canvas.toDataURL("image/png");
     const downloadLink = document.createElement("a");
     downloadLink.href = pngUrl;
@@ -123,9 +179,17 @@ export default function QRCodesPage() {
     document.body.removeChild(downloadLink);
   };
 
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 w-full p-4 md:p-8 flex flex-col gap-6">
-      {/* Configuration Header - Hidden during print */}
+      {/* Configuration Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between bg-card p-4 md:p-6 rounded-xl border shadow-sm print:hidden gap-4">
         <div>
           <h2 className="text-xl font-bold tracking-tight">QR Codes das Mesas</h2>
@@ -232,14 +296,15 @@ export default function QRCodesPage() {
 
               {dialogStep !== "choice" && (
                 <div className="bg-muted/30 p-4 flex gap-3 border-t">
-                  <Button variant="ghost" onClick={() => setDialogStep("choice")} className="flex-1 h-9 text-sm">
+                  <Button variant="ghost" onClick={() => setDialogStep("choice")} className="flex-1 h-9 text-sm" disabled={saving}>
                     Voltar
                   </Button>
                   <Button
                     onClick={dialogStep === "single" ? addTable : addTableRange}
                     className="flex-1 bg-brand hover:bg-brand/90 text-white h-9 text-sm font-bold"
+                    disabled={saving}
                   >
-                    Gerar
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Gerar"}
                   </Button>
                 </div>
               )}
@@ -265,14 +330,16 @@ export default function QRCodesPage() {
                   variant="ghost"
                   onClick={() => setIsConfirmOpen(false)}
                   className="flex-1 h-9 text-sm font-semibold"
+                  disabled={saving}
                 >
                   Cancelar
                 </Button>
                 <Button
                   onClick={removeTable}
                   className="flex-1 bg-brand hover:bg-brand/90 text-white h-9 text-sm font-bold shadow-sm"
+                  disabled={saving}
                 >
-                  Excluir Mesa
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Excluir Mesa"}
                 </Button>
               </div>
             </DialogContent>
@@ -287,15 +354,15 @@ export default function QRCodesPage() {
 
       {/* QR Codes Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 print:grid-cols-5 print:gap-4 print:p-0">
-        {tables.map((tableNumber) => {
-          const tableUrl = `${baseUrl}?mesa=${tableNumber}`;
+        {mesas.map((mesa) => {
+          const tableUrl = `${BASE_URL}?mesa=${mesa.numero}`;
           return (
-            <Card key={tableNumber} className="overflow-hidden border border-border/80 shadow-xs break-inside-avoid print:shadow-none print:border-gray-200 transition-all hover:border-brand/40 hover:shadow-md group">
+            <Card key={mesa.id} className="overflow-hidden border border-border/80 shadow-xs break-inside-avoid print:shadow-none print:border-gray-200 transition-all hover:border-brand/40 hover:shadow-md group">
               <CardContent className="p-0 flex flex-col items-center justify-center bg-card aspect-[3/4.1] relative transition-all duration-300">
                 <div className="p-4 w-full h-full flex flex-col items-center justify-center">
                   <div className="bg-white p-2.5 rounded-xl border border-gray-100 shadow-sm transition-transform group-hover:scale-105 duration-300">
                     <QRCodeCanvas
-                      id={`qr-code-${tableNumber}`}
+                      id={`qr-code-${mesa.numero}`}
                       value={tableUrl}
                       size={512}
                       style={{ height: 'auto', maxWidth: '140px', width: '100%' }}
@@ -309,7 +376,7 @@ export default function QRCodesPage() {
                   <div className="mt-4 text-center space-y-0.5">
                     <p className="text-[10px] font-bold tracking-[0.1em] text-muted-foreground uppercase opacity-70">Mesa</p>
                     <h3 className="font-bold text-3xl md:text-4xl text-foreground tracking-tight">
-                      {tableNumber}
+                      {mesa.numero}
                     </h3>
                   </div>
 
@@ -319,7 +386,7 @@ export default function QRCodesPage() {
                       variant="ghost"
                       size="sm"
                       className="h-8 text-[11px] font-bold tracking-wider uppercase text-muted-foreground/60 hover:text-brand hover:bg-brand/5 transition-all rounded-lg px-6 border border-transparent hover:border-brand/20"
-                      onClick={() => downloadQR(tableNumber)}
+                      onClick={() => downloadQR(mesa.numero)}
                     >
                       <Download size={14} className="mr-2" />
                       Baixar
@@ -329,7 +396,7 @@ export default function QRCodesPage() {
                       variant="ghost"
                       size="sm"
                       className="h-7 text-[10px] font-bold tracking-wider uppercase text-brand/40 hover:text-brand hover:bg-brand/5 transition-all rounded-lg px-4"
-                      onClick={() => confirmDelete(tableNumber)}
+                      onClick={() => confirmDelete(mesa.numero)}
                     >
                       Excluir
                     </Button>
