@@ -37,6 +37,7 @@ export default function QRCodesPage() {
   const [dialogStep, setDialogStep] = useState<"choice" | "single" | "bulk">("choice");
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [tableToDelete, setTableToDelete] = useState<number | null>(null);
+  const [errorDialogMsg, setErrorDialogMsg] = useState<string | null>(null);
 
   // Fetch mesas from Supabase
   const fetchMesas = useCallback(async () => {
@@ -142,9 +143,9 @@ export default function QRCodesPage() {
       console.error("Erro ao excluir mesa:", error);
       // Padrão de erro de Foreign Key do Postgres (23503) ou mensagem contendo 'comandas'
       if (error.code === '23503' || error.message.includes('comandas')) {
-        alert("❌ Esta mesa não pode ser excluída pois possui pedidos ou comandas vinculadas a ela no histórico.");
+        setErrorDialogMsg("Esta mesa não pode ser excluída pois possui pedidos ou comandas vinculadas a ela no histórico.");
       } else {
-        alert(`Erro ao excluir mesa: ${error.message}`);
+        setErrorDialogMsg(`Erro ao excluir mesa: ${error.message}`);
       }
     } else {
       await fetchMesas();
@@ -347,6 +348,33 @@ export default function QRCodesPage() {
                   disabled={saving}
                 >
                   {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Excluir Mesa"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Error Message Modal */}
+          <Dialog open={!!errorDialogMsg} onOpenChange={(open) => !open && setErrorDialogMsg(null)}>
+            <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden rounded-xl border border-border shadow-lg">
+              <div className="p-6">
+                <div className="flex items-start gap-4 mb-2">
+                  <div className="h-10 w-10 shrink-0 rounded-full bg-destructive/10 flex items-center justify-center">
+                    <AlertTriangle className="h-5 w-5 text-destructive" />
+                  </div>
+                  <div className="pt-1">
+                    <h3 className="text-lg font-bold text-foreground mb-1">Ação Não Permitida</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {errorDialogMsg}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-muted/30 p-4 flex gap-3 border-t">
+                <Button
+                  onClick={() => setErrorDialogMsg(null)}
+                  className="w-full bg-foreground hover:bg-foreground/90 text-background h-9 text-sm font-bold shadow-sm"
+                >
+                  Entendi
                 </Button>
               </div>
             </DialogContent>
