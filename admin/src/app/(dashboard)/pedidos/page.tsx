@@ -40,7 +40,7 @@ interface Pedido {
 const COLUMNS = [
   { id: "recebido", label: "Recebidos", color: "bg-blue-500/10 text-blue-500" },
   { id: "preparando", label: "Preparando", color: "bg-amber-500/10 text-amber-500" },
-  { id: "pronto", label: "Prontos", color: "bg-emerald-500/10 text-emerald-500" },
+  { id: "pronto", label: "Servido", color: "bg-emerald-500/10 text-emerald-500" },
   { id: "entregue", label: "Histórico Hoje", color: "bg-zinc-500/10 text-zinc-500" },
 ];
 
@@ -216,7 +216,7 @@ export default function PedidosPage() {
       case "recebido":
         return "Preparar →";
       case "preparando":
-        return "Servir →";
+        return "Pronto →";
       case "pronto":
         return "Concluir →";
       default:
@@ -258,8 +258,8 @@ export default function PedidosPage() {
             variant="ghost"
             size="icon"
             className={`h-7 w-7 rounded-md transition-colors ${soundEnabled
-                ? "text-brand hover:bg-brand/10"
-                : "text-muted-foreground hover:bg-muted"
+              ? "text-brand hover:bg-brand/10"
+              : "text-muted-foreground hover:bg-muted"
               }`}
             onClick={toggleSound}
             title={soundEnabled ? "Desativar som" : "Ativar som"}
@@ -347,7 +347,11 @@ export default function PedidosPage() {
 
                                     <div className="space-y-1">
                                       {pedido.itens_pedido.map((item, idx) => (
-                                        <p key={idx} className="text-xs text-muted-foreground leading-relaxed">
+                                        <p key={idx} className={`text-xs leading-relaxed ${pedido.status === "pronto"
+                                            ? "text-emerald-500 font-medium"
+                                            : "text-muted-foreground"
+                                          }`}>
+                                          {pedido.status === "pronto" && <span className="mr-1">✓</span>}
                                           {item.quantidade}x {item.nome_produto}
                                           {item.nome_variacao && <span className="opacity-60"> ({item.nome_variacao})</span>}
                                         </p>
