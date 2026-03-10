@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   Clock,
-  MoreHorizontal,
   ChevronRight,
   AlertCircle,
   Utensils,
@@ -12,6 +11,7 @@ import {
   Loader2,
   Volume2,
   VolumeX,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -22,9 +22,11 @@ import { supabase } from "@/lib/supabase";
 import { useNotificationSound } from "@/hooks/useNotificationSound";
 
 interface ItemPedido {
+  id: string;
   quantidade: number;
   nome_produto: string;
   nome_variacao: string | null;
+  servido: boolean;
 }
 
 interface Pedido {
@@ -86,7 +88,7 @@ export default function PedidosPage() {
 
     const { data, error } = await supabase
       .from("pedidos")
-      .select("id, numero_mesa, nome_pessoa, status, total, criado_em, itens_pedido (quantidade, nome_produto, nome_variacao)")
+      .select("id, numero_mesa, nome_pessoa, status, total, criado_em, itens_pedido (id, quantidade, nome_produto, nome_variacao, servido)")
       .gte("criado_em", today.toISOString())
       .order("criado_em", { ascending: true });
 
@@ -224,6 +226,31 @@ export default function PedidosPage() {
     }
   };
 
+  const toggleItemServido = async (pedidoId: string, itemId: string, currentValue: boolean) => {
+    // Optimistic UI
+    setColumns((prev) => {
+      const updated = { ...prev };
+      for (const key of Object.keys(updated)) {
+        updated[key] = updated[key].map((p) =>
+          p.id === pedidoId
+            ? { ...p, itens_pedido: p.itens_pedido.map((item) => item.id === itemId ? { ...item, servido: !currentValue } : item) }
+            : p
+        );
+      }
+      return updated;
+    });
+
+    const { error } = await supabase
+      .from("itens_pedido")
+      .update({ servido: !currentValue })
+      .eq("id", itemId);
+
+    if (error) {
+      console.error("Erro ao marcar item:", error);
+      fetchPedidos();
+    }
+  };
+
   if (!mounted) return null;
 
   if (loading) {
@@ -345,17 +372,37 @@ export default function PedidosPage() {
                                       </div>
                                     )}
 
-                                    <div className="space-y-1">
-                                      {pedido.itens_pedido.map((item, idx) => (
-                                        <p key={idx} className={`text-xs leading-relaxed ${pedido.status === "pronto"
-                                            ? "text-emerald-500 font-medium"
-                                            : "text-muted-foreground"
-                                          }`}>
-                                          {pedido.status === "pronto" && <span className="mr-1">✓</span>}
-                                          {item.quantidade}x {item.nome_produto}
-                                          {item.nome_variacao && <span className="opacity-60"> ({item.nome_variacao})</span>}
-                                        </p>
-                                      ))}
+                                    <div className="space-y-1.5">
+                                      {pedido.itens_pedido.map((item) => {
+                                        const isServed = item.servido || pedido.status === "pronto" || pedido.status === "entregue";
+                                        return (
+                                          <button
+                                            key={item.id}
+                                            type="button"
+                                            className="flex items-center gap-2 w-full text-left group/item"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              if (pedido.status !== "entregue") {
+                                                toggleItemServido(pedido.id, item.id, item.servido);
+                                              }
+                                            }}
+                                          >
+                                            <div className={`h-4 w-4 shrink-0 rounded border flex items-center justify-center transition-all ${isServed
+                                                ? "bg-emerald-500 border-emerald-500"
+                                                : "border-muted-foreground/30 group-hover/item:border-muted-foreground/60"
+                                              }`}>
+                                              {isServed && <Check className="h-3 w-3 text-white" />}
+                                            </div>
+                                            <span className={`text-xs leading-relaxed transition-colors ${isServed
+                                                ? "text-emerald-500 font-medium"
+                                                : "text-muted-foreground"
+                                              }`}>
+                                              {item.quantidade}x {item.nome_produto}
+                                              {item.nome_variacao && <span className="opacity-60"> ({item.nome_variacao})</span>}
+                                            </span>
+                                          </button>
+                                        );
+                                      })}
                                     </div>
 
                                     {isUrgent && (
