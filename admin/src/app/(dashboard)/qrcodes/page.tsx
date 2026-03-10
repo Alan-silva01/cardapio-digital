@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { QRCodeCanvas } from "qrcode.react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Printer, Download, Plus, AlertTriangle, Loader2 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 
 const BASE_URL = "https://menu-bar-xi.vercel.app";
 
@@ -26,6 +26,7 @@ interface Mesa {
 }
 
 export default function QRCodesPage() {
+  const supabase = useMemo(() => createClient(), []);
   const [mesas, setMesas] = useState<Mesa[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -50,7 +51,7 @@ export default function QRCodesPage() {
     }
     if (data) setMesas(data);
     setLoading(false);
-  }, []);
+  }, [supabase]);
 
   useEffect(() => {
     fetchMesas();
