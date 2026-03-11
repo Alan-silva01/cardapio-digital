@@ -110,20 +110,16 @@ function ItemCheckbox({
       <div
         className={`h-[18px] w-[18px] shrink-0 rounded border-[1.5px] flex items-center justify-center transition-all duration-300 ${
           isServed
-            ? "bg-emerald-500 border-emerald-500"
+            ? "bg-emerald-400 border-emerald-400"
             : "border-muted-foreground/25 group-hover/item:border-muted-foreground/50"
         }`}
       >
         {isServed && (
-          <Check className="h-3 w-3 text-white animate-in zoom-in-50 duration-200" />
+          <Check className="h-3 w-3 text-background animate-in zoom-in-50 duration-200" />
         )}
       </div>
       <span
-        className={`text-[13px] leading-relaxed transition-colors duration-200 ${
-          isServed
-            ? "text-emerald-600 dark:text-emerald-400 font-medium"
-            : "text-foreground"
-        }`}
+        className="text-[13px] leading-relaxed text-foreground"
       >
         <span className="font-medium">{item.quantidade}x</span>{" "}
         {item.nome_produto}
@@ -262,7 +258,7 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
                     <span className="text-muted-foreground/30">·</span>
                     {time}
                     <span className="text-muted-foreground/30">·</span>
-                    {comanda.pessoas.length} {comanda.pessoas.length === 1 ? "pessoa" : "pessoas"}
+                    {comanda.pessoas.length} {comanda.pessoas.length === 1 ? "comanda" : "comandas"}
                   </DialogDescription>
                 </div>
               </div>
@@ -300,8 +296,8 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
                   {/* Person name */}
                   <div className="flex items-center justify-between mb-1 px-1">
                     <div className="flex items-center gap-2">
-                      <User className="h-3.5 w-3.5 text-brand" />
-                      <span className="text-sm font-semibold text-brand">
+                      <User className="h-3.5 w-3.5 text-foreground" />
+                      <span className="text-sm font-bold text-foreground">
                         {pessoa.nome}
                       </span>
                       <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">

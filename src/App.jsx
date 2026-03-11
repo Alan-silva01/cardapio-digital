@@ -80,6 +80,66 @@ const App = () => {
     const [orderSuccess, setOrderSuccess] = useState(false); // Success screen after order
     const cartIconRef = useRef(null);
 
+    // NEW COMANDAS STATE
+    const [pessoaAtiva, setPessoaAtiva] = useState(() => localStorage.getItem('@Menu-PessoaAtiva') || '');
+    const [isPeopleDrawerOpen, setIsPeopleDrawerOpen] = useState(false);
+    const [pessoasNaMesa, setPessoasNaMesa] = useState([]);
+    const [isFetchingPessoas, setIsFetchingPessoas] = useState(false);
+    const [novaPessoaNome, setNovaPessoaNome] = useState('');
+    const [isAddMode, setIsAddMode] = useState(false);
+
+    // PERSIST PERSON ON DEVICE
+    useEffect(() => {
+        if (pessoaAtiva) {
+            localStorage.setItem('@Menu-PessoaAtiva', pessoaAtiva);
+        } else {
+            localStorage.removeItem('@Menu-PessoaAtiva');
+        }
+    }, [pessoaAtiva]);
+
+    // FETCH EXISTING COMANDAS ON THIS TABLE
+    const fetchPessoasNaMesa = useCallback(async () => {
+        setIsFetchingPessoas(true);
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const mesaNum = parseInt(params.get('mesa'), 10) || 1;
+
+            const { data: mesaData } = await supabase.from('mesas').select('id').eq('numero', mesaNum).single();
+            if (!mesaData) return;
+
+            const { data: openComanda } = await supabase.from('comandas').select('id').eq('mesa_id', mesaData.id).eq('status', 'aberta').maybeSingle();
+            if (!openComanda) {
+                setPessoasNaMesa(pessoaAtiva ? [pessoaAtiva] : []);
+                return;
+            }
+
+            const { data: pessoasData } = await supabase.from('pessoas_comanda').select('nome').eq('comanda_id', openComanda.id);
+            if (pessoasData) {
+                let nomes = pessoasData.map(p => p.nome).filter(n => n && n !== 'Cliente');
+                
+                if (pessoaAtiva && !nomes.includes(pessoaAtiva) && pessoaAtiva !== 'Cliente') {
+                    nomes.unshift(pessoaAtiva);
+                }
+                
+                nomes = [...new Set(nomes)];
+                setPessoasNaMesa(nomes);
+            }
+        } catch (e) {
+            console.error("Erro fetch Pessoas", e);
+        } finally {
+            setIsFetchingPessoas(false);
+        }
+    }, [pessoaAtiva]);
+
+    // REFRESH PEOPLE WHEN DRAWER OPENS
+    useEffect(() => {
+        if (isPeopleDrawerOpen) {
+            fetchPessoasNaMesa();
+            setIsAddMode(false);
+            setNovaPessoaNome('');
+        }
+    }, [isPeopleDrawerOpen, fetchPessoasNaMesa]);
+
     const totalCartItems = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
 
     const currentProduct = products.length > 0 ? products[currentIndex] : null;
@@ -125,13 +185,28 @@ const App = () => {
                 comandaId = newComanda.id;
             }
 
-            // 4. Create pessoa_comanda
-            const { data: pessoa, error: pessoaErr } = await supabase
+            // 4. Create ou Find pessoa_comanda (Use real nome_pessoa)
+            let pessoaId;
+            const nomeFinal = pessoaAtiva || 'Cliente';
+            
+            const { data: existingPessoa } = await supabase
                 .from('pessoas_comanda')
-                .insert({ comanda_id: comandaId, nome: 'Cliente' })
                 .select('id')
-                .single();
-            if (pessoaErr) throw pessoaErr;
+                .eq('comanda_id', comandaId)
+                .eq('nome', nomeFinal)
+                .maybeSingle();
+
+            if (existingPessoa) {
+                pessoaId = existingPessoa.id;
+            } else {
+                const { data: pessoa, error: pessoaErr } = await supabase
+                    .from('pessoas_comanda')
+                    .insert({ comanda_id: comandaId, nome: nomeFinal })
+                    .select('id')
+                    .single();
+                if (pessoaErr) throw pessoaErr;
+                pessoaId = pessoa.id;
+            }
 
             // 5. Calculate total and build itens array
             let totalVal = 0;
@@ -173,9 +248,9 @@ const App = () => {
                 .from('pedidos')
                 .insert({
                     comanda_id: comandaId,
-                    pessoa_id: pessoa.id,
+                    pessoa_id: pessoaId,
                     numero_mesa: mesaNum,
-                    nome_pessoa: 'Cliente',
+                    nome_pessoa: nomeFinal,
                     status: 'recebido',
                     total: totalVal,
                 })
@@ -1089,7 +1164,42 @@ const App = () => {
                         </div>
 
                         <div className="cart-items-container">
-                            {Object.entries(cart).length === 0 ? (
+                            {/* PEOPLE GROUPING IDENTIFIER */}
+                            {Object.keys(cart).length > 0 && (
+                                <div className="cart-person-section">
+                                    <h4>Identificação da Comanda</h4>
+                                    {!pessoaAtiva ? (
+                                        <div className="cart-person-input-group">
+                                            <input 
+                                                type="text" 
+                                                className="cart-person-input" 
+                                                placeholder="Para qual comanda?"
+                                                value={novaPessoaNome}
+                                                onChange={(e) => setNovaPessoaNome(e.target.value)}
+                                            />
+                                            <button 
+                                                className="cart-person-btn"
+                                                onClick={() => {
+                                                    if(novaPessoaNome.trim()) setPessoaAtiva(novaPessoaNome.trim());
+                                                }}
+                                            >
+                                                Salvar
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="cart-person-active">
+                                            <div className="cart-person-active-name">
+                                                <Users size={16} /> Comanda: {pessoaAtiva}
+                                            </div>
+                                            <button className="cart-person-change-btn" onClick={() => setIsPeopleDrawerOpen(true)}>
+                                                Trocar
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {Object.keys(cart).length === 0 ? (
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.5, marginTop: '40px' }}>
                                     <ShoppingCart size={48} color="#888" style={{ marginBottom: '16px' }} />
                                     <p style={{ color: '#FFF', fontSize: '14px', textAlign: 'center' }}>Seu carrinho está vazio.</p>
@@ -1217,7 +1327,13 @@ const App = () => {
                             </div>
                             <button
                                 className="checkout-btn"
-                                onClick={handleCheckout}
+                                onClick={() => {
+                                   if (!pessoaAtiva) {
+                                       alert('Por favor, informe uma comanda para o seu pedido (campo no topo do carrinho).');
+                                       return;
+                                   }
+                                   handleCheckout();
+                                }}
                                 disabled={Object.keys(cart).length === 0 || isCheckingOut}
                                 style={{ opacity: (Object.keys(cart).length === 0 || isCheckingOut) ? 0.5 : 1 }}
                             >
@@ -1296,8 +1412,112 @@ const App = () => {
                             }}
                         >
                             Seu pedido foi recebido pela cozinha.
-                            <br />Fique à vontade para continuar navegando.
                         </motion.p>
+                        <button
+                            onClick={() => setOrderSuccess(false)}
+                            style={{
+                                marginTop: '30px',
+                                padding: '12px 30px',
+                                background: 'transparent',
+                                border: '1px solid rgba(255,255,255,0.2)',
+                                color: '#FFF',
+                                borderRadius: '20px',
+                                fontSize: '12px',
+                                textTransform: 'uppercase',
+                                letterSpacing: '1px'
+                            }}
+                        >
+                            FECHAR
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* PEOPLE SELECTOR DRAWER */}
+            <AnimatePresence>
+                {isPeopleDrawerOpen && (
+                    <motion.div
+                        className="people-drawer-overlay"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={(e) => {
+                            if (e.target === e.currentTarget) setIsPeopleDrawerOpen(false);
+                        }}
+                    >
+                        <motion.div
+                            className="people-drawer-content"
+                            initial={{ y: '100%' }}
+                            animate={{ y: 0 }}
+                            exit={{ y: '100%' }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                        >
+                            <div className="people-drawer-header">
+                                <h3 className="people-drawer-title">Pra qual comanda?</h3>
+                                <button onClick={() => setIsPeopleDrawerOpen(false)} style={{ background: 'none', border: 'none', color: '#FFF', cursor: 'pointer' }}>
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            {isAddMode ? (
+                                <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+                                    <input 
+                                        type="text"
+                                        className="cart-person-input"
+                                        placeholder="Digite o novo nome..."
+                                        value={novaPessoaNome}
+                                        onChange={(e) => setNovaPessoaNome(e.target.value)}
+                                        autoFocus
+                                    />
+                                    <button 
+                                        className="cart-person-btn"
+                                        onClick={() => {
+                                            if (novaPessoaNome.trim()) {
+                                                setPessoaAtiva(novaPessoaNome.trim());
+                                                setIsPeopleDrawerOpen(false);
+                                            }
+                                        }}
+                                    >
+                                        OK
+                                    </button>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="people-list">
+                                        {isFetchingPessoas ? (
+                                            <div style={{ display: 'flex', justifyContent: 'center', padding: '20px', color: '#888' }}>
+                                                <Loader2 size={24} className="animate-spin" />
+                                            </div>
+                                        ) : pessoasNaMesa.length > 0 ? (
+                                            pessoasNaMesa.map((nome, idx) => (
+                                                <div 
+                                                    key={idx} 
+                                                    className={`person-item ${pessoaAtiva === nome ? 'active' : ''}`}
+                                                    onClick={() => {
+                                                        setPessoaAtiva(nome);
+                                                        setIsPeopleDrawerOpen(false);
+                                                    }}
+                                                >
+                                                    <Users size={16} />
+                                                    {nome}
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div style={{ padding: '20px', textAlign: 'center', color: '#888', fontSize: '14px' }}>
+                                                Nenhuma comanda aberta nesta mesa ainda.
+                                            </div>
+                                        )}
+                                    </div>
+                                    <button 
+                                        className="checkout-btn" 
+                                        style={{ background: 'transparent', border: '1px solid var(--accent-gold)', color: 'var(--accent-gold)' }}
+                                        onClick={() => setIsAddMode(true)}
+                                    >
+                                        <Plus size={16} /> ADICIONAR NOVA COMANDA
+                                    </button>
+                                </>
+                            )}
+                        </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>

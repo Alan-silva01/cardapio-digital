@@ -387,9 +387,9 @@ export default function PedidosPage() {
   const totalComandas = Object.values(columns).flat().length;
 
   return (
-    <div className="flex-1 flex flex-col bg-background text-foreground min-h-screen">
+    <div className="flex-1 flex flex-col bg-background text-foreground h-screen max-h-screen overflow-hidden">
       {/* Header / Subnav */}
-      <div className="h-14 border-b px-6 flex items-center justify-between bg-card z-10 shrink-0">
+      <div className="h-14 border-b px-6 flex items-center justify-between bg-card z-10 shrink-0 sticky top-0">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <span>Pedidos</span>
           <ChevronRight className="h-4 w-4" />
@@ -401,9 +401,6 @@ export default function PedidosPage() {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-none px-2 py-0 h-5 text-[10px] font-bold">
-            REALTIME ON
-          </Badge>
           <Button
             variant="ghost"
             size="icon"
@@ -420,11 +417,11 @@ export default function PedidosPage() {
       </div>
 
       {/* Content area */}
-      <div className="flex-1 p-6 overflow-x-auto overflow-y-auto">
+      <div className="flex-1 px-6 pb-6 overflow-x-auto overflow-y-hidden">
         <DragDropContext onDragEnd={onDragEnd}>
-          <div className="flex gap-6 h-full min-w-[1200px] items-stretch pb-4">
+          <div className="flex gap-6 h-full min-w-[1200px] items-stretch pt-6 pb-4">
             {COLUMNS.map((column) => (
-              <div key={column.id} className="flex-1 min-w-[280px] max-w-[320px] flex flex-col gap-4">
+              <div key={column.id} className="flex-1 min-w-[280px] max-w-[320px] flex flex-col gap-4 max-h-full">
                 {/* Column Header */}
                 <div className="flex items-center justify-between px-2 shrink-0">
                   <div className="flex items-center gap-2">
@@ -443,7 +440,7 @@ export default function PedidosPage() {
                     <div
                       {...provided.droppableProps}
                       ref={provided.innerRef}
-                      className={`flex-1 flex flex-col gap-3 rounded-xl p-2 border transition-colors min-h-[150px] ${snapshot.isDraggingOver ? "bg-muted/50 border-primary/20" : "bg-muted/30 border-transparent"
+                      className={`flex-1 overflow-y-auto flex flex-col gap-3 rounded-xl p-2 border transition-colors min-h-[150px] ${snapshot.isDraggingOver ? "bg-muted/50 border-primary/20" : "bg-muted/30 border-transparent"
                         }`}
                     >
                       {columns[column.id].length === 0 && (
@@ -496,7 +493,7 @@ export default function PedidosPage() {
                                       {comanda.pessoas.map((pessoa) => (
                                         <div key={pessoa.nome} className="space-y-1 py-2 first:pt-0 last:pb-0">
                                           <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-1.5 text-[10px] text-brand font-semibold">
+                                            <div className="flex items-center gap-1.5 text-[10px] text-foreground font-bold">
                                               <User className="h-3 w-3 shrink-0" />
                                               {pessoa.nome}
                                             </div>
@@ -515,7 +512,7 @@ export default function PedidosPage() {
                                                   <div
                                                     role="button"
                                                     className={`h-4 w-4 shrink-0 rounded border flex items-center justify-center transition-all cursor-pointer ${isServed
-                                                        ? "bg-emerald-500 border-emerald-500"
+                                                        ? "bg-emerald-400 border-emerald-400"
                                                         : "border-muted-foreground/30 hover:border-muted-foreground/60"
                                                       }`}
                                                     onClick={(e) => {
@@ -525,12 +522,9 @@ export default function PedidosPage() {
                                                       }
                                                     }}
                                                   >
-                                                    {isServed && <Check className="h-3 w-3 text-white" />}
+                                                    {isServed && <Check className="h-3 w-3 text-background" />}
                                                   </div>
-                                                  <span className={`text-xs leading-relaxed transition-colors ${isServed
-                                                      ? "text-emerald-500 font-medium"
-                                                      : "text-muted-foreground"
-                                                    }`}>
+                                                  <span className="text-xs leading-relaxed text-muted-foreground">
                                                     {item.quantidade}x {item.nome_produto}
                                                     {item.nome_variacao && <span className="opacity-60"> ({item.nome_variacao})</span>}
                                                   </span>
