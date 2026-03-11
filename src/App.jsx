@@ -1058,14 +1058,14 @@ const App = () => {
                                             setTimeout(() => {
                                                 setCart(prev => ({
                                                     ...prev,
-                                                    [currentProduct.id]: (prev[currentProduct.id] || 0) + addQty
+                                                    [selectedVariation ? `${currentProduct.id}-${selectedVariation}` : currentProduct.id]: (prev[selectedVariation ? `${currentProduct.id}-${selectedVariation}` : currentProduct.id] || 0) + addQty
                                                 }));
                                                 setFlyingItems(prev => prev.filter(f => f.id !== id));
                                             }, 600);
                                         } else {
                                             setCart(prev => ({
                                                 ...prev,
-                                                [currentProduct.id]: (prev[currentProduct.id] || 0) + addQty
+                                                [selectedVariation ? `${currentProduct.id}-${selectedVariation}` : currentProduct.id]: (prev[selectedVariation ? `${currentProduct.id}-${selectedVariation}` : currentProduct.id] || 0) + addQty
                                             }));
                                         }
                                         setPendingQty(1);
