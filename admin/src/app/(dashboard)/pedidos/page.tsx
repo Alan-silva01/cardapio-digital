@@ -39,7 +39,8 @@ interface ItemPedido {
 interface PedidoRaw {
   id: string;
   comanda_id: string;
-  numero_pedido: number;
+  order_number: string;
+  order_id: string;
   numero_mesa: number;
   nome_pessoa: string | null;
   status: "recebido" | "preparando" | "pronto" | "entregue";
@@ -57,7 +58,8 @@ export interface ComandaAgrupada {
   total: number;
   criado_em: string; // earliest pedido
   pedido_ids: string[];
-  numero_pedido: number; // lowest numero_pedido in the group
+  order_number: string;
+  order_id: string;
   forma_pagamento?: FormaPagamento;
   pessoas: {
     nome: string;
@@ -104,20 +106,25 @@ function groupPedidosByComanda(pedidos: PedidoRaw[]): ComandaAgrupada[] {
     const status = STATUS_ORDER[lowestStatusIdx] as ComandaAgrupada["status"];
 
     const total = group.reduce((sum, p) => sum + Number(p.total), 0);
-    const earliestDate = group.reduce(
-      (min, p) => (p.criado_em < min ? p.criado_em : min),
-      group[0].criado_em
+    const earliestPedido = group.reduce(
+      (earliest, p) => (p.criado_em < earliest.criado_em ? p : earliest),
+      group[0]
     );
-    const lowestPedidoNum = Math.min(...group.map((p) => p.numero_pedido));
+    const earliestDate = earliestPedido.criado_em;
     const formaPagamento = group.find((p) => p.forma_pagamento)?.forma_pagamento || undefined;
 
-    // Group items by person with subtotals
-    const pessoasMap = new Map<string, { itens: ItemPedido[]; subtotal: number }>();
+    // Group items by person with subtotals + payment status
+    const pessoasMap = new Map<string, { itens: ItemPedido[]; subtotal: number; allPaid: boolean; pedidoCount: number; paidCount: number }>();
     group.forEach((p) => {
       const nome = p.nome_pessoa || "Cliente";
-      const existing = pessoasMap.get(nome) || { itens: [], subtotal: 0 };
+      const existing = pessoasMap.get(nome) || { itens: [], subtotal: 0, allPaid: true, pedidoCount: 0, paidCount: 0 };
       existing.itens.push(...p.itens_pedido);
       existing.subtotal += Number(p.total);
+      existing.pedidoCount += 1;
+      if (p.forma_pagamento) {
+        existing.paidCount += 1;
+      }
+      existing.allPaid = existing.paidCount === existing.pedidoCount;
       pessoasMap.set(nome, existing);
     });
 
@@ -125,6 +132,7 @@ function groupPedidosByComanda(pedidos: PedidoRaw[]): ComandaAgrupada[] {
       nome,
       subtotal: data.subtotal,
       itens: data.itens,
+      pago: data.allPaid && data.pedidoCount > 0,
     }));
 
     return {
@@ -134,7 +142,8 @@ function groupPedidosByComanda(pedidos: PedidoRaw[]): ComandaAgrupada[] {
       total,
       criado_em: earliestDate,
       pedido_ids: group.map((p) => p.id),
-      numero_pedido: lowestPedidoNum,
+      order_number: earliestPedido.order_number,
+      order_id: earliestPedido.order_id,
       forma_pagamento: formaPagamento ?? undefined,
       pessoas,
     };
@@ -172,7 +181,7 @@ export default function PedidosPage() {
 
     const { data, error } = await supabase
       .from("pedidos")
-      .select("id, comanda_id, numero_pedido, numero_mesa, nome_pessoa, status, total, criado_em, forma_pagamento, itens_pedido (id, quantidade, nome_produto, nome_variacao, servido, preco_unitario, preco_total, produtos (imagem_url))")
+      .select("id, comanda_id, order_number, order_id, numero_mesa, nome_pessoa, status, total, criado_em, forma_pagamento, itens_pedido (id, quantidade, nome_produto, nome_variacao, servido, preco_unitario, preco_total, produtos (imagem_url))")
       .gte("criado_em", today.toISOString())
       .order("criado_em", { ascending: true });
 
@@ -422,8 +431,19 @@ export default function PedidosPage() {
       fetchPedidos();
     }
 
+    // Check if all pedidos in this comanda are now paid (entregue) → close comanda
+    const { data: remainingPedidos } = await supabase
+      .from("pedidos")
+      .select("id, status")
+      .eq("comanda_id", comandaId)
+      .neq("status", "entregue");
+
+    if (remainingPedidos && remainingPedidos.length === 0) {
+      await supabase.from("comandas").update({ status: "fechada" }).eq("id", comandaId);
+    }
+
     // DB: insert into pagamentos table
-    const pagamentosToInsert = [];
+    const pagamentosToInsert: { comanda_id: string; metodo: string; valor: number; tipo: string }[] = [];
     if (forma.pix > 0) pagamentosToInsert.push({ comanda_id: comandaId, metodo: 'pix', valor: forma.pix, tipo: 'individual' });
     if (forma.credito > 0) pagamentosToInsert.push({ comanda_id: comandaId, metodo: 'credito', valor: forma.credito, tipo: 'individual' });
     if (forma.debito > 0) pagamentosToInsert.push({ comanda_id: comandaId, metodo: 'debito', valor: forma.debito, tipo: 'individual' });
@@ -469,8 +489,11 @@ export default function PedidosPage() {
       fetchPedidos();
     }
 
+    // Close the comanda since everything is paid
+    await supabase.from("comandas").update({ status: "fechada" }).eq("id", comandaId);
+
     // DB: insert into pagamentos table
-    const pagamentosToInsert = [];
+    const pagamentosToInsert: { comanda_id: string; metodo: string; valor: number; tipo: string }[] = [];
     if (forma.pix > 0) pagamentosToInsert.push({ comanda_id: comandaId, metodo: 'pix', valor: forma.pix, tipo: 'total' });
     if (forma.credito > 0) pagamentosToInsert.push({ comanda_id: comandaId, metodo: 'credito', valor: forma.credito, tipo: 'total' });
     if (forma.debito > 0) pagamentosToInsert.push({ comanda_id: comandaId, metodo: 'debito', valor: forma.debito, tipo: 'total' });
@@ -506,25 +529,41 @@ export default function PedidosPage() {
       <head>
         <title>Comanda - ${nomePessoa}</title>
         <style>
+          @page { margin: 0; }
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { font-family: 'Courier New', monospace; font-size: 12px; width: 58mm; padding: 4mm; }
+          .logo-top { text-align: center; margin-bottom: 6px; }
+          .logo-top img { max-width: 35mm; height: auto; filter: grayscale(100%) brightness(0); }
           .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 4px; margin-bottom: 6px; }
           .header h2 { font-size: 14px; margin-bottom: 2px; }
           .meta { font-size: 10px; color: #555; }
           table { width: 100%; border-collapse: collapse; }
           .total { border-top: 1px dashed #000; margin-top: 6px; padding-top: 4px; text-align: right; font-weight: bold; font-size: 13px; }
           .footer { text-align: center; margin-top: 8px; font-size: 9px; color: #888; }
+          .powered { display: flex; align-items: center; justify-content: center; gap: 3px; margin-top: 6px; }
+          .powered img { width: 12px; height: 12px; filter: grayscale(100%) brightness(0); }
+          .powered span { font-size: 8px; color: #aaa; }
         </style>
       </head>
       <body>
+        <div class="logo-top">
+          <img src="https://res.cloudinary.com/ddhlqymvf/image/upload/v1772656206/Logotipo_2_odktzy.png" alt="Logo" />
+        </div>
         <div class="header">
           <h2>${nomePessoa}</h2>
-          <div class="meta">Mesa ${String(comanda.numero_mesa).padStart(2, "0")} · Pedido ${String(comanda.numero_pedido).padStart(2, "0")}</div>
+          <div class="meta">Mesa ${String(comanda.numero_mesa).padStart(2, "0")} · Pedido ${comanda.order_number}</div>
           <div class="meta">${new Date().toLocaleString("pt-BR")}</div>
         </div>
         <table>${itemsHtml}</table>
         <div class="total">Total: R$ ${pessoa.subtotal.toFixed(2)}</div>
-        <div class="footer">Comanda Individual</div>
+        <div class="footer">
+          <div>Comanda Individual</div>
+          <div class="powered">
+            <img src="/assets/images/logointelflux.png" alt="Intelflux" />
+            <span>Intelflux</span>
+          </div>
+          <div style="margin-top:2px;">ID: ${comanda.order_id}</div>
+        </div>
         <script>window.onload=()=>{window.print();window.close();}<\/script>
       </body>
       </html>
@@ -566,8 +605,11 @@ export default function PedidosPage() {
       <head>
         <title>Pedido - Mesa ${String(comanda.numero_mesa).padStart(2, "0")}</title>
         <style>
+          @page { margin: 0; }
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { font-family: 'Courier New', monospace; font-size: 12px; width: 58mm; padding: 4mm; }
+          .logo-top { text-align: center; margin-bottom: 6px; }
+          .logo-top img { max-width: 35mm; height: auto; filter: grayscale(100%) brightness(0); }
           .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 4px; margin-bottom: 6px; }
           .header h2 { font-size: 14px; margin-bottom: 2px; }
           .meta { font-size: 10px; color: #555; }
@@ -577,17 +619,30 @@ export default function PedidosPage() {
           .subtotal { text-align: right; font-size: 11px; margin-top: 2px; color: #555; }
           .total { border-top: 1px dashed #000; margin-top: 6px; padding-top: 4px; text-align: right; font-weight: bold; font-size: 14px; }
           .footer { text-align: center; margin-top: 8px; font-size: 9px; color: #888; }
+          .powered { display: flex; align-items: center; justify-content: center; gap: 3px; margin-top: 6px; }
+          .powered img { width: 12px; height: 12px; filter: grayscale(100%) brightness(0); }
+          .powered span { font-size: 8px; color: #aaa; }
         </style>
       </head>
       <body>
+        <div class="logo-top">
+          <img src="https://res.cloudinary.com/ddhlqymvf/image/upload/v1772656206/Logotipo_2_odktzy.png" alt="Logo" />
+        </div>
         <div class="header">
           <h2>Mesa ${String(comanda.numero_mesa).padStart(2, "0")}</h2>
-          <div class="meta">Pedido ${String(comanda.numero_pedido).padStart(2, "0")} · ${comanda.pessoas.length} comanda${comanda.pessoas.length > 1 ? "s" : ""}</div>
+          <div class="meta">Pedido ${comanda.order_number} · ${comanda.pessoas.length} comanda${comanda.pessoas.length > 1 ? "s" : ""}</div>
           <div class="meta">${new Date().toLocaleString("pt-BR")}</div>
         </div>
         ${sectionsHtml}
         <div class="total">Total: R$ ${Number(comanda.total).toFixed(2)}</div>
-        <div class="footer">Pedido Completo</div>
+        <div class="footer">
+          <div>Pedido Completo</div>
+          <div class="powered">
+            <img src="/assets/images/logointelflux.png" alt="Intelflux" />
+            <span>Intelflux</span>
+          </div>
+          <div style="margin-top:2px;">ID: ${comanda.order_id}</div>
+        </div>
         <script>window.onload=()=>{window.print();window.close();}<\/script>
       </body>
       </html>
@@ -693,6 +748,11 @@ export default function PedidosPage() {
                                   }`}
                                   onClick={() => setSelectedComanda(comanda)}
                                 >
+                                  <div className="bg-muted/30 border-b border-border/50 px-4 py-1.5 flex justify-center items-center">
+                                    <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+                                      Pedido: {comanda.order_number}
+                                    </span>
+                                  </div>
                                   <CardContent className="p-4 space-y-3">
                                     <div className="flex justify-between items-start">
                                       <div className="flex items-center gap-2">
@@ -702,7 +762,7 @@ export default function PedidosPage() {
                                         <span className="font-semibold text-sm tracking-tight text-foreground">
                                           Mesa {String(comanda.numero_mesa).padStart(2, "0")}
                                         </span>
-                                        {(comanda.forma_pagamento || comanda.pessoas.every(p => p.pago)) && (
+                                        {comanda.pessoas.length > 0 && comanda.pessoas.every(p => p.pago) && (
                                           <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider bg-emerald-500/10 px-1.5 py-0.5 rounded ml-1">
                                             Pago
                                           </span>
