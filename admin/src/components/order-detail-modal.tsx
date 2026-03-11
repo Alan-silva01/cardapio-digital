@@ -54,7 +54,8 @@ interface ComandaAgrupada {
   total: number;
   criado_em: string;
   pedido_ids: string[];
-  numero_pedido: number;
+  order_number: string;
+  order_id: string;
   forma_pagamento?: FormaPagamento;
   pessoas: {
     nome: string;
@@ -282,6 +283,19 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
     ).length;
   }, [comanda, allItems]);
 
+  const totalPendente = useMemo(() => {
+    if (!comanda) return 0;
+    return comanda.pessoas.reduce(
+      (sum, p) => (p.pago ? sum : sum + p.subtotal),
+      0
+    );
+  }, [comanda]);
+
+  const allPaid = useMemo(() => {
+    if (!comanda) return false;
+    return comanda.pessoas.length > 0 && comanda.pessoas.every((p) => p.pago);
+  }, [comanda]);
+
   if (!comanda) return null;
 
   const statusConfig = STATUS_CONFIG[comanda.status];
@@ -301,7 +315,7 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
                 </div>
                 <div className="min-w-0">
                   <DialogTitle className="text-base font-bold tracking-tight">
-                    Pedido {String(comanda.numero_pedido).padStart(2, "0")} — Mesa {String(comanda.numero_mesa).padStart(2, "0")}
+                    Pedido: {comanda.order_number} — Mesa {String(comanda.numero_mesa).padStart(2, "0")}
                   </DialogTitle>
                   <DialogDescription className="flex items-center gap-1.5 text-xs mt-0.5">
                     <Clock className="h-3 w-3" />
@@ -441,40 +455,48 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
           <Separator />
 
           {/* Footer */}
-          <div className="px-6 py-3 flex items-center gap-2">
-            <Button
-              variant="outline"
-              className="h-9 text-xs font-semibold text-muted-foreground hover:text-destructive hover:border-destructive/30 hover:bg-destructive/5"
-              onClick={() => setShowCancelConfirm(true)}
-            >
-              <Ban className="h-3.5 w-3.5 mr-1.5" />
-              Cancelar
-            </Button>
-            <Button
-              variant="outline"
-              className="h-9 text-xs font-semibold text-muted-foreground hover:text-foreground"
-              onClick={() => onPrintAll?.(comanda)}
-            >
-              <Printer className="h-3.5 w-3.5 mr-1.5" />
-              Imprimir
-            </Button>
-            <Button
-              className="flex-1 h-9 text-xs bg-brand hover:bg-brand/90 text-white font-semibold"
-              onClick={() => setShowPaymentModal(true)}
-            >
-              <CreditCard className="h-3.5 w-3.5 mr-1.5" />
-              Confirmar Pagamento
-            </Button>
+          <div className="px-6 pt-3 pb-8 flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                className="h-9 text-xs font-semibold text-muted-foreground hover:text-destructive hover:border-destructive/30 hover:bg-destructive/5"
+                onClick={() => setShowCancelConfirm(true)}
+              >
+                <Ban className="h-3.5 w-3.5 mr-1.5" />
+                Cancelar
+              </Button>
+              <Button
+                variant="outline"
+                className="h-9 text-xs font-semibold text-muted-foreground hover:text-foreground"
+                onClick={() => onPrintAll?.(comanda)}
+              >
+                <Printer className="h-3.5 w-3.5 mr-1.5" />
+                Imprimir
+              </Button>
+              <Button
+                className="flex-1 h-9 text-xs bg-brand hover:bg-brand/90 text-white font-semibold"
+                onClick={() => setShowPaymentModal(true)}
+                disabled={allPaid || totalPendente <= 0}
+              >
+                <CreditCard className="h-3.5 w-3.5 mr-1.5" />
+                {allPaid || totalPendente <= 0 
+                  ? "Totalmente Pago" 
+                  : `Cobrar Restante (R$ ${totalPendente.toFixed(2)})`}
+              </Button>
+            </div>
+            <div className="text-[10px] text-center text-muted-foreground/60 w-full flex items-center justify-center gap-1.5 select-all">
+              ID: {comanda.order_id}
+            </div>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Payment modal — whole order */}
+      {/* Payment modal — whole order (or remaining) */}
       <PaymentModal
         open={showPaymentModal}
         onOpenChange={setShowPaymentModal}
-        total={comanda.total}
-        label={`Mesa ${String(comanda.numero_mesa).padStart(2, "0")} · Pedido ${String(comanda.numero_pedido).padStart(2, "0")}`}
+        total={totalPendente > 0 ? totalPendente : comanda.total}
+        label={`Mesa ${String(comanda.numero_mesa).padStart(2, "0")} · Pedido ${comanda.order_number}`}
         onConfirm={(forma) => onConfirmPayment?.(comanda.comanda_id, forma)}
       />
 

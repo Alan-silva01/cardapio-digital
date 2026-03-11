@@ -23,6 +23,7 @@ interface Mesa {
   id: string;
   numero: number;
   qr_code_url: string | null;
+  token: string | null;
 }
 
 export default function QRCodesPage() {
@@ -43,7 +44,7 @@ export default function QRCodesPage() {
   const fetchMesas = useCallback(async () => {
     const { data, error } = await supabase
       .from("mesas")
-      .select("id, numero, qr_code_url")
+      .select("id, numero, qr_code_url, token")
       .order("numero", { ascending: true });
 
     if (error) {
@@ -74,10 +75,12 @@ export default function QRCodesPage() {
     if (isNaN(num) || mesas.some((m) => m.numero === num)) return;
 
     setSaving(true);
+    const newToken = Math.random().toString(36).substring(2, 10);
     const { error } = await supabase.from("mesas").insert({
       id: `mesa-${num}`,
       numero: num,
-      qr_code_url: `${BASE_URL}?mesa=${num}`,
+      token: newToken,
+      qr_code_url: `${BASE_URL}?t=${newToken}`,
     });
 
     if (error) {
@@ -99,10 +102,12 @@ export default function QRCodesPage() {
     const newMesas = [];
     for (let i = start; i <= end; i++) {
       if (!existingNumbers.has(i)) {
+        const newToken = Math.random().toString(36).substring(2, 10);
         newMesas.push({
           id: `mesa-${i}`,
           numero: i,
-          qr_code_url: `${BASE_URL}?mesa=${i}`,
+          token: newToken,
+          qr_code_url: `${BASE_URL}?t=${newToken}`,
         });
       }
     }
@@ -390,7 +395,7 @@ export default function QRCodesPage() {
       {/* QR Codes Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 print:grid-cols-5 print:gap-4 print:p-0">
         {mesas.map((mesa) => {
-          const tableUrl = `${BASE_URL}?mesa=${mesa.numero}`;
+          const tableUrl = `${BASE_URL}?t=${mesa.token}`;
           return (
             <Card key={mesa.id} className="overflow-hidden border border-border/80 shadow-xs break-inside-avoid print:shadow-none print:border-gray-200 transition-all hover:border-brand/40 hover:shadow-md group">
               <CardContent className="p-0 flex flex-col items-center justify-center bg-card aspect-[3/4.1] relative transition-all duration-300">

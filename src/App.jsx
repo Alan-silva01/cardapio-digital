@@ -102,9 +102,11 @@ const App = () => {
         setIsFetchingPessoas(true);
         try {
             const params = new URLSearchParams(window.location.search);
-            const mesaNum = parseInt(params.get('mesa'), 10) || 1;
+            const token = params.get('t');
 
-            const { data: mesaData } = await supabase.from('mesas').select('id').eq('numero', mesaNum).single();
+            if (!token) return;
+
+            const { data: mesaData } = await supabase.from('mesas').select('id, numero').eq('token', token).single();
             if (!mesaData) return;
 
             const { data: openComanda } = await supabase.from('comandas').select('id').eq('mesa_id', mesaData.id).eq('status', 'aberta').maybeSingle();
@@ -150,19 +152,25 @@ const App = () => {
         setIsCheckingOut(true);
 
         try {
-            // 1. Get mesa number from URL
+            // 1. Get token from URL
             const params = new URLSearchParams(window.location.search);
-            const mesaNum = parseInt(params.get('mesa'), 10) || 1;
+            const token = params.get('t');
 
-            // 2. Look up mesa_id by numero
+            if (!token) {
+                alert("Mesa inválida ou não encontrada. Por favor, leia o QR Code novamente.");
+                setIsCheckingOut(false);
+                return;
+            }
+
+            // 2. Look up mesa_id by token
             const { data: mesaData, error: mesaError } = await supabase
                 .from('mesas')
-                .select('id')
-                .eq('numero', mesaNum)
+                .select('id, numero')
+                .eq('token', token)
                 .single();
-
-            if (mesaError || !mesaData) throw new Error(`Mesa ${mesaNum} não encontrada.`);
+            if (mesaError || !mesaData) throw new Error(`Mesa correspondente ao QRCode não encontrada.`);
             const mesaId = mesaData.id;
+            const mesaNum = mesaData.numero;
 
             // 3. Find or create an open comanda for this mesa
             let comandaId;
