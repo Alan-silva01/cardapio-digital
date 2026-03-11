@@ -113,9 +113,9 @@ const App = () => {
                 return;
             }
 
-            const { data: pessoasData } = await supabase.from('pessoas_comanda').select('nome').eq('comanda_id', openComanda.id);
+            const { data: pessoasData } = await supabase.from('pedidos').select('nome_pessoa').eq('comanda_id', openComanda.id);
             if (pessoasData) {
-                let nomes = pessoasData.map(p => p.nome).filter(n => n && n !== 'Cliente');
+                let nomes = pessoasData.map(p => p.nome_pessoa).filter(n => n && n !== 'Cliente');
                 
                 if (pessoaAtiva && !nomes.includes(pessoaAtiva) && pessoaAtiva !== 'Cliente') {
                     nomes.unshift(pessoaAtiva);
@@ -185,28 +185,8 @@ const App = () => {
                 comandaId = newComanda.id;
             }
 
-            // 4. Create ou Find pessoa_comanda (Use real nome_pessoa)
-            let pessoaId;
+            // 4. Set final person name for this request
             const nomeFinal = pessoaAtiva || 'Cliente';
-            
-            const { data: existingPessoa } = await supabase
-                .from('pessoas_comanda')
-                .select('id')
-                .eq('comanda_id', comandaId)
-                .eq('nome', nomeFinal)
-                .maybeSingle();
-
-            if (existingPessoa) {
-                pessoaId = existingPessoa.id;
-            } else {
-                const { data: pessoa, error: pessoaErr } = await supabase
-                    .from('pessoas_comanda')
-                    .insert({ comanda_id: comandaId, nome: nomeFinal })
-                    .select('id')
-                    .single();
-                if (pessoaErr) throw pessoaErr;
-                pessoaId = pessoa.id;
-            }
 
             // 5. Calculate total and build itens array
             let totalVal = 0;
@@ -248,7 +228,6 @@ const App = () => {
                 .from('pedidos')
                 .insert({
                     comanda_id: comandaId,
-                    pessoa_id: pessoaId,
                     numero_mesa: mesaNum,
                     nome_pessoa: nomeFinal,
                     status: 'recebido',

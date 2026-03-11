@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useMemo } from "react";
+import { PaymentModal, FormaPagamento } from "@/components/payment-modal";
 import {
   Clock,
   User,
@@ -11,6 +12,11 @@ import {
   AlertTriangle,
   Package,
   Receipt,
+  Image as ImageIcon,
+  Printer,
+  BadgeDollarSign,
+  Eye,
+  CheckCircle2,
 } from "lucide-react";
 import {
   Dialog,
@@ -24,13 +30,21 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 interface ItemPedido {
   id: string;
   quantidade: number;
   nome_produto: string;
   nome_variacao: string | null;
+  preco_unitario: number;
+  preco_total: number;
   servido: boolean;
+  produtos?: any;
 }
 
 interface ComandaAgrupada {
@@ -41,10 +55,12 @@ interface ComandaAgrupada {
   criado_em: string;
   pedido_ids: string[];
   numero_pedido: number;
+  forma_pagamento?: FormaPagamento;
   pessoas: {
     nome: string;
     subtotal: number;
     itens: ItemPedido[];
+    pago?: boolean;
   }[];
 }
 
@@ -53,8 +69,11 @@ interface OrderDetailModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onToggleItemServido: (itemId: string, currentValue: boolean) => void;
-  onConfirmPayment?: (comandaId: string) => void;
+  onConfirmPayment?: (comandaId: string, forma: FormaPagamento) => void;
   onCancelOrder?: (comandaId: string) => void;
+  onConfirmPaymentPerson?: (comandaId: string, nomePessoa: string, forma: FormaPagamento) => void;
+  onPrintPerson?: (comanda: ComandaAgrupada, nomePessoa: string) => void;
+  onPrintAll?: (comanda: ComandaAgrupada) => void;
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
@@ -100,36 +119,64 @@ function ItemCheckbox({
   }, [canToggle, onToggle, item.id, item.servido]);
 
   return (
-    <button
-      type="button"
-      className={`flex items-center gap-3 w-full text-left py-2.5 px-3 rounded-lg transition-all duration-200 group/item ${
-        canToggle ? "hover:bg-muted/50 cursor-pointer" : "cursor-default"
-      }`}
-      onClick={handleClick}
-    >
-      <div
-        className={`h-[18px] w-[18px] shrink-0 rounded border-[1.5px] flex items-center justify-center transition-all duration-300 ${
-          isServed
-            ? "bg-emerald-400 border-emerald-400"
-            : "border-muted-foreground/25 group-hover/item:border-muted-foreground/50"
-        }`}
-      >
-        {isServed && (
-          <Check className="h-3 w-3 text-background animate-in zoom-in-50 duration-200" />
-        )}
-      </div>
-      <span
-        className="text-[13px] leading-relaxed text-foreground"
-      >
-        <span className="font-medium">{item.quantidade}x</span>{" "}
-        {item.nome_produto}
-        {item.nome_variacao && (
-          <span className="text-muted-foreground/70 ml-1">
-            ({item.nome_variacao})
+    <div className="flex items-center w-full group/item">
+      <div className="flex items-center gap-3 flex-1 py-2.5 px-3 rounded-lg">
+        <button
+          type="button"
+          className={`h-[18px] w-[18px] shrink-0 rounded border-[1.5px] flex items-center justify-center transition-all duration-300 ${
+            isServed
+              ? "bg-emerald-400 border-emerald-400"
+              : "border-muted-foreground/25 hover:border-muted-foreground/50"
+          } ${canToggle ? "cursor-pointer" : "cursor-default"}`}
+          onClick={handleClick}
+        >
+          {isServed && (
+            <Check className="h-3 w-3 text-background animate-in zoom-in-50 duration-200" />
+          )}
+        </button>
+        <div className="flex-1 flex justify-between items-start text-[13px] leading-relaxed text-foreground select-none min-w-0 pr-2">
+          <span className="truncate pr-2 border-b border-transparent border-dashed">
+            <span className="font-medium">{item.quantidade}x</span>{" "}
+            {item.nome_produto}
+            {item.nome_variacao && (
+              <span className="text-muted-foreground/70 ml-1">
+                ({item.nome_variacao})
+              </span>
+            )}
           </span>
-        )}
-      </span>
-    </button>
+          <span className="font-mono text-[11px] text-muted-foreground shrink-0 pt-[2px]">
+            R$ {Number(item.preco_total).toFixed(2)}
+          </span>
+        </div>
+      </div>
+
+      {/* Render Image Icon if imageUrl exists */}
+      {(() => {
+        const imageUrl = Array.isArray(item.produtos)
+          ? item.produtos[0]?.imagem_url
+          : item.produtos?.imagem_url;
+
+        if (!imageUrl) return null;
+
+        return (
+          <HoverCard>
+            <HoverCardTrigger className="p-2 mr-2 text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50 focus:outline-hidden cursor-pointer">
+              <ImageIcon className="h-4 w-4" />
+            </HoverCardTrigger>
+            <HoverCardContent side="top" className="w-auto p-1.5 border-border/50 bg-background/95 backdrop-blur-xs">
+              <div className="rounded-md overflow-hidden bg-muted/50 flex items-center justify-center">
+                <img 
+                  src={imageUrl} 
+                  alt={item.nome_produto}
+                  className="w-[160px] h-[192px] object-cover rounded-md block"
+                  loading="lazy"
+                />
+              </div>
+            </HoverCardContent>
+          </HoverCard>
+        );
+      })()}
+    </div>
   );
 }
 
@@ -207,9 +254,13 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
   onToggleItemServido,
   onConfirmPayment,
   onCancelOrder,
+  onConfirmPaymentPerson,
+  onPrintPerson,
+  onPrintAll,
 }: OrderDetailModalProps) {
-  const [showPaymentConfirm, setShowPaymentConfirm] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [personPayConfirm, setPersonPayConfirm] = useState<string | null>(null);
 
   const totalItems = useMemo(() => {
     if (!comanda) return 0;
@@ -292,34 +343,96 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
           <ScrollArea className="max-h-[60vh]">
             <div className="px-6 py-4 divide-y divide-border">
               {comanda.pessoas.map((pessoa) => (
-                <div key={pessoa.nome} className="space-y-1 py-4 first:pt-0 last:pb-0">
-                  {/* Person name */}
-                  <div className="flex items-center justify-between mb-1 px-1">
-                    <div className="flex items-center gap-2">
-                      <User className="h-3.5 w-3.5 text-foreground" />
-                      <span className="text-sm font-bold text-foreground">
-                        {pessoa.nome}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                        {pessoa.itens.reduce((sum, i) => sum + i.quantidade, 0)} itens
-                      </span>
+                <div key={pessoa.nome} className="relative py-4 first:pt-0 last:pb-0">
+                  {pessoa.pago ? (
+                    /* ── PAID STATE: blur + overlay ── */
+                    <div className="relative">
+                      <div className="blur-[2px] opacity-40 pointer-events-none space-y-1">
+                        <div className="flex items-center justify-between mb-1 px-1">
+                          <div className="flex items-center gap-2">
+                            <User className="h-3.5 w-3.5 text-foreground" />
+                            <span className="text-sm font-bold text-foreground">{pessoa.nome}</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground font-mono">
+                            R$ {pessoa.subtotal.toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="space-y-0.5">
+                          {pessoa.itens.slice(0, 2).map((item) => (
+                            <div key={item.id} className="py-2.5 px-3 text-[13px]"> 
+                              {item.quantidade}x {item.nome_produto}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      {/* Overlay */}
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                        <div className="flex items-center gap-1.5 text-emerald-500">
+                          <CheckCircle2 className="h-5 w-5" />
+                          <span className="text-sm font-bold">Comanda Fechada — Pago</span>
+                        </div>
+                        <button
+                          type="button"
+                          className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/60"
+                        >
+                          <Eye className="h-3 w-3" />
+                          Ver detalhes
+                        </button>
+                      </div>
                     </div>
-                    <span className="text-xs text-muted-foreground font-mono">
-                      R$ {pessoa.subtotal.toFixed(2)}
-                    </span>
-                  </div>
+                  ) : (
+                    /* ── NORMAL STATE ── */
+                    <div className="space-y-1">
+                      {/* Person name + action buttons */}
+                      <div className="flex items-center justify-between mb-1 px-1">
+                        <div className="flex items-center gap-2">
+                          <User className="h-3.5 w-3.5 text-foreground" />
+                          <span className="text-sm font-bold text-foreground">
+                            {pessoa.nome}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                            {pessoa.itens.reduce((sum, i) => sum + i.quantidade, 0)} itens
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {/* Per-person Print */}
+                          <button
+                            type="button"
+                            className="p-1.5 rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-muted/60 transition-colors"
+                            title={`Imprimir comanda de ${pessoa.nome}`}
+                            onClick={() => onPrintPerson?.(comanda, pessoa.nome)}
+                          >
+                            <Printer className="h-3.5 w-3.5" />
+                          </button>
+                          {/* Per-person Pay */}
+                          <button
+                            type="button"
+                            className="p-1.5 rounded-md text-muted-foreground/50 hover:text-emerald-500 hover:bg-emerald-500/10 transition-colors"
+                            title={`Confirmar pagamento de ${pessoa.nome}`}
+                            onClick={() => setPersonPayConfirm(pessoa.nome)}
+                          >
+                            <BadgeDollarSign className="h-3.5 w-3.5" />
+                          </button>
+                          {/* Subtotal */}
+                          <span className="text-xs text-muted-foreground font-mono ml-1">
+                            R$ {pessoa.subtotal.toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
 
-                  {/* Items */}
-                  <div className="space-y-0.5">
-                    {pessoa.itens.map((item) => (
-                      <MemoizedItemCheckbox
-                        key={item.id}
-                        item={item}
-                        comandaStatus={comanda.status}
-                        onToggle={onToggleItemServido}
-                      />
-                    ))}
-                  </div>
+                      {/* Items */}
+                      <div className="space-y-0.5">
+                        {pessoa.itens.map((item) => (
+                          <MemoizedItemCheckbox
+                            key={item.id}
+                            item={item}
+                            comandaStatus={comanda.status}
+                            onToggle={onToggleItemServido}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -328,18 +441,26 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
           <Separator />
 
           {/* Footer */}
-          <div className="px-6 py-3 flex items-center gap-3">
+          <div className="px-6 py-3 flex items-center gap-2">
             <Button
               variant="outline"
-              className="flex-1 h-9 text-xs font-semibold text-muted-foreground hover:text-destructive hover:border-destructive/30 hover:bg-destructive/5"
+              className="h-9 text-xs font-semibold text-muted-foreground hover:text-destructive hover:border-destructive/30 hover:bg-destructive/5"
               onClick={() => setShowCancelConfirm(true)}
             >
               <Ban className="h-3.5 w-3.5 mr-1.5" />
-              Cancelar Pedido
+              Cancelar
+            </Button>
+            <Button
+              variant="outline"
+              className="h-9 text-xs font-semibold text-muted-foreground hover:text-foreground"
+              onClick={() => onPrintAll?.(comanda)}
+            >
+              <Printer className="h-3.5 w-3.5 mr-1.5" />
+              Imprimir
             </Button>
             <Button
               className="flex-1 h-9 text-xs bg-brand hover:bg-brand/90 text-white font-semibold"
-              onClick={() => setShowPaymentConfirm(true)}
+              onClick={() => setShowPaymentModal(true)}
             >
               <CreditCard className="h-3.5 w-3.5 mr-1.5" />
               Confirmar Pagamento
@@ -348,15 +469,13 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
         </DialogContent>
       </Dialog>
 
-      {/* Confirmation Dialogs */}
-      <ConfirmationDialog
-        open={showPaymentConfirm}
-        onOpenChange={setShowPaymentConfirm}
-        title="Confirmar Pagamento"
-        description={`Deseja confirmar o pagamento de R$ ${Number(comanda.total).toFixed(2)} da Mesa ${String(comanda.numero_mesa).padStart(2, "0")}?`}
-        confirmLabel="Sim, Confirmar"
-        icon={CreditCard}
-        onConfirm={() => onConfirmPayment?.(comanda.comanda_id)}
+      {/* Payment modal — whole order */}
+      <PaymentModal
+        open={showPaymentModal}
+        onOpenChange={setShowPaymentModal}
+        total={comanda.total}
+        label={`Mesa ${String(comanda.numero_mesa).padStart(2, "0")} · Pedido ${String(comanda.numero_pedido).padStart(2, "0")}`}
+        onConfirm={(forma) => onConfirmPayment?.(comanda.comanda_id, forma)}
       />
 
       <ConfirmationDialog
@@ -369,6 +488,24 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
         icon={AlertTriangle}
         onConfirm={() => onCancelOrder?.(comanda.comanda_id)}
       />
+
+      {/* Per-person payment modal */}
+      {personPayConfirm && (() => {
+        const pessoa = comanda.pessoas.find((p) => p.nome === personPayConfirm);
+        if (!pessoa) return null;
+        return (
+          <PaymentModal
+            open={!!personPayConfirm}
+            onOpenChange={(open) => { if (!open) setPersonPayConfirm(null); }}
+            total={pessoa.subtotal}
+            label={`${personPayConfirm} · Mesa ${String(comanda.numero_mesa).padStart(2, "0")}`}
+            onConfirm={(forma) => {
+              onConfirmPaymentPerson?.(comanda.comanda_id, personPayConfirm, forma);
+              setPersonPayConfirm(null);
+            }}
+          />
+        );
+      })()}
     </>
   );
 });

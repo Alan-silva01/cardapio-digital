@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { type FormaPagamento } from "@/components/payment-modal";
 import {
   Clock,
   ChevronRight,
@@ -27,7 +28,12 @@ interface ItemPedido {
   quantidade: number;
   nome_produto: string;
   nome_variacao: string | null;
+  preco_unitario: number;
+  preco_total: number;
   servido: boolean;
+  produtos?: {
+    imagem_url: string | null;
+  } | null;
 }
 
 interface PedidoRaw {
@@ -38,6 +44,7 @@ interface PedidoRaw {
   nome_pessoa: string | null;
   status: "recebido" | "preparando" | "pronto" | "entregue";
   total: number;
+  forma_pagamento?: FormaPagamento | null;
   criado_em: string;
   itens_pedido: ItemPedido[];
 }
@@ -51,10 +58,12 @@ export interface ComandaAgrupada {
   criado_em: string; // earliest pedido
   pedido_ids: string[];
   numero_pedido: number; // lowest numero_pedido in the group
+  forma_pagamento?: FormaPagamento;
   pessoas: {
     nome: string;
     subtotal: number;
     itens: ItemPedido[];
+    pago?: boolean;
   }[];
 }
 
@@ -100,6 +109,7 @@ function groupPedidosByComanda(pedidos: PedidoRaw[]): ComandaAgrupada[] {
       group[0].criado_em
     );
     const lowestPedidoNum = Math.min(...group.map((p) => p.numero_pedido));
+    const formaPagamento = group.find((p) => p.forma_pagamento)?.forma_pagamento || undefined;
 
     // Group items by person with subtotals
     const pessoasMap = new Map<string, { itens: ItemPedido[]; subtotal: number }>();
@@ -125,6 +135,7 @@ function groupPedidosByComanda(pedidos: PedidoRaw[]): ComandaAgrupada[] {
       criado_em: earliestDate,
       pedido_ids: group.map((p) => p.id),
       numero_pedido: lowestPedidoNum,
+      forma_pagamento: formaPagamento ?? undefined,
       pessoas,
     };
   });
@@ -161,7 +172,7 @@ export default function PedidosPage() {
 
     const { data, error } = await supabase
       .from("pedidos")
-      .select("id, comanda_id, numero_pedido, numero_mesa, nome_pessoa, status, total, criado_em, itens_pedido (id, quantidade, nome_produto, nome_variacao, servido)")
+      .select("id, comanda_id, numero_pedido, numero_mesa, nome_pessoa, status, total, criado_em, forma_pagamento, itens_pedido (id, quantidade, nome_produto, nome_variacao, servido, preco_unitario, preco_total, produtos (imagem_url))")
       .gte("criado_em", today.toISOString())
       .order("criado_em", { ascending: true });
 
@@ -171,7 +182,7 @@ export default function PedidosPage() {
     }
 
     if (data) {
-      const comandas = groupPedidosByComanda(data as PedidoRaw[]);
+      const comandas = groupPedidosByComanda(data as unknown as PedidoRaw[]);
       setColumns(groupByStatus(comandas));
     }
     setLoading(false);
@@ -374,6 +385,216 @@ export default function PedidosPage() {
     }
   };
 
+  // ── Per-person payment ──
+  const handlePayPerson = useCallback(async (comandaId: string, nomePessoa: string, forma: FormaPagamento) => {
+    // Optimistic: mark the person as paid in local state
+    const markPago = (comanda: ComandaAgrupada) => ({
+      ...comanda,
+      pessoas: comanda.pessoas.map((p) =>
+        p.nome === nomePessoa ? { ...p, pago: true } : p
+      ),
+    });
+
+    setColumns((prev) => {
+      const updated = { ...prev };
+      for (const key of Object.keys(updated)) {
+        updated[key] = updated[key].map((c) =>
+          c.comanda_id === comandaId ? markPago(c) : c
+        );
+      }
+      return updated;
+    });
+
+    setSelectedComanda((prev) => {
+      if (!prev || prev.comanda_id !== comandaId) return prev;
+      return markPago(prev);
+    });
+
+    // DB: update all pedidos matching this comanda + person to 'entregue'
+    const { error } = await supabase
+      .from("pedidos")
+      .update({ status: "entregue", forma_pagamento: forma })
+      .eq("comanda_id", comandaId)
+      .eq("nome_pessoa", nomePessoa);
+
+    if (error) {
+      console.error("Erro ao pagar pessoa:", error);
+      fetchPedidos();
+    }
+
+    // DB: insert into pagamentos table
+    const pagamentosToInsert = [];
+    if (forma.pix > 0) pagamentosToInsert.push({ comanda_id: comandaId, metodo: 'pix', valor: forma.pix, tipo: 'individual' });
+    if (forma.credito > 0) pagamentosToInsert.push({ comanda_id: comandaId, metodo: 'credito', valor: forma.credito, tipo: 'individual' });
+    if (forma.debito > 0) pagamentosToInsert.push({ comanda_id: comandaId, metodo: 'debito', valor: forma.debito, tipo: 'individual' });
+    if (forma.dinheiro > 0) pagamentosToInsert.push({ comanda_id: comandaId, metodo: 'dinheiro', valor: forma.dinheiro, tipo: 'individual' });
+
+    if (pagamentosToInsert.length > 0) {
+      const { error: pgError } = await supabase.from("pagamentos").insert(pagamentosToInsert);
+      if (pgError) console.error("Erro ao inserir na tabela pagamentos:", pgError);
+    }
+  }, [fetchPedidos]);
+
+  // ── Whole-order payment ──
+  const handlePayAll = useCallback(async (comandaId: string, forma: FormaPagamento) => {
+    // Optimistic: mark all people as paid
+    const markAllPago = (comanda: ComandaAgrupada) => ({
+      ...comanda,
+      pessoas: comanda.pessoas.map((p) => ({ ...p, pago: true })),
+    });
+
+    setColumns((prev) => {
+      const updated = { ...prev };
+      for (const key of Object.keys(updated)) {
+        updated[key] = updated[key].map((c) =>
+          c.comanda_id === comandaId ? markAllPago(c) : c
+        );
+      }
+      return updated;
+    });
+
+    setSelectedComanda((prev) => {
+      if (!prev || prev.comanda_id !== comandaId) return prev;
+      return markAllPago(prev);
+    });
+
+    // DB: update all pedidos in this comanda to 'entregue'
+    const { error } = await supabase
+      .from("pedidos")
+      .update({ status: "entregue", forma_pagamento: forma })
+      .eq("comanda_id", comandaId);
+
+    if (error) {
+      console.error("Erro ao pagar comanda inteira:", error);
+      fetchPedidos();
+    }
+
+    // DB: insert into pagamentos table
+    const pagamentosToInsert = [];
+    if (forma.pix > 0) pagamentosToInsert.push({ comanda_id: comandaId, metodo: 'pix', valor: forma.pix, tipo: 'total' });
+    if (forma.credito > 0) pagamentosToInsert.push({ comanda_id: comandaId, metodo: 'credito', valor: forma.credito, tipo: 'total' });
+    if (forma.debito > 0) pagamentosToInsert.push({ comanda_id: comandaId, metodo: 'debito', valor: forma.debito, tipo: 'total' });
+    if (forma.dinheiro > 0) pagamentosToInsert.push({ comanda_id: comandaId, metodo: 'dinheiro', valor: forma.dinheiro, tipo: 'total' });
+
+    if (pagamentosToInsert.length > 0) {
+      const { error: pgError } = await supabase.from("pagamentos").insert(pagamentosToInsert);
+      if (pgError) console.error("Erro ao inserir na tabela pagamentos:", pgError);
+    }
+  }, [fetchPedidos]);
+
+  // ── Per-person thermal print ──
+  const handlePrintPerson = useCallback((comanda: ComandaAgrupada, nomePessoa: string) => {
+    const pessoa = comanda.pessoas.find((p) => p.nome === nomePessoa);
+    if (!pessoa) return;
+
+    const printWindow = window.open("", "_blank", "width=320,height=600");
+    if (!printWindow) return;
+
+    const itemsHtml = pessoa.itens
+      .map(
+        (item) =>
+          `<tr>
+            <td style="padding:2px 0; padding-right:8px;">${item.quantidade}x ${item.nome_produto}${item.nome_variacao ? ` (${item.nome_variacao})` : ""}</td>
+            <td style="padding:2px 0; text-align:right; white-space:nowrap;">R$ ${Number(item.preco_total).toFixed(2)}</td>
+          </tr>`
+      )
+      .join("");
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Comanda - ${nomePessoa}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: 'Courier New', monospace; font-size: 12px; width: 58mm; padding: 4mm; }
+          .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 4px; margin-bottom: 6px; }
+          .header h2 { font-size: 14px; margin-bottom: 2px; }
+          .meta { font-size: 10px; color: #555; }
+          table { width: 100%; border-collapse: collapse; }
+          .total { border-top: 1px dashed #000; margin-top: 6px; padding-top: 4px; text-align: right; font-weight: bold; font-size: 13px; }
+          .footer { text-align: center; margin-top: 8px; font-size: 9px; color: #888; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h2>${nomePessoa}</h2>
+          <div class="meta">Mesa ${String(comanda.numero_mesa).padStart(2, "0")} · Pedido ${String(comanda.numero_pedido).padStart(2, "0")}</div>
+          <div class="meta">${new Date().toLocaleString("pt-BR")}</div>
+        </div>
+        <table>${itemsHtml}</table>
+        <div class="total">Total: R$ ${pessoa.subtotal.toFixed(2)}</div>
+        <div class="footer">Comanda Individual</div>
+        <script>window.onload=()=>{window.print();window.close();}<\/script>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+  }, []);
+
+  // ── Print all (whole order) ──
+  const handlePrintAll = useCallback((comanda: ComandaAgrupada) => {
+    const printWindow = window.open("", "_blank", "width=320,height=600");
+    if (!printWindow) return;
+
+    const sectionsHtml = comanda.pessoas
+      .map(
+        (pessoa) => {
+          const itemsHtml = pessoa.itens
+            .map(
+              (item) =>
+                `<tr>
+                   <td style="padding:2px 0; padding-right:8px;">${item.quantidade}x ${item.nome_produto}${item.nome_variacao ? ` (${item.nome_variacao})` : ""}</td>
+                   <td style="padding:2px 0; text-align:right; white-space:nowrap;">R$ ${Number(item.preco_total).toFixed(2)}</td>
+                 </tr>`
+            )
+            .join("");
+          return `
+            <div class="person">
+              <div class="person-name">${pessoa.nome}</div>
+              <table>${itemsHtml}</table>
+              <div class="subtotal">Subtotal: R$ ${pessoa.subtotal.toFixed(2)}</div>
+            </div>
+          `;
+        }
+      )
+      .join("");
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Pedido - Mesa ${String(comanda.numero_mesa).padStart(2, "0")}</title>
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          body { font-family: 'Courier New', monospace; font-size: 12px; width: 58mm; padding: 4mm; }
+          .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 4px; margin-bottom: 6px; }
+          .header h2 { font-size: 14px; margin-bottom: 2px; }
+          .meta { font-size: 10px; color: #555; }
+          table { width: 100%; border-collapse: collapse; }
+          .person { margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px dotted #ccc; }
+          .person-name { font-weight: bold; font-size: 13px; margin-bottom: 2px; }
+          .subtotal { text-align: right; font-size: 11px; margin-top: 2px; color: #555; }
+          .total { border-top: 1px dashed #000; margin-top: 6px; padding-top: 4px; text-align: right; font-weight: bold; font-size: 14px; }
+          .footer { text-align: center; margin-top: 8px; font-size: 9px; color: #888; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h2>Mesa ${String(comanda.numero_mesa).padStart(2, "0")}</h2>
+          <div class="meta">Pedido ${String(comanda.numero_pedido).padStart(2, "0")} · ${comanda.pessoas.length} comanda${comanda.pessoas.length > 1 ? "s" : ""}</div>
+          <div class="meta">${new Date().toLocaleString("pt-BR")}</div>
+        </div>
+        ${sectionsHtml}
+        <div class="total">Total: R$ ${Number(comanda.total).toFixed(2)}</div>
+        <div class="footer">Pedido Completo</div>
+        <script>window.onload=()=>{window.print();window.close();}<\/script>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+  }, []);
+
   if (!mounted) return null;
 
   if (loading) {
@@ -481,6 +702,11 @@ export default function PedidosPage() {
                                         <span className="font-semibold text-sm tracking-tight text-foreground">
                                           Mesa {String(comanda.numero_mesa).padStart(2, "0")}
                                         </span>
+                                        {(comanda.forma_pagamento || comanda.pessoas.every(p => p.pago)) && (
+                                          <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider bg-emerald-500/10 px-1.5 py-0.5 rounded ml-1">
+                                            Pago
+                                          </span>
+                                        )}
                                       </div>
                                       <div className={`flex items-center gap-1.5 text-[10px] font-medium px-2 py-1 rounded-full border ${isUrgent ? "text-red-500 bg-red-500/10 border-red-500/20" : "text-muted-foreground bg-muted"}`}>
                                         <Clock className="h-3 w-3" />
@@ -496,6 +722,11 @@ export default function PedidosPage() {
                                             <div className="flex items-center gap-1.5 text-[10px] text-foreground font-bold">
                                               <User className="h-3 w-3 shrink-0" />
                                               {pessoa.nome}
+                                              {pessoa.pago && (
+                                                <span className="text-[8px] font-bold text-emerald-500 uppercase tracking-wider bg-emerald-500/10 px-1 py-0 rounded ml-1">
+                                                  Pago
+                                                </span>
+                                              )}
                                             </div>
                                             <span className="text-[10px] text-muted-foreground font-mono">
                                               R$ {pessoa.subtotal.toFixed(2)}
@@ -524,10 +755,15 @@ export default function PedidosPage() {
                                                   >
                                                     {isServed && <Check className="h-3 w-3 text-background" />}
                                                   </div>
-                                                  <span className="text-xs leading-relaxed text-muted-foreground">
-                                                    {item.quantidade}x {item.nome_produto}
-                                                    {item.nome_variacao && <span className="opacity-60"> ({item.nome_variacao})</span>}
-                                                  </span>
+                                                  <div className="flex-1 flex justify-between items-start text-xs leading-relaxed text-muted-foreground min-w-0">
+                                                    <span className="truncate pr-2 border-b border-transparent border-dashed">
+                                                      {item.quantidade}x {item.nome_produto}
+                                                      {item.nome_variacao && <span className="opacity-60"> ({item.nome_variacao})</span>}
+                                                    </span>
+                                                    <span className="font-mono text-[10px] shrink-0 pt-0.5">
+                                                      R$ {Number(item.preco_total).toFixed(2)}
+                                                    </span>
+                                                  </div>
                                                 </div>
                                               );
                                             })}
@@ -588,6 +824,10 @@ export default function PedidosPage() {
         open={!!selectedComanda}
         onOpenChange={(open) => { if (!open) setSelectedComanda(null); }}
         onToggleItemServido={toggleItemServido}
+        onConfirmPayment={handlePayAll}
+        onConfirmPaymentPerson={handlePayPerson}
+        onPrintPerson={handlePrintPerson}
+        onPrintAll={handlePrintAll}
       />
     </div>
   );
