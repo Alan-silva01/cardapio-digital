@@ -197,6 +197,7 @@ function DraggableGroupWrapper(props: {
   linkMode: boolean;
   isLinkTarget: boolean;
   onClick?: () => void;
+  onDoubleClick?: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: props.group.id,
@@ -213,6 +214,10 @@ function DraggableGroupWrapper(props: {
            // Prevent duplicate click events if bubbling
            e.stopPropagation();
            if (props.onClick) props.onClick();
+         }}
+         onDoubleClick={(e) => {
+           e.stopPropagation();
+           if (props.onDoubleClick) props.onDoubleClick();
          }}>
       {/* We pass a cloned group with 0,0 locally because wrapper handles positioning */}
       <TableEntity {...props} group={{ ...props.group, x: 0, y: 0 }} />
@@ -633,26 +638,21 @@ export default function LayoutPage() {
               style={{ transform: `scale(${zoom})`, transformOrigin: "0 0" }}
             >
               {visualGroups.map((group) => (
-                <div
-                  key={group.id}
-                  onClick={() => {
-                    if (linkMode) {
-                      handleGroupClick(group.id);
-                    } else if (group.activeCount > 0) {
-                      // Navigate to Kanban board filtering by the first mesa in the group
-                      // The group label could be "12 + 13", so we pick the primary mesa (group.mesas[0])
-                      // to search/filter by its exact number in the board
-                      router.push(`/pedidos?busca=${group.mesas[0].numero_mesa}`);
-                    }
-                  }}
-                  onDoubleClick={() => handleUnlinkGroup(group.id)}
-                >
+                <div key={group.id}>
                   <DraggableGroupWrapper
                     group={group}
                     isActive={group.activeCount > 0}
                     isDragging={draggingId === group.id}
                     linkMode={linkMode}
                     isLinkTarget={linkSourceId === group.id}
+                    onClick={() => {
+                      if (linkMode) {
+                        handleGroupClick(group.id);
+                      } else if (group.activeCount > 0) {
+                        router.push(`/pedidos?busca=${group.mesas[0].numero_mesa}`);
+                      }
+                    }}
+                    onDoubleClick={() => handleUnlinkGroup(group.id)}
                   />
                 </div>
               ))}
