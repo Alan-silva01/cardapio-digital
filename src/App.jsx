@@ -203,22 +203,34 @@ const App = () => {
             return;
         }
 
+        // Prepare to finalize UI regardless of DB success
+        const finalizeUI = () => {
+            setPessoaAtiva(nomeFinal);
+            setIsPeopleDrawerOpen(false);
+            if (isCartPending) {
+                setIsCartPending(false);
+                setIsCartOpen(true);
+            }
+        };
+
         // Add to DB (pedidos table)
         try {
             const params = new URLSearchParams(window.location.search);
             const token = params.get('t');
 
             if (!token) {
-                alert("Mesa inválida ou não encontrada.");
+                console.warn("Mesa inválida ou não encontrada na URL. Modo teste local?");
+                // Proceed with local state anyway
+                finalizeUI();
                 return;
             }
 
-            const { data: mesaData } = await supabase
+            const { data: mesaData, error: mesaErr } = await supabase
                 .from('mesas')
                 .select('id, numero')
                 .eq('token', token)
                 .single();
-            if (!mesaData) throw new Error(`Mesa correspondente ao QRCode não encontrada.`);
+            if (mesaErr || !mesaData) throw new Error(`Mesa correspondente ao QRCode não encontrada.`);
             const mesaId = mesaData.id;
             const mesaNum = mesaData.numero;
 
@@ -254,19 +266,15 @@ const App = () => {
                 });
             if (pedidoErr) throw pedidoErr;
 
-            // Refresh the list of people and select the new one
+            // Refresh the list of people
             await fetchPessoasNaMesa(); // Re-fetch to include the new person
-            setPessoaAtiva(nomeFinal);
             
-            if (isCartPending) {
-                setIsCartPending(false);
-                setIsCartOpen(true);
-            }
-            
-            setIsPeopleDrawerOpen(false);
+            finalizeUI();
         } catch (error) {
-            console.error('Erro ao adicionar pessoa:', error);
-            alert('Erro ao adicionar pessoa. Tente novamente.');
+            console.error('Erro ao adicionar pessoa no DB:', error);
+            // Even on error (offline, no table, etc), let the user proceed locally
+            // The hard block is at Checkout
+            finalizeUI();
         }
     }, [novaPessoaNome, pessoasNaMesa, fetchPessoasNaMesa, isCartPending]);
 
