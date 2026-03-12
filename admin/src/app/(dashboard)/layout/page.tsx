@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { supabase } from "@/lib/supabase";
 import { createClient } from "@/lib/supabase/client";
 import {
   DndContext,
@@ -10,7 +11,9 @@ import {
   useSensor,
   useSensors,
   DragOverlay,
+  defaultDropAnimationSideEffects,
 } from "@dnd-kit/core";
+import { snapCenterToCursor, restrictToParentElement } from "@dnd-kit/modifiers";
 import { Loader2, MapPin, Maximize2, ZoomIn, ZoomOut, RotateCcw, Link2, Unlink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,102 +36,180 @@ interface ActiveMesa {
   total: number;
 }
 
-// ── Constants ──
-const MESA_SIZE = 48; // Compact size for 24 tables
-const CANVAS_W = 1000;
-const CANVAS_H = 700;
-const WALL_COLOR = "#EC662D";
-const WALL_THICKNESS = 24; // User requested 4x thicker than previous (which was 8, let's make it 24 to be safe)
+interface VisualGroup {
+  id: string; // group_id or mesa_id
+  mesas: MesaLayout[];
+  x: number;
+  y: number;
+  capacity: number;
+  label: string;
+  activeCount: number;
+}
 
-// ── Draggable Mesa Component ──
-function DraggableMesa({
-  mesa,
+// ── Constants ──
+const CANVAS_W = 1200;
+const CANVAS_H = 800;
+const WALL_COLOR = "#EC662D";
+const WALL_THICKNESS = 21; // 2.6x thick
+
+function getCapacity(numeroMesa: number) {
+  // 6 mesas com 6 lugares, restante 4 lugares
+  return numeroMesa <= 6 ? 6 : 4;
+}
+
+// ── Draggable Merged Table Component ──
+function TableEntity({
+  group,
   isActive,
-  activeInfo,
-  isGrouped,
   isDragging,
-  onStartLink,
   linkMode,
+  isLinkTarget,
 }: {
-  mesa: MesaLayout;
+  group: VisualGroup;
   isActive: boolean;
-  activeInfo?: ActiveMesa;
-  isGrouped: boolean;
   isDragging: boolean;
-  onStartLink: () => void;
   linkMode: boolean;
+  isLinkTarget: boolean;
 }) {
+  const sideSeats = 2; // Always 1 left, 1 right
+  const remainingSeats = Math.max(0, group.capacity - sideSeats);
+  const topSeats = Math.ceil(remainingSeats / 2);
+  const bottomSeats = remainingSeats - topSeats;
+  
+  // Base width on topSeats (24px per seat + padding). Minimum table size is 56px to fit numbers nicely.
+  const tableWidth = Math.max(56, topSeats * 28 + 16);
+
   return (
     <div
       className={cn(
         "absolute flex flex-col items-center justify-center cursor-grab active:cursor-grabbing select-none transition-all duration-300",
-        "bg-background text-foreground", // Use theme background
-        isActive
-          ? "border-[3px] border-[#EC662D] shadow-[0_0_15px_#EC662D]" // Neon glow
-          : "border-[3px] border-[#EC662D]/70 hover:border-[#EC662D]", // Orange borders like the reference
-        isGrouped && "border-dashed",
-        isDragging && "opacity-60 scale-105 shadow-2xl z-50",
-        linkMode && "ring-4 ring-[#EC662D]/50 ring-offset-2 ring-offset-background z-40"
+        isDragging && "opacity-60 scale-105 z-50",
+        linkMode && "z-40"
       )}
       style={{
-        width: MESA_SIZE,
-        height: MESA_SIZE,
-        left: mesa.pos_x,
-        top: mesa.pos_y,
-        borderRadius: "6px",
+        left: group.x,
+        top: group.y,
+        // Center alignment offset handled by wrapper, this is the top-left of the group
       }}
     >
-      <span className="text-[14px] font-bold leading-none tracking-tighter">
-        {String(mesa.numero_mesa).padStart(2, "0")}
-      </span>
-      {isActive && activeInfo && (
-        <span className="absolute -bottom-5 w-[200%] text-center left-1/2 -translate-x-1/2 text-[10px] font-bold text-[#EC662D] whitespace-nowrap bg-background/80 px-1 rounded-sm">
-          {activeInfo.count} ped.
-        </span>
-      )}
+      {/* Top Chairs */}
+      <div className="flex justify-center gap-[6px] mb-[-4px] z-0 px-3">
+        {Array.from({ length: topSeats }).map((_, i) => (
+          <div
+            key={`top-${i}`}
+            className={cn(
+              "w-4 h-3.5 rounded-t-md border-t-2 border-l-2 border-r-2 border-b-0",
+              isActive ? "border-[#EC662D]/80 bg-[#EC662D]/10" : "border-muted-foreground/40 bg-card"
+            )}
+          />
+        ))}
+      </div>
+
+      <div className="relative flex items-center justify-center">
+        {/* Left Chair - Same dimension as top/bottom but rotated visually */}
+        <div 
+          className={cn(
+            "absolute left-[-4px] top-1/2 -translate-y-1/2 w-4 h-[14px] rounded-l-md border-l-2 border-t-2 border-b-2 border-r-0 z-0",
+            isActive ? "border-[#EC662D]/80 bg-[#EC662D]/10" : "border-muted-foreground/40 bg-card"
+          )} 
+        />
+
+        {/* Table Body */}
+        <div
+          className={cn(
+            "relative flex flex-col items-center justify-center rounded-md z-10 transition-colors shadow-sm",
+            "bg-card text-foreground", // Themed backgrounds
+            isActive
+              ? "border-[3px] border-[#EC662D] shadow-[0_0_15px_#EC662D60]" // Neon glow
+              : "border-[3px] border-[#EC662D]/60 hover:border-[#EC662D]", // Orange borders
+            isLinkTarget && "ring-4 ring-[#EC662D]/50 ring-offset-2 ring-offset-background"
+          )}
+          style={{ width: tableWidth, height: 48 }}
+        >
+          <span className="text-[14px] font-bold leading-none tracking-tight whitespace-nowrap overflow-hidden px-2 text-ellipsis max-w-full">
+            {group.label}
+          </span>
+          {isActive && group.activeCount > 0 && (
+            <span className="absolute -bottom-6 text-[10px] font-bold text-[#EC662D] whitespace-nowrap bg-background/90 px-1.5 py-0.5 rounded shadow-sm border border-[#EC662D]/30">
+              {group.activeCount} ped.
+            </span>
+          )}
+        </div>
+
+        {/* Right Chair - Same dimension as top/bottom but rotated visually */}
+        <div 
+          className={cn(
+            "absolute right-[-4px] top-1/2 -translate-y-1/2 w-4 h-[14px] rounded-r-md border-r-2 border-t-2 border-b-2 border-l-0 z-0",
+            isActive ? "border-[#EC662D]/80 bg-[#EC662D]/10" : "border-muted-foreground/40 bg-card"
+          )} 
+        />
+      </div>
+
+      {/* Bottom Chairs */}
+      <div className="flex justify-center gap-[6px] mt-[-4px] z-0 px-3">
+        {Array.from({ length: bottomSeats }).map((_, i) => (
+          <div
+            key={`bot-${i}`}
+            className={cn(
+              "w-4 h-3.5 rounded-b-md border-b-2 border-l-2 border-r-2 border-t-0",
+              isActive ? "border-[#EC662D]/80 bg-[#EC662D]/10" : "border-muted-foreground/40 bg-card"
+            )}
+          />
+        ))}
+      </div>
     </div>
   );
 }
 
 // ── Overlay during drag ──
-function MesaOverlay({ mesa, isActive }: { mesa: MesaLayout; isActive: boolean }) {
+function TableOverlay({ group, isActive }: { group: VisualGroup; isActive: boolean }) {
+  const sideSeats = 2; // Always 1 left, 1 right
+  const remainingSeats = Math.max(0, group.capacity - sideSeats);
+  const topSeats = Math.ceil(remainingSeats / 2);
+  const tableWidth = Math.max(56, topSeats * 28 + 16);
+
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center border-[3px] shadow-[0_20px_25px_-5px_rgb(0_0_0_/_0.5)] z-50",
-        "bg-background text-foreground",
-        isActive ? "border-[#EC662D] shadow-[0_0_20px_#EC662D]" : "border-[#EC662D]/90"
+        "flex flex-col items-center justify-center z-50",
+        "shadow-[0_20px_25px_-5px_rgb(0_0_0_/_0.5)] scale-105"
       )}
-      style={{ width: MESA_SIZE, height: MESA_SIZE, borderRadius: "6px" }}
     >
-      <span className="text-[14px] font-bold leading-none tracking-tighter">
-        {String(mesa.numero_mesa).padStart(2, "0")}
-      </span>
+      <div
+        className={cn(
+          "flex flex-col items-center justify-center rounded-md border-[3px]",
+          "bg-card text-foreground",
+          isActive ? "border-[#EC662D] shadow-[0_0_20px_#EC662D]" : "border-[#EC662D]/90"
+        )}
+        style={{ width: tableWidth, height: 48 }}
+      >
+        <span className="text-[14px] font-bold leading-none tracking-tight">{group.label}</span>
+      </div>
     </div>
   );
 }
 
 // ── Wrapper that uses dnd-kit's useDraggable ──
-function DraggableMesaWrapper(props: {
-  mesa: MesaLayout;
+function DraggableGroupWrapper(props: {
+  group: VisualGroup;
   isActive: boolean;
-  activeInfo?: ActiveMesa;
-  isGrouped: boolean;
   isDragging: boolean;
-  onStartLink: () => void;
   linkMode: boolean;
+  isLinkTarget: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
-    id: props.mesa.id,
+    id: props.group.id,
   });
 
   const style = transform
     ? { transform: `translate(${transform.x}px, ${transform.y}px)` }
-    : undefined;
+    : {};
 
   return (
-    <div ref={setNodeRef} style={style} {...listeners} {...attributes} className="z-10">
-      <DraggableMesa {...props} />
+    <div ref={setNodeRef} {...listeners} {...attributes} className="z-10 absolute outline-none"
+         style={{ left: props.group.x, top: props.group.y, ...style }}>
+      {/* We pass a cloned group with 0,0 locally because wrapper handles positioning */}
+      <TableEntity {...props} group={{ ...props.group, x: 0, y: 0 }} />
     </div>
   );
 }
@@ -141,13 +222,13 @@ export default function LayoutPage() {
   const [loading, setLoading] = useState(true);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [linkMode, setLinkMode] = useState(false);
-  const [linkSource, setLinkSource] = useState<string | null>(null);
+  const [linkSourceId, setLinkSourceId] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: { distance: 3 },
+      activationConstraint: { distance: 5 },
     })
   );
 
@@ -196,6 +277,47 @@ export default function LayoutPage() {
     fetchData();
   }, [fetchData]);
 
+  // ── Compute Visual Groups ──
+  const activeMap = useMemo(
+    () => new Map(activeMesas.map((a) => [a.numero_mesa, a])),
+    [activeMesas]
+  );
+
+  const visualGroups = useMemo<VisualGroup[]>(() => {
+    const map = new Map<string, MesaLayout[]>();
+    
+    mesas.forEach(m => {
+      const key = m.grupo_id || `single-${m.id}`;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(m);
+    });
+
+    return Array.from(map.entries()).map(([key, groupMesas]) => {
+      // Sort to have consistent label like "10 + 11"
+      groupMesas.sort((a, b) => a.numero_mesa - b.numero_mesa);
+      
+      const capacity = groupMesas.reduce((sum, m) => sum + getCapacity(m.numero_mesa), 0);
+      const label = groupMesas.map(m => String(m.numero_mesa).padStart(2, '0')).join(" + ");
+      
+      let activeCount = 0;
+      groupMesas.forEach(m => {
+        const a = activeMap.get(m.numero_mesa);
+        if (a) activeCount += a.count;
+      });
+
+      // Position is based on the first mesa in the sorted group
+      return {
+        id: key,
+        mesas: groupMesas,
+        x: groupMesas[0].pos_x,
+        y: groupMesas[0].pos_y,
+        capacity,
+        label,
+        activeCount
+      };
+    });
+  }, [mesas, activeMap]);
+
   // ── Drag handlers ──
   const handleDragStart = (event: DragStartEvent) => {
     setDraggingId(event.active.id as string);
@@ -204,77 +326,105 @@ export default function LayoutPage() {
   const handleDragEnd = async (event: DragEndEvent) => {
     setDraggingId(null);
     const { active, delta } = event;
-    const mesaId = active.id as string;
+    const groupId = active.id as string;
+    
+    const group = visualGroups.find(g => g.id === groupId);
+    if (!group) return;
 
-    setMesas((prev) =>
-      prev.map((m) => {
-        if (m.id !== mesaId) return m;
-        const newX = Math.max(0, Math.min(CANVAS_W - MESA_SIZE, m.pos_x + delta.x / zoom));
-        const newY = Math.max(0, Math.min(CANVAS_H - MESA_SIZE, m.pos_y + delta.y / zoom));
-        const updated = { ...m, pos_x: newX, pos_y: newY };
+    // We only update the position of the first mesa in the group to anchor it
+    const anchorMesa = group.mesas[0];
+    const newX = Math.max(0, Math.min(CANVAS_W - 100, anchorMesa.pos_x + delta.x / zoom));
+    const newY = Math.max(0, Math.min(CANVAS_H - 100, anchorMesa.pos_y + delta.y / zoom));
 
-        // Persist to Supabase
-        supabase
-          .from("mesa_layout")
-          .update({ pos_x: newX, pos_y: newY })
-          .eq("id", mesaId)
-          .then();
-
-        return updated;
-      })
+    setMesas(prev => 
+      prev.map(m => m.id === anchorMesa.id ? { ...m, pos_x: newX, pos_y: newY } : m)
     );
+
+    await supabase
+      .from("mesa_layout")
+      .update({ pos_x: newX, pos_y: newY })
+      .eq("id", anchorMesa.id);
   };
 
   // ── Link/unlink mesas ──
-  const handleMesaClick = async (mesaId: string) => {
+  const handleGroupClick = async (groupId: string) => {
     if (!linkMode) return;
 
-    if (!linkSource) {
-      setLinkSource(mesaId);
+    if (!linkSourceId) {
+      setLinkSourceId(groupId);
       return;
     }
 
-    if (linkSource === mesaId) {
-      setLinkSource(null);
+    if (linkSourceId === groupId) {
+      setLinkSourceId(null);
       return;
     }
 
-    // Link the two mesas with a shared grupo_id
-    const sourceMesa = mesas.find((m) => m.id === linkSource);
-    const targetMesa = mesas.find((m) => m.id === mesaId);
-    if (!sourceMesa || !targetMesa) return;
+    // Merge the two groups
+    const sourceGroup = visualGroups.find(g => g.id === linkSourceId);
+    const targetGroup = visualGroups.find(g => g.id === groupId);
+    
+    if (!sourceGroup || !targetGroup) return;
 
-    const grupoId = sourceMesa.grupo_id || targetMesa.grupo_id || crypto.randomUUID();
+    // Use existing group_id if one already exists, else create new
+    const finalGrupoId = sourceGroup.mesas[0].grupo_id || targetGroup.mesas[0].grupo_id || crypto.randomUUID();
+    
+    const allMesasToUpdate = [...sourceGroup.mesas, ...targetGroup.mesas];
+    const mesaIds = allMesasToUpdate.map(m => m.id);
 
+    // Anchor position to the target group
+    const anchor = targetGroup.mesas[0];
+
+    // Optimistic UI update
+    setMesas(prev => prev.map(m => {
+      if (mesaIds.includes(m.id)) {
+        return { 
+          ...m, 
+          grupo_id: finalGrupoId,
+          pos_x: m.id === anchor.id ? anchor.pos_x : m.pos_x, // Only anchor really matters 
+          pos_y: m.id === anchor.id ? anchor.pos_y : m.pos_y 
+        };
+      }
+      return m;
+    }));
+
+    // DB Update
     await supabase
       .from("mesa_layout")
-      .update({ grupo_id: grupoId })
-      .in("id", [linkSource, mesaId]);
+      .update({ grupo_id: finalGrupoId })
+      .in("id", mesaIds);
 
-    setMesas((prev) =>
-      prev.map((m) =>
-        m.id === linkSource || m.id === mesaId
-          ? { ...m, grupo_id: grupoId }
-          : m
-      )
-    );
-
-    setLinkSource(null);
+    setLinkSourceId(null);
     setLinkMode(false);
   };
 
-  const handleUnlinkMesa = async (mesaId: string) => {
-    const mesa = mesas.find((m) => m.id === mesaId);
-    if (!mesa?.grupo_id) return;
+  const handleUnlinkGroup = async (groupId: string) => {
+    const group = visualGroups.find(g => g.id === groupId);
+    if (!group || group.mesas.length <= 1) return; // Not a group
 
-    await supabase
-      .from("mesa_layout")
-      .update({ grupo_id: null })
-      .eq("id", mesaId);
+    const mesaIds = group.mesas.map(m => m.id);
 
-    setMesas((prev) =>
-      prev.map((m) => (m.id === mesaId ? { ...m, grupo_id: null } : m))
-    );
+    // Spread them out slightly so they don't overlap completely
+    const updates = group.mesas.map((m, idx) => ({
+      ...m,
+      grupo_id: null,
+      pos_x: group.x + (idx * 90),
+      pos_y: group.y
+    }));
+
+    // Optimistic UI
+    setMesas(prev => prev.map(m => {
+      const up = updates.find(u => u.id === m.id);
+      return up ? up : m;
+    }));
+
+    // DB Update
+    for (const up of updates) {
+      await supabase
+        .from("mesa_layout")
+        .update({ pos_x: up.pos_x, pos_y: up.pos_y, grupo_id: null })
+        .eq("id", up.id);
+    }
   };
 
   const handleResetPositions = async () => {
@@ -283,10 +433,10 @@ export default function LayoutPage() {
       // 24 tables grid in the main hall
       const col = index % 8; // 8 per row
       const row = Math.floor(index / 8); // 3 rows
-      const startX = 250; // Start inside the main hall
+      const startX = 250; 
       const startY = 300; 
-      const x = startX + col * 80;
-      const y = startY + row * 80;
+      const x = startX + col * 90;
+      const y = startY + row * 90;
 
       return supabase
         .from("mesa_layout")
@@ -298,58 +448,18 @@ export default function LayoutPage() {
     fetchData();
   };
 
-  // ── Derived data ──
-  const activeSet = useMemo(
-    () => new Set(activeMesas.map((a) => a.numero_mesa)),
-    [activeMesas]
+  const draggingGroup = useMemo(
+    () => visualGroups.find(g => g.id === draggingId),
+    [visualGroups, draggingId]
   );
 
-  const activeMap = useMemo(
-    () => new Map(activeMesas.map((a) => [a.numero_mesa, a])),
-    [activeMesas]
-  );
-
-  const draggingMesa = useMemo(
-    () => mesas.find((m) => m.id === draggingId),
-    [mesas, draggingId]
-  );
-
-  // ── Group lines (SVG connections between grouped mesas) ──
-  const groupLines = useMemo(() => {
-    const groups = new Map<string, MesaLayout[]>();
-    mesas.forEach((m) => {
-      if (m.grupo_id) {
-        const group = groups.get(m.grupo_id) || [];
-        group.push(m);
-        groups.set(m.grupo_id, group);
-      }
-    });
-
-    const lines: { x1: number; y1: number; x2: number; y2: number }[] = [];
-    groups.forEach((members) => {
-      for (let i = 0; i < members.length - 1; i++) {
-        for (let j = i + 1; j < members.length; j++) {
-          lines.push({
-            x1: members[i].pos_x + MESA_SIZE / 2,
-            y1: members[i].pos_y + MESA_SIZE / 2,
-            x2: members[j].pos_x + MESA_SIZE / 2,
-            y2: members[j].pos_y + MESA_SIZE / 2,
-          });
-        }
-      }
-    });
-    return lines;
-  }, [mesas]);
-
-  // ── Active mesa stats ──
   const totalActive = activeMesas.length > 0 ? activeMesas.reduce((s, a) => s + a.count, 0) : 0;
-  const mesasOcupadas = activeSet.size;
+  const mesasOcupadas = activeMesas.length;
 
-  // ── Loading state ──
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-brand" />
+        <Loader2 className="h-6 w-6 animate-spin text-[#EC662D]" />
       </div>
     );
   }
@@ -361,7 +471,7 @@ export default function LayoutPage() {
         <div>
           <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
             <MapPin className="h-5 w-5 text-muted-foreground" />
-            Planta Baixa (24 Mesas)
+            Planta Baixa Interativa
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5 font-medium">
             {mesasOcupadas} mesa{mesasOcupadas !== 1 ? "s" : ""} ocupada{mesasOcupadas !== 1 ? "s" : ""} · {totalActive} pedido{totalActive !== 1 ? "s" : ""} ativo{totalActive !== 1 ? "s" : ""}
@@ -374,11 +484,11 @@ export default function LayoutPage() {
             className={cn("h-9 text-xs gap-1.5 font-semibold transition-all", linkMode && "bg-[#EC662D] hover:bg-[#EC662D]/90 text-white shadow-md")}
             onClick={() => {
               setLinkMode(!linkMode);
-              setLinkSource(null);
+              setLinkSourceId(null);
             }}
           >
             <Link2 className="h-4 w-4" />
-            {linkMode ? "Selecione a 2ª Mesa..." : "Juntar Mesas"}
+            {linkMode ? "Selecione a 2ª Mesa..." : "Agrupar Mesas"}
           </Button>
           <div className="flex items-center gap-0.5 bg-muted/30 rounded-md border border-border p-1">
             <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-background/80" onClick={() => setZoom((z) => Math.max(0.5, z - 0.1))}>
@@ -403,25 +513,21 @@ export default function LayoutPage() {
       {/* Legend */}
       <div className="px-6 py-2.5 flex flex-wrap items-center gap-5 text-[12px] font-medium text-muted-foreground border-b border-border/50 shrink-0 bg-muted/10 z-10">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded-[4px] border-2 border-[#EC662D]/70 bg-card" />
+          <div className="w-4 h-4 rounded-[4px] border-2 border-[#EC662D]/60 bg-card" />
           <span>Livre</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded-[4px] border-[2px] border-[#EC662D] bg-card shadow-[0_0_8px_#EC662D]" />
-          <span className="text-foreground">Com pedidos</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded-[4px] border-2 border-dashed border-[#EC662D]/70 bg-card" />
-          <span>Juntas</span>
+          <span className="text-foreground">Com pedidos (Neon)</span>
         </div>
         {linkMode && (
           <Badge className="bg-[#EC662D]/10 text-[#EC662D] border-[#EC662D]/30 text-[11px] animate-pulse">
-            Selecione 2 mesas para agrupar (Duplo-clique para soltar)
+            Selecione 2 agrupamentos para fundir (Duplo-clique separa)
           </Badge>
         )}
       </div>
 
-      {/* Canvas Area - Themed background */}
+      {/* Canvas Area */}
       <div className="flex-1 overflow-auto bg-background flex items-center justify-center p-8 relative" ref={canvasRef}>
         {/* Subtle grid pattern background */}
         <div 
@@ -429,7 +535,12 @@ export default function LayoutPage() {
           style={{ backgroundImage: 'linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px)', backgroundSize: '40px 40px' }}
         />
 
-        <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        <DndContext 
+          sensors={sensors} 
+          onDragStart={handleDragStart} 
+          onDragEnd={handleDragEnd}
+          modifiers={[restrictToParentElement]}
+        >
           <div
             className="relative rounded-sm overflow-hidden"
             style={{
@@ -438,7 +549,7 @@ export default function LayoutPage() {
               background: "transparent",
             }}
           >
-            {/* SVG layer: Thick blueprint walls like the reference */}
+            {/* SVG layer: Blueprint walls */}
             <svg
               className="absolute inset-0 pointer-events-none"
               width={CANVAS_W * zoom}
@@ -447,24 +558,11 @@ export default function LayoutPage() {
             >
               <defs>
                 <filter id="wallShadow" x="-10%" y="-10%" width="120%" height="120%">
-                  <feDropShadow dx="0" dy="8" stdDeviation="6" floodColor="#000000" floodOpacity="0.4"/>
+                  <feDropShadow dx="0" dy="6" stdDeviation="4" floodColor="#000000" floodOpacity="0.15"/>
                 </filter>
               </defs>
 
-              {/* Group connection lines (drawn below tables) */}
-              {groupLines.map((line, i) => (
-                <line
-                  key={i}
-                  x1={line.x1} y1={line.y1}
-                  x2={line.x2} y2={line.y2}
-                  stroke={WALL_COLOR}
-                  strokeWidth="4"
-                  strokeDasharray="8 6"
-                  opacity="0.8"
-                />
-              ))}
-
-              {/* Blueprint Walls Structure - styled like the reference image */}
+              {/* Blueprint Walls Structure - THINNER (20.8 ~ 21px as requested) */}
               <g filter="url(#wallShadow)">
                 {/* Outer perimeter with openings for entrance and patio */}
                 <path 
@@ -472,7 +570,7 @@ export default function LayoutPage() {
                   fill="none" 
                   stroke={WALL_COLOR} 
                   strokeWidth={WALL_THICKNESS} 
-                  strokeDasharray={`${CANVAS_W-80} 0 0 0 0 0 ${CANVAS_W/2 - 100} 100 1000`} /* Creates a gap for entrance at the bottom */
+                  strokeDasharray={`${CANVAS_W-80} 0 0 0 0 0 ${CANVAS_W/2 - 100} 200 1000`} 
                 />
 
                 {/* Left side rooms (Kitchen and Work Area) */}
@@ -484,7 +582,7 @@ export default function LayoutPage() {
                 
                 {/* Toilets (Bottom Right) */}
                 <path d={`M ${CANVAS_W - 200},${CANVAS_H - 40} L ${CANVAS_W - 200},${CANVAS_H - 180} L ${CANVAS_W - 40},${CANVAS_H - 180}`} fill="none" stroke={WALL_COLOR} strokeWidth={WALL_THICKNESS} />
-                <path d={`M ${CANVAS_W - 120},${CANVAS_H - 40} L ${CANVAS_W - 120},${CANVAS_H - 180}`} fill="none" stroke={WALL_COLOR} strokeWidth={WALL_THICKNESS} />
+                <path d={`M ${CANVAS_W - 100},${CANVAS_H - 40} L ${CANVAS_W - 100},${CANVAS_H - 180}`} fill="none" stroke={WALL_COLOR} strokeWidth={WALL_THICKNESS} />
                 
                 {/* Middle partitions / columns */}
                 <line x1={400} y1={40} x2={400} y2={100} stroke={WALL_COLOR} strokeWidth={WALL_THICKNESS} />
@@ -496,51 +594,53 @@ export default function LayoutPage() {
               <text x="145" y="230" textAnchor="middle" fill="#EC662D" opacity="0.4" fontSize="16" fontWeight="bold" letterSpacing="2">COZINHA</text>
               <text x="95" y="105" textAnchor="middle" fill="#EC662D" opacity="0.4" fontSize="12" fontWeight="bold" letterSpacing="1">PREPARO</text>
               <text x={CANVAS_W - 145} y="115" textAnchor="middle" fill="#EC662D" opacity="0.4" fontSize="16" fontWeight="bold" letterSpacing="2">BAR</text>
-              <text x={CANVAS_W - 80} y={CANVAS_H - 105} textAnchor="middle" fill="#EC662D" opacity="0.4" fontSize="14" fontWeight="bold" letterSpacing="1">WC FEM</text>
-              <text x={CANVAS_W - 160} y={CANVAS_H - 105} textAnchor="middle" fill="#EC662D" opacity="0.4" fontSize="14" fontWeight="bold" letterSpacing="1">WC MASC</text>
+              <text x={CANVAS_W - 50} y={CANVAS_H - 105} textAnchor="middle" fill="#EC662D" opacity="0.4" fontSize="14" fontWeight="bold" letterSpacing="1">WC FEM</text>
+              <text x={CANVAS_W - 150} y={CANVAS_H - 105} textAnchor="middle" fill="#EC662D" opacity="0.4" fontSize="14" fontWeight="bold" letterSpacing="1">WC MASC</text>
               <text x={CANVAS_W / 2} y={CANVAS_H - 55} textAnchor="middle" fill="#EC662D" opacity="0.4" fontSize="16" fontWeight="bold" letterSpacing="4">ENTRADA PRINCIPAL</text>
-              <text x={CANVAS_W / 2 + 50} y={CANVAS_H / 2} textAnchor="middle" fill="#EC662D" opacity="0.15" fontSize="36" fontWeight="bold" letterSpacing="8">SALÃO PRINCIPAL</text>
+              <text x={CANVAS_W / 2 + 50} y={CANVAS_H / 2 - 50} textAnchor="middle" fill="#EC662D" opacity="0.15" fontSize="36" fontWeight="bold" letterSpacing="8">SALÃO PRINCIPAL</text>
             </svg>
 
-            {/* Mesas layer */}
+            {/* Visual Groups Layer */}
             <div
               className="absolute inset-0"
               style={{ transform: `scale(${zoom})`, transformOrigin: "0 0" }}
             >
-              {mesas.map((mesa) => {
-                const isActive = activeSet.has(mesa.numero_mesa);
-                const isGrouped = !!mesa.grupo_id;
-
-                return (
-                  <div
-                    key={mesa.id}
-                    data-id={mesa.id}
-                    onClick={() => handleMesaClick(mesa.id)}
-                    onDoubleClick={() => handleUnlinkMesa(mesa.id)}
-                    className="absolute z-10"
-                    style={{ left: mesa.pos_x, top: mesa.pos_y }} // Added absolute pos wrapper for draggable reset issues sometimes
-                  >
-                    <DraggableMesaWrapper
-                      mesa={{...mesa, pos_x: 0, pos_y: 0}} // Draggable hook handles transform from 0,0 locally
-                      isActive={isActive}
-                      activeInfo={activeMap.get(mesa.numero_mesa)}
-                      isGrouped={isGrouped}
-                      isDragging={draggingId === mesa.id}
-                      onStartLink={() => handleMesaClick(mesa.id)}
-                      linkMode={linkMode && linkSource === mesa.id}
-                    />
-                  </div>
-                );
-              })}
+              {visualGroups.map((group) => (
+                <div
+                  key={group.id}
+                  onClick={() => handleGroupClick(group.id)}
+                  onDoubleClick={() => handleUnlinkGroup(group.id)}
+                >
+                  <DraggableGroupWrapper
+                    group={group}
+                    isActive={group.activeCount > 0}
+                    isDragging={draggingId === group.id}
+                    linkMode={linkMode}
+                    isLinkTarget={linkSourceId === group.id}
+                  />
+                </div>
+              ))}
             </div>
           </div>
 
           {/* Drag overlay for smooth drag animation */}
-          <DragOverlay>
-            {draggingMesa && (
-              <MesaOverlay
-                mesa={{...draggingMesa, pos_x: 0, pos_y: 0}}
-                isActive={activeSet.has(draggingMesa.numero_mesa)}
+          <DragOverlay
+             dropAnimation={{
+               duration: 250,
+               easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
+               sideEffects: defaultDropAnimationSideEffects({
+                 styles: {
+                   active: {
+                     opacity: '0.4',
+                   },
+                 },
+               }),
+             }}
+          >
+            {draggingGroup && (
+              <TableOverlay
+                group={draggingGroup}
+                isActive={draggingGroup.activeCount > 0}
               />
             )}
           </DragOverlay>
