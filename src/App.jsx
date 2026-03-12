@@ -98,7 +98,8 @@ const App = () => {
     }, [pessoaAtiva]);
 
     // FETCH EXISTING COMANDAS ON THIS TABLE
-    const fetchPessoasNaMesa = useCallback(async () => {
+    const fetchPessoasNaMesa = useCallback(async (options = {}) => {
+        const { autoSelect = false } = options;
         setIsFetchingPessoas(true);
         try {
             const params = new URLSearchParams(window.location.search);
@@ -111,27 +112,51 @@ const App = () => {
 
             const { data: openComanda } = await supabase.from('comandas').select('id').eq('mesa_id', mesaData.id).eq('status', 'aberta').maybeSingle();
             if (!openComanda) {
-                setPessoasNaMesa(pessoaAtiva ? [pessoaAtiva] : []);
+                // No open comanda = fresh table, clear any stale pessoaAtiva
+                setPessoasNaMesa([]);
+                if (autoSelect) {
+                    setPessoaAtiva('');
+                }
                 return;
             }
 
             const { data: pessoasData } = await supabase.from('pedidos').select('nome_pessoa').eq('comanda_id', openComanda.id);
             if (pessoasData) {
                 let nomes = pessoasData.map(p => p.nome_pessoa).filter(n => n && n !== 'Cliente');
-                
-                if (pessoaAtiva && !nomes.includes(pessoaAtiva) && pessoaAtiva !== 'Cliente') {
-                    nomes.unshift(pessoaAtiva);
-                }
-                
                 nomes = [...new Set(nomes)];
                 setPessoasNaMesa(nomes);
+
+                if (autoSelect && nomes.length > 0) {
+                    // Try to match localStorage hint first
+                    const savedName = localStorage.getItem('@Menu-PessoaAtiva');
+                    if (savedName && nomes.includes(savedName)) {
+                        // localStorage name matches someone in the comanda — auto-select
+                        setPessoaAtiva(savedName);
+                    } else if (nomes.length === 1) {
+                        // Only one person on the table — auto-select them
+                        setPessoaAtiva(nomes[0]);
+                    } else {
+                        // Multiple people, no localStorage match — show drawer to pick
+                        setPessoaAtiva('');
+                        setIsPeopleDrawerOpen(true);
+                    }
+                }
             }
         } catch (e) {
             console.error("Erro fetch Pessoas", e);
         } finally {
             setIsFetchingPessoas(false);
         }
-    }, [pessoaAtiva]);
+    }, []);
+
+    // AUTO-FETCH PEOPLE ON APP LOAD (DB-backed name recovery)
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get('t');
+        if (token) {
+            fetchPessoasNaMesa({ autoSelect: true });
+        }
+    }, [fetchPessoasNaMesa]);
 
     // REFRESH PEOPLE WHEN DRAWER OPENS
     useEffect(() => {
