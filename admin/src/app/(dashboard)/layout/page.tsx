@@ -17,6 +17,12 @@ import {
 import { Loader2, MapPin, Maximize2, ZoomIn, ZoomOut, RotateCcw, Link2, Unlink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { startOfDay, endOfDay } from "date-fns";
 import { useDraggable } from "@dnd-kit/core";
@@ -235,6 +241,7 @@ export default function LayoutPage() {
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [linkMode, setLinkMode] = useState(false);
   const [linkSourceId, setLinkSourceId] = useState<string | null>(null);
+  const [selectedGroupParams, setSelectedGroupParams] = useState<VisualGroup | null>(null);
   const [zoom, setZoom] = useState(1);
   const effectiveZoom = zoom * 0.9; // Map 100% UI to 90% actual scale as requested
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -522,7 +529,7 @@ export default function LayoutPage() {
             }}
           >
             <Link2 className="h-4 w-4" />
-            {linkMode ? "Selecione a 2ª Mesa..." : "Agrupar Mesas"}
+            {linkMode ? "Adicionar Mesa..." : "Agrupar Mesas"}
           </Button>
           <div className="flex items-center gap-0.5 bg-muted/30 rounded-md border border-border p-1">
             <Button variant="ghost" size="icon" className="h-7 w-7 hover:bg-background/80" onClick={() => setZoom((z) => Math.max(0.5, z - 0.1))}>
@@ -556,7 +563,7 @@ export default function LayoutPage() {
         </div>
         {linkMode && (
           <Badge className="bg-[#EC662D]/10 text-[#EC662D] border-[#EC662D]/30 text-[11px] animate-pulse">
-            Selecione 2 agrupamentos para fundir (Duplo-clique separa)
+            Selecione a mesa para fundir ao grupo principal
           </Badge>
         )}
       </div>
@@ -642,11 +649,10 @@ export default function LayoutPage() {
                     onClick={() => {
                       if (linkMode) {
                         handleGroupClick(group.id);
-                      } else if (group.activeCount > 0) {
-                        router.push(`/pedidos?mesa=${group.mesas[0].numero_mesa}`);
+                      } else {
+                        setSelectedGroupParams(group);
                       }
                     }}
-                    onDoubleClick={() => handleUnlinkGroup(group.id)}
                   />
                 </div>
               ))}
@@ -676,6 +682,57 @@ export default function LayoutPage() {
           </DragOverlay>
         </DndContext>
       </div>
+
+      {/* Action Dialog for Tables */}
+      <Dialog open={!!selectedGroupParams} onOpenChange={(val) => { if (!val) setSelectedGroupParams(null) }}>
+        <DialogContent className="sm:max-w-[360px]">
+          <DialogHeader>
+            <DialogTitle>Mesa(s): {selectedGroupParams?.label}</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 py-2">
+            {(selectedGroupParams?.activeCount ?? 0) > 0 && (
+              <Button 
+                className="w-full h-11 bg-[#EC662D] hover:bg-[#EC662D]/90 text-white justify-start"
+                onClick={() => {
+                  router.push(`/pedidos?mesa=${selectedGroupParams?.mesas[0].numero_mesa}`);
+                }}
+              >
+                <div className="h-6 w-6 mr-3 bg-white/20 rounded flex items-center justify-center">
+                  <span className="text-white text-[11px] font-bold">{selectedGroupParams?.activeCount}</span>
+                </div>
+                Ver Pedidos Ativos
+              </Button>
+            )}
+
+            <Button 
+              variant="outline" 
+              className="w-full h-11 justify-start font-medium"
+              onClick={() => {
+                setLinkMode(true);
+                setLinkSourceId(selectedGroupParams!.id);
+                setSelectedGroupParams(null);
+              }}
+            >
+              <Link2 className="h-4 w-4 mr-3 text-muted-foreground" />
+              Agrupar com outra mesa
+            </Button>
+
+            {(selectedGroupParams?.mesas.length ?? 0) > 1 && (
+              <Button 
+                variant="outline" 
+                className="w-full h-11 justify-start font-medium text-destructive hover:text-destructive hover:bg-destructive/5 border-destructive/20"
+                onClick={() => {
+                  handleUnlinkGroup(selectedGroupParams!.id);
+                  setSelectedGroupParams(null);
+                }}
+              >
+                <Unlink className="h-4 w-4 mr-3" />
+                Desagrupar Mesas
+              </Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
