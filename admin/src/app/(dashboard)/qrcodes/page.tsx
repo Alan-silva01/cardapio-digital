@@ -17,7 +17,7 @@ import {
 import { Printer, Download, Plus, AlertTriangle, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
-const BASE_URL = "https://menu-bar-xi.vercel.app";
+const BASE_URL = "https://paineladminmenubar.vercel.app/menu";
 
 interface Mesa {
   id: string;
