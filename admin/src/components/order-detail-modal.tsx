@@ -44,6 +44,7 @@ interface ItemPedido {
   preco_unitario: number;
   preco_total: number;
   servido: boolean;
+  criado_em?: string;
   produtos?: any;
 }
 
@@ -139,7 +140,7 @@ function ItemCheckbox({
           )}
         </button>
         <div className="flex-1 flex justify-between items-start text-[13px] leading-relaxed text-foreground select-none min-w-0 pr-2">
-          <span className="truncate pr-2 border-b border-transparent border-dashed">
+          <span className="truncate pr-2 border-b border-transparent border-dashed break-words whitespace-normal">
             <span className="font-medium">{item.quantidade}x</span>{" "}
             {item.nome_produto}
             {(item.nome_variacao && item.nome_variacao.toLowerCase() !== 'unidade') && (
@@ -148,9 +149,17 @@ function ItemCheckbox({
               </span>
             )}
           </span>
-          <span className="font-mono text-[11px] text-muted-foreground shrink-0 pt-[2px]">
-            R$ {Number(item.preco_total).toFixed(2)}
-          </span>
+          <div className="flex flex-col items-end shrink-0 pt-[2px] min-w-[60px]">
+            <span className="font-mono text-[11px] text-muted-foreground">
+              R$ {Number(item.preco_total).toFixed(2)}
+            </span>
+            {item.criado_em && (
+              <span className="flex items-center gap-1 text-[9px] text-muted-foreground mt-0.5">
+                <Clock className="h-2.5 w-2.5 opacity-70" />
+                {formatElapsedTime(item.criado_em)}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
