@@ -848,12 +848,12 @@ export default function PedidosPage() {
                                 }}
                               >
                                 <Card
-                                  className={`bg-card border-border hover:border-border/80 transition-shadow cursor-grab active:cursor-grabbing group ${snapshot.isDragging ? "shadow-lg scale-[1.02] rotate-1 ring-1 ring-primary/20" : "shadow-xs"
+                                  className={`bg-card border-border hover:border-border/80 transition-shadow cursor-grab active:cursor-grabbing group overflow-hidden py-0 ${snapshot.isDragging ? "shadow-lg scale-[1.02] rotate-1 ring-1 ring-primary/20" : "shadow-xs"
                                   }`}
                                   onClick={() => setSelectedComanda(comanda)}
                                 >
-                                  <div className="bg-muted/30 border-b border-border/50 px-4 py-1.5 flex justify-center items-center">
-                                    <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">
+                                  <div className="bg-[#EC662D] px-4 py-2.5 flex justify-center items-center w-full">
+                                    <span className="text-[11px] font-black text-white uppercase tracking-[0.2em] drop-shadow-sm">
                                       Pedido: {comanda.order_number}
                                     </span>
                                   </div>
