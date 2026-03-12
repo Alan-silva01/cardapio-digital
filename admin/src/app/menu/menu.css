@@ -68,10 +68,10 @@ body,
   }
 }
 
-/* Browser mode adjustments (Safari toolbar compensation) */
+/* Browser mode adjustments (Safari/Chrome toolbar compensation) */
 body.is-browser .top-nav {
-  padding-top: calc(45px + env(safe-area-inset-top));
-  /* Drastic space to avoid camera/notch in Browser */
+  padding-top: calc(15px + env(safe-area-inset-top));
+  /* Safer space without crushing vertical height on Android */
 }
 
 
