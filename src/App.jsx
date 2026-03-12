@@ -87,6 +87,7 @@ const App = () => {
     const [isFetchingPessoas, setIsFetchingPessoas] = useState(false);
     const [novaPessoaNome, setNovaPessoaNome] = useState('');
     const [isAddMode, setIsAddMode] = useState(false);
+    const [isCartPending, setIsCartPending] = useState(false);
 
     // PERSIST PERSON ON DEVICE
     useEffect(() => {
@@ -170,6 +171,104 @@ const App = () => {
     const totalCartItems = Object.values(cart).reduce((sum, qty) => sum + qty, 0);
 
     const currentProduct = products.length > 0 ? products[currentIndex] : null;
+
+    // Function to handle opening the cart, checking for active person
+    const handleOpenCartClick = useCallback(() => {
+        if (!pessoaAtiva) {
+            setIsCartPending(true);
+            setIsPeopleDrawerOpen(true);
+        } else {
+            setIsCartOpen(true);
+        }
+    }, [pessoaAtiva]);
+
+    // Function to handle selecting an existing person
+    const handlePessoaSelect = useCallback((nome) => {
+        setPessoaAtiva(nome);
+        if (isCartPending) {
+            setIsCartPending(false);
+            setIsCartOpen(true);
+        }
+        setIsPeopleDrawerOpen(false);
+    }, [isCartPending]);
+
+    // Function to handle adding a new person
+    const handlePessoaAdd = useCallback(async () => {
+        if (!novaPessoaNome.trim()) return;
+
+        const nomeFinal = novaPessoaNome.trim();
+        // Check if the person already exists in the list (case-insensitive)
+        if (pessoasNaMesa.some(p => p.toLowerCase() === nomeFinal.toLowerCase())) {
+            alert('Essa pessoa já está na mesa.');
+            return;
+        }
+
+        // Add to DB (pedidos table)
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('t');
+
+            if (!token) {
+                alert("Mesa inválida ou não encontrada.");
+                return;
+            }
+
+            const { data: mesaData } = await supabase
+                .from('mesas')
+                .select('id, numero')
+                .eq('token', token)
+                .single();
+            if (!mesaData) throw new Error(`Mesa correspondente ao QRCode não encontrada.`);
+            const mesaId = mesaData.id;
+            const mesaNum = mesaData.numero;
+
+            let comandaId;
+            const { data: existingComanda } = await supabase
+                .from('comandas')
+                .select('id')
+                .eq('mesa_id', mesaId)
+                .eq('status', 'aberta')
+                .maybeSingle();
+
+            if (existingComanda) {
+                comandaId = existingComanda.id;
+            } else {
+                const { data: newComanda, error: comandaErr } = await supabase
+                    .from('comandas')
+                    .insert({ mesa_id: mesaId, status: 'aberta', qtd_pessoas: 1 })
+                    .select('id')
+                    .single();
+                if (comandaErr) throw comandaErr;
+                comandaId = newComanda.id;
+            }
+
+            // Insert a dummy pedido to register the person's name
+            const { error: pedidoErr } = await supabase
+                .from('pedidos')
+                .insert({
+                    comanda_id: comandaId,
+                    numero_mesa: mesaNum,
+                    nome_pessoa: nomeFinal,
+                    status: 'recebido', // Can be any status, it's just to register the name
+                    total: 0, // No actual items yet
+                });
+            if (pedidoErr) throw pedidoErr;
+
+            // Refresh the list of people and select the new one
+            await fetchPessoasNaMesa(); // Re-fetch to include the new person
+            setPessoaAtiva(nomeFinal);
+            
+            if (isCartPending) {
+                setIsCartPending(false);
+                setIsCartOpen(true);
+            }
+            
+            setIsPeopleDrawerOpen(false);
+        } catch (error) {
+            console.error('Erro ao adicionar pessoa:', error);
+            alert('Erro ao adicionar pessoa. Tente novamente.');
+        }
+    }, [novaPessoaNome, pessoasNaMesa, fetchPessoasNaMesa, isCartPending]);
 
     // CHECKOUT LOGIC — Creates order in Supabase
     const handleCheckout = async () => {
@@ -594,7 +693,7 @@ const App = () => {
             <div className="top-nav">
                 <ArrowLeft className="icon" />
                 <div className="page-title">{currentProduct.category}</div>
-                <div ref={cartIconRef} style={{ position: 'relative', cursor: 'pointer' }} onClick={() => setIsCartOpen(true)}>
+                <div ref={cartIconRef} style={{ position: 'relative', cursor: 'pointer' }} onClick={handleOpenCartClick}>
                     <ShoppingCart className="icon" />
                     {totalCartItems > 0 && (
                         <div style={{
@@ -1177,37 +1276,13 @@ const App = () => {
 
                         <div className="cart-items-container">
                             {/* PEOPLE GROUPING IDENTIFIER */}
-                            {Object.keys(cart).length > 0 && (
+                            {Object.keys(cart).length > 0 && pessoaAtiva && (
                                 <div className="cart-person-section">
-                                    <h4>Identificação da Comanda</h4>
-                                    {!pessoaAtiva ? (
-                                        <div className="cart-person-input-group">
-                                            <input 
-                                                type="text" 
-                                                className="cart-person-input" 
-                                                placeholder="Para qual comanda?"
-                                                value={novaPessoaNome}
-                                                onChange={(e) => setNovaPessoaNome(e.target.value)}
-                                            />
-                                            <button 
-                                                className="cart-person-btn"
-                                                onClick={() => {
-                                                    if(novaPessoaNome.trim()) setPessoaAtiva(novaPessoaNome.trim());
-                                                }}
-                                            >
-                                                Salvar
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <div className="cart-person-active">
-                                            <div className="cart-person-active-name">
-                                                <Users size={16} /> Comanda: {pessoaAtiva}
-                                            </div>
-                                            <button className="cart-person-change-btn" onClick={() => setIsPeopleDrawerOpen(true)}>
-                                                Trocar
-                                            </button>
-                                        </div>
-                                    )}
+                                    <h4>Comanda Identificada</h4>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#fff', fontSize: '15px' }}>
+                                        <User size={16} color="#d4af37" />
+                                        <span>{pessoaAtiva}</span>
+                                    </div>
                                 </div>
                             )}
 
