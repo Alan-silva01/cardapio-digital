@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import logoImage from "@/assets/images/logo.png";
+import { GlobalOrderNotifier } from "@/components/global-order-notifier";
 
 export default function DashboardLayout({
     children,
@@ -12,6 +13,8 @@ export default function DashboardLayout({
 }) {
     return (
         <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
+            {/* Global sound listener for new orders - works on ALL pages */}
+            <GlobalOrderNotifier />
             {/* Supabase-style Top Bar */}
             <header className="h-11 border-b bg-card flex items-center shrink-0 w-full z-50">
                 {/* Fixed Logo Area - Always 48px */}
