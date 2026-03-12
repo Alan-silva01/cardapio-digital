@@ -236,6 +236,7 @@ export default function LayoutPage() {
   const [linkMode, setLinkMode] = useState(false);
   const [linkSourceId, setLinkSourceId] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
+  const effectiveZoom = zoom * 0.9; // Map 100% UI to 90% actual scale as requested
   const canvasRef = useRef<HTMLDivElement>(null);
 
   const sensors = useSensors(
@@ -576,16 +577,16 @@ export default function LayoutPage() {
           <div
             className="relative rounded-sm overflow-hidden"
             style={{
-              width: CANVAS_W * zoom,
-              height: CANVAS_H * zoom,
+              width: CANVAS_W * effectiveZoom,
+              height: CANVAS_H * effectiveZoom,
               background: "transparent",
             }}
           >
             {/* SVG layer: Blueprint walls */}
             <svg
               className="absolute inset-0 pointer-events-none"
-              width={CANVAS_W * zoom}
-              height={CANVAS_H * zoom}
+              width={CANVAS_W * effectiveZoom}
+              height={CANVAS_H * effectiveZoom}
               viewBox={`0 0 ${CANVAS_W} ${CANVAS_H}`}
             >
               <defs>
@@ -622,20 +623,13 @@ export default function LayoutPage() {
                 <line x1={400} y1={500} x2={400} y2={CANVAS_H - 40} stroke={WALL_COLOR} strokeWidth={WALL_THICKNESS} />
               </g>
 
-              {/* Room Labels */}
-              <text x="145" y="230" textAnchor="middle" fill="#EC662D" opacity="0.4" fontSize="16" fontWeight="bold" letterSpacing="2">COZINHA</text>
-              <text x="95" y="105" textAnchor="middle" fill="#EC662D" opacity="0.4" fontSize="12" fontWeight="bold" letterSpacing="1">PREPARO</text>
-              <text x={CANVAS_W - 145} y="115" textAnchor="middle" fill="#EC662D" opacity="0.4" fontSize="16" fontWeight="bold" letterSpacing="2">BAR</text>
-              <text x={CANVAS_W - 50} y={CANVAS_H - 105} textAnchor="middle" fill="#EC662D" opacity="0.4" fontSize="14" fontWeight="bold" letterSpacing="1">WC FEM</text>
-              <text x={CANVAS_W - 150} y={CANVAS_H - 105} textAnchor="middle" fill="#EC662D" opacity="0.4" fontSize="14" fontWeight="bold" letterSpacing="1">WC MASC</text>
-              <text x={CANVAS_W / 2} y={CANVAS_H - 55} textAnchor="middle" fill="#EC662D" opacity="0.4" fontSize="16" fontWeight="bold" letterSpacing="4">ENTRADA PRINCIPAL</text>
-              <text x={CANVAS_W / 2 + 50} y={CANVAS_H / 2 - 50} textAnchor="middle" fill="#EC662D" opacity="0.15" fontSize="36" fontWeight="bold" letterSpacing="8">SALÃO PRINCIPAL</text>
+              {/* Room Labels Removed as requested */}
             </svg>
 
             {/* Visual Groups Layer */}
             <div
               className="absolute inset-0"
-              style={{ transform: `scale(${zoom})`, transformOrigin: "0 0" }}
+              style={{ transform: `scale(${effectiveZoom})`, transformOrigin: "0 0" }}
             >
               {visualGroups.map((group) => (
                 <div key={group.id}>
@@ -649,7 +643,7 @@ export default function LayoutPage() {
                       if (linkMode) {
                         handleGroupClick(group.id);
                       } else if (group.activeCount > 0) {
-                        router.push(`/pedidos?busca=${group.mesas[0].numero_mesa}`);
+                        router.push(`/pedidos?mesa=${group.mesas[0].numero_mesa}`);
                       }
                     }}
                     onDoubleClick={() => handleUnlinkGroup(group.id)}

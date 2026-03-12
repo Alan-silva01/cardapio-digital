@@ -208,6 +208,21 @@ export default function PedidosPage() {
     if (data) {
       const comandas = groupPedidosByComanda(data as unknown as PedidoRaw[]);
       setColumns(groupByStatus(comandas));
+
+      // Auto-open modal if URL has ?mesa=X
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        const mesaParam = params.get("mesa");
+        if (mesaParam) {
+          const mesaNum = parseInt(mesaParam, 10);
+          const activeComanda = comandas.find(c => c.numero_mesa === mesaNum && c.status !== "entregue" && c.status !== "cancelado");
+          if (activeComanda) {
+            setSelectedComanda(activeComanda);
+            // Clear URL param after opening
+            window.history.replaceState({}, '', '/pedidos');
+          }
+        }
+      }
     }
     setLoading(false);
   }, []);
