@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 import {
   DndContext,
   DragEndEvent,
@@ -195,6 +196,7 @@ function DraggableGroupWrapper(props: {
   isDragging: boolean;
   linkMode: boolean;
   isLinkTarget: boolean;
+  onClick?: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: props.group.id,
@@ -206,7 +208,12 @@ function DraggableGroupWrapper(props: {
 
   return (
     <div ref={setNodeRef} {...listeners} {...attributes} className="z-10 absolute outline-none"
-         style={{ left: props.group.x, top: props.group.y, ...style }}>
+         style={{ left: props.group.x, top: props.group.y, ...style }}
+         onClick={(e) => {
+           // Prevent duplicate click events if bubbling
+           e.stopPropagation();
+           if (props.onClick) props.onClick();
+         }}>
       {/* We pass a cloned group with 0,0 locally because wrapper handles positioning */}
       <TableEntity {...props} group={{ ...props.group, x: 0, y: 0 }} />
     </div>
@@ -215,6 +222,7 @@ function DraggableGroupWrapper(props: {
 
 // ── Main Component ──
 export default function LayoutPage() {
+  const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [mesas, setMesas] = useState<MesaLayout[]>([]);
   const [activeMesas, setActiveMesas] = useState<ActiveMesa[]>([]);
@@ -274,7 +282,28 @@ export default function LayoutPage() {
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+
+    // ── Setup Realtime Subscription for Pedidos ──
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to INSERT, UPDATE, DELETE
+          schema: 'public',
+          table: 'pedidos',
+        },
+        () => {
+          // Whenever a pedido changes, refetch the data to update active counts and glow
+          fetchData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchData, supabase]);
 
   // ── Compute Visual Groups ──
   const activeMap = useMemo(
@@ -606,7 +635,16 @@ export default function LayoutPage() {
               {visualGroups.map((group) => (
                 <div
                   key={group.id}
-                  onClick={() => handleGroupClick(group.id)}
+                  onClick={() => {
+                    if (linkMode) {
+                      handleGroupClick(group.id);
+                    } else if (group.activeCount > 0) {
+                      // Navigate to Kanban board filtering by the first mesa in the group
+                      // The group label could be "12 + 13", so we pick the primary mesa (group.mesas[0])
+                      // to search/filter by its exact number in the board
+                      router.push(`/pedidos?busca=${group.mesas[0].numero_mesa}`);
+                    }
+                  }}
                   onDoubleClick={() => handleUnlinkGroup(group.id)}
                 >
                   <DraggableGroupWrapper
