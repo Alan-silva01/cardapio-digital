@@ -824,7 +824,7 @@ const App = () => {
                             </h1>
                         </div>
 
-                        <div style={{ position: 'relative', width: '100%', flex: 1, minHeight: '120px', display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '5px' }}>
+                        <div style={{ position: 'relative', width: '100%', height: '280px', display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '5px' }}>
                             {/* Back Glow */}
                             <div style={{
                                 position: 'absolute', width: '200px', height: '200px',
