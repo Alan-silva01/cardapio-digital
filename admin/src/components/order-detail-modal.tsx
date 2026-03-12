@@ -139,7 +139,7 @@ function ItemCheckbox({
           <span className="truncate pr-2 border-b border-transparent border-dashed">
             <span className="font-medium">{item.quantidade}x</span>{" "}
             {item.nome_produto}
-            {item.nome_variacao && (
+            {(item.nome_variacao && item.nome_variacao.toLowerCase() !== 'unidade') && (
               <span className="text-muted-foreground/70 ml-1">
                 ({item.nome_variacao})
               </span>

@@ -517,7 +517,7 @@ export default function PedidosPage() {
       .map(
         (item) =>
           `<tr>
-            <td style="padding:2px 0; padding-right:8px;">${item.quantidade}x ${item.nome_produto}${item.nome_variacao ? ` (${item.nome_variacao})` : ""}</td>
+            <td style="padding:2px 0; padding-right:8px;">${item.quantidade}x ${item.nome_produto}${(item.nome_variacao && item.nome_variacao.toLowerCase() !== 'unidade') ? ` (${item.nome_variacao})` : ""}</td>
             <td style="padding:2px 0; text-align:right; white-space:nowrap;">R$ ${Number(item.preco_total).toFixed(2)}</td>
           </tr>`
       )
@@ -583,7 +583,7 @@ export default function PedidosPage() {
             .map(
               (item) =>
                 `<tr>
-                   <td style="padding:2px 0; padding-right:8px;">${item.quantidade}x ${item.nome_produto}${item.nome_variacao ? ` (${item.nome_variacao})` : ""}</td>
+                   <td style="padding:2px 0; padding-right:8px;">${item.quantidade}x ${item.nome_produto}${(item.nome_variacao && item.nome_variacao.toLowerCase() !== 'unidade') ? ` (${item.nome_variacao})` : ""}</td>
                    <td style="padding:2px 0; text-align:right; white-space:nowrap;">R$ ${Number(item.preco_total).toFixed(2)}</td>
                  </tr>`
             )
@@ -818,7 +818,7 @@ export default function PedidosPage() {
                                                   <div className="flex-1 flex justify-between items-start text-[13px] leading-snug text-foreground font-medium min-w-0">
                                                     <span className="truncate pr-2 border-b border-transparent border-dashed">
                                                       {item.quantidade}x {item.nome_produto}
-                                                      {item.nome_variacao && <span className="opacity-70 text-muted-foreground font-normal text-xs ml-1">({item.nome_variacao})</span>}
+                                                      {(item.nome_variacao && item.nome_variacao.toLowerCase() !== 'unidade') && <span className="opacity-70 text-muted-foreground font-normal text-xs ml-1">({item.nome_variacao})</span>}
                                                     </span>
                                                     <span className="font-mono text-[11px] text-muted-foreground font-medium shrink-0 pt-0.5">
                                                       R$ {Number(item.preco_total).toFixed(2)}
