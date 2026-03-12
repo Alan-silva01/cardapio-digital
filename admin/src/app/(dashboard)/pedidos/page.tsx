@@ -848,16 +848,23 @@ export default function PedidosPage() {
                                 }}
                               >
                                 <Card
-                                  className={`bg-card border-border hover:border-border/80 transition-shadow cursor-grab active:cursor-grabbing group overflow-hidden py-0 ${snapshot.isDragging ? "shadow-lg scale-[1.02] rotate-1 ring-1 ring-primary/20" : "shadow-xs"
+                                  className={`bg-card border-border hover:border-border/80 transition-shadow cursor-grab active:cursor-grabbing group overflow-hidden py-0 gap-0 ${snapshot.isDragging ? "shadow-lg scale-[1.02] rotate-1 ring-1 ring-primary/20" : "shadow-xs"
                                   }`}
                                   onClick={() => setSelectedComanda(comanda)}
                                 >
-                                  <div className="bg-[#EC662D] px-4 py-2.5 flex justify-center items-center w-full">
+                                  <div className="relative bg-[#EC662D] px-4 py-1.5 flex justify-center items-center w-full shrink-0">
                                     <span className="text-[11px] font-black text-white uppercase tracking-[0.2em] drop-shadow-sm">
                                       Pedido: {comanda.order_number}
                                     </span>
+                                    {/* Efeito de pontinha (concave curve) */}
+                                    <div className="absolute top-full left-0 w-2 h-2 bg-[#EC662D]">
+                                      <div className="w-full h-full bg-card rounded-tl-lg" />
+                                    </div>
+                                    <div className="absolute top-full right-0 w-2 h-2 bg-[#EC662D]">
+                                      <div className="w-full h-full bg-card rounded-tr-lg" />
+                                    </div>
                                   </div>
-                                  <CardContent className="p-4 space-y-3">
+                                  <CardContent className="p-3 space-y-2 pt-4">
                                     <div className="flex justify-between items-start">
                                       <div className="flex items-center gap-2">
                                         <div className="h-7 w-7 rounded-md bg-muted flex items-center justify-center shrink-0">
