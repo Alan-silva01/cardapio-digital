@@ -856,12 +856,12 @@ export default function PedidosPage() {
                                     <span className="text-[11px] font-black text-white uppercase tracking-[0.2em] drop-shadow-sm">
                                       Pedido: {comanda.order_number}
                                     </span>
-                                    {/* Efeito de pontinha (concave curve) */}
-                                    <div className="absolute top-full left-0 w-2 h-2 bg-[#EC662D]">
-                                      <div className="w-full h-full bg-card rounded-tl-lg" />
+                                    {/* Efeito de pontinha (concave curve) mais pronunciado */}
+                                    <div className="absolute top-full left-0 w-3 h-3 bg-[#EC662D]">
+                                      <div className="w-full h-full bg-card rounded-tl-xl" />
                                     </div>
-                                    <div className="absolute top-full right-0 w-2 h-2 bg-[#EC662D]">
-                                      <div className="w-full h-full bg-card rounded-tr-lg" />
+                                    <div className="absolute top-full right-0 w-3 h-3 bg-[#EC662D]">
+                                      <div className="w-full h-full bg-card rounded-tr-xl" />
                                     </div>
                                   </div>
                                   <CardContent className="p-3 space-y-2 pt-4">
