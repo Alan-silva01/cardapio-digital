@@ -31,6 +31,7 @@ interface ItemPedido {
   preco_unitario: number;
   preco_total: number;
   servido: boolean;
+  criado_em?: string;
   produtos?: {
     imagem_url: string | null;
   } | null;
@@ -121,7 +122,13 @@ function groupPedidosByComanda(pedidos: PedidoRaw[]): ComandaAgrupada[] {
     group.forEach((p) => {
       const nome = p.nome_pessoa || "Cliente";
       const existing = pessoasMap.get(nome) || { itens: [], subtotal: 0, allPaid: true, allCanceled: true, pedidoCount: 0, paidCount: 0, canceledCount: 0 };
-      existing.itens.push(...p.itens_pedido);
+      
+      // Inject the pedido's timestamp into each item
+      const itensComTimestamp = p.itens_pedido.map(item => ({
+        ...item,
+        criado_em: p.criado_em
+      }));
+      existing.itens.push(...itensComTimestamp);
       
       if (p.status !== "cancelado") {
         existing.subtotal += Number(p.total);
@@ -925,9 +932,17 @@ export default function PedidosPage() {
                                                       {item.quantidade}x {item.nome_produto}
                                                       {(item.nome_variacao && item.nome_variacao.toLowerCase() !== 'unidade') && <span className="opacity-70 text-muted-foreground font-normal text-xs ml-1">({item.nome_variacao})</span>}
                                                     </span>
-                                                    <span className="font-mono text-[11px] text-muted-foreground font-medium shrink-0 pt-0.5">
-                                                      R$ {Number(item.preco_total).toFixed(2)}
-                                                    </span>
+                                                    <div className="flex flex-col items-end shrink-0 pt-0.5 min-w-[60px]">
+                                                      <span className="font-mono text-[11px] text-muted-foreground font-medium">
+                                                        R$ {Number(item.preco_total).toFixed(2)}
+                                                      </span>
+                                                      {item.criado_em && (
+                                                        <span className="flex items-center gap-1 text-[9px] text-muted-foreground mt-0.5">
+                                                          <Clock className="h-2.5 w-2.5 opacity-70" />
+                                                          {formatElapsedTime(item.criado_em)}
+                                                        </span>
+                                                      )}
+                                                    </div>
                                                   </div>
                                                 </div>
                                               );
