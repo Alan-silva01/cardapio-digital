@@ -14,7 +14,7 @@ import {
   DragOverlay,
   defaultDropAnimationSideEffects,
 } from "@dnd-kit/core";
-import { Loader2, MapPin, Maximize2, ZoomIn, ZoomOut, RotateCcw, Link2, Unlink } from "lucide-react";
+import { Loader2, MapPin, Maximize2, ZoomIn, ZoomOut, RotateCcw, Link2, Unlink, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -22,6 +22,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { startOfDay, endOfDay } from "date-fns";
@@ -232,6 +234,71 @@ function DraggableGroupWrapper(props: {
 }
 
 // ── Main Component ──
+function ConfirmationDialog({
+  open,
+  onOpenChange,
+  title,
+  description,
+  confirmLabel,
+  confirmVariant = "default",
+  icon: Icon,
+  onConfirm,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description: string;
+  confirmLabel: string;
+  confirmVariant?: "default" | "destructive";
+  icon: React.ElementType;
+  onConfirm: () => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[380px]">
+        <DialogHeader>
+          <div className="flex items-center gap-3">
+            <div
+              className={`h-10 w-10 rounded-xl flex items-center justify-center ${
+                confirmVariant === "destructive"
+                  ? "bg-red-500/10 text-red-500"
+                  : "bg-brand/10 text-brand"
+              }`}
+            >
+              <Icon className="h-5 w-5" />
+            </div>
+            <div>
+              <DialogTitle>{title}</DialogTitle>
+              <DialogDescription className="mt-1">
+                {description}
+              </DialogDescription>
+            </div>
+          </div>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Voltar
+          </Button>
+          <Button
+            variant={confirmVariant === "destructive" ? "destructive" : "default"}
+            className={
+              confirmVariant !== "destructive"
+                ? "bg-brand hover:bg-brand/90 text-white"
+                : ""
+            }
+            onClick={() => {
+              onConfirm();
+              onOpenChange(false);
+            }}
+          >
+            {confirmLabel}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function LayoutPage() {
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
@@ -242,6 +309,7 @@ export default function LayoutPage() {
   const [linkMode, setLinkMode] = useState(false);
   const [linkSourceId, setLinkSourceId] = useState<string | null>(null);
   const [selectedGroupParams, setSelectedGroupParams] = useState<VisualGroup | null>(null);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [zoom, setZoom] = useState(1);
   const effectiveZoom = zoom * 0.9; // Map 100% UI to 90% actual scale as requested
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -544,7 +612,7 @@ export default function LayoutPage() {
             <Maximize2 className="h-3.5 w-3.5" />
             Ajustar
           </Button>
-          <Button variant="outline" size="sm" className="h-9 text-xs gap-1.5 font-semibold text-destructive hover:text-destructive hover:bg-destructive/10" onClick={handleResetPositions}>
+          <Button variant="outline" size="sm" className="h-9 text-xs gap-1.5 font-semibold text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setShowResetConfirm(true)}>
             <RotateCcw className="h-3.5 w-3.5" />
             Resetar
           </Button>
@@ -733,6 +801,17 @@ export default function LayoutPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <ConfirmationDialog
+        open={showResetConfirm}
+        onOpenChange={setShowResetConfirm}
+        title="Resetar Layout"
+        description="Tem certeza que deseja resetar a posição de todas as mesas? Esta ação não pode ser desfeita e todas as mesas retornarão para a posição inicial no centro do salão."
+        confirmLabel="Sim, Resetar"
+        confirmVariant="destructive"
+        icon={AlertTriangle}
+        onConfirm={handleResetPositions}
+      />
     </div>
   );
 }
