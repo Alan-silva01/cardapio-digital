@@ -63,14 +63,18 @@ export default function ConfiguracoesPage() {
               {LANGUAGES.map((l) => (
                 <button
                   key={l.code}
+                  disabled={l.code === "en"}
                   onClick={() => handleLanguageChange(l.code)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm font-medium transition-all ${lang === l.code
-                      ? "border-foreground bg-foreground text-background"
-                      : "border-border bg-card text-muted-foreground hover:border-foreground/30 hover:text-foreground"
-                    }`}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm font-medium transition-all ${
+                    l.code === "en"
+                      ? "opacity-50 blur-[1px] cursor-not-allowed border-dashed"
+                      : lang === l.code
+                        ? "border-foreground bg-foreground text-background"
+                        : "border-border bg-card text-muted-foreground hover:border-foreground/30 hover:text-foreground"
+                  }`}
                 >
                   <span className="text-base">{l.flag}</span>
-                  {l.label}
+                  {l.code === "en" ? "English (Em breve)" : l.label}
                 </button>
               ))}
             </div>
