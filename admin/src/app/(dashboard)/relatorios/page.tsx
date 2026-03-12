@@ -122,7 +122,7 @@ function getDateRange(period: PeriodKey): { from: Date; to: Date } {
 }
 
 export default function RelatoriosPage() {
-  const [period, setPeriod] = useState<PeriodKey>("hoje");
+  const [period, setPeriod] = useState<PeriodKey>("7d");
   const [pedidos, setPedidos] = useState<PedidoRow[]>([]);
   const [itensPedido, setItensPedido] = useState<ItemPedidoRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -419,93 +419,66 @@ export default function RelatoriosPage() {
 
           {/* ── SEARCH RESULT ── */}
           {(searchResult || searchNotFound) && (
-            <div className="space-y-2">
-              <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Resultado da Busca</h2>
+            <div className="space-y-1.5">
               {searchNotFound ? (
                 <Card className="shadow-none border-dashed">
-                  <CardContent className="py-6 text-center">
-                    <p className="text-sm text-muted-foreground">Nenhum pedido encontrado com esse ID.</p>
+                  <CardContent className="py-4 text-center">
+                    <p className="text-xs text-muted-foreground">Nenhum pedido encontrado com esse ID.</p>
                   </CardContent>
                 </Card>
               ) : searchResult && (
-                <Card className="shadow-none">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="space-y-2 flex-1">
-                        <div className="flex items-center gap-2">
-                          <Receipt className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-mono text-sm font-bold">{searchResult.order_id}</span>
-                          <Badge variant="outline" className={`text-[10px] ${statusLabel(searchResult.status).className}`}>
-                            {statusLabel(searchResult.status).label}
-                          </Badge>
-                        </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                          <div className="flex items-center gap-1.5 text-muted-foreground">
-                            <Armchair className="h-3 w-3" />
-                            Mesa {String(searchResult.numero_mesa).padStart(2, "0")}
-                          </div>
-                          <div className="flex items-center gap-1.5 text-muted-foreground">
-                            <User className="h-3 w-3" />
-                            {searchResult.nome_pessoa || "Cliente"}
-                          </div>
-                          <div className="flex items-center gap-1.5 text-muted-foreground">
-                            <Calendar className="h-3 w-3" />
-                            {format(parseISO(searchResult.criado_em), "dd/MM/yyyy", { locale: ptBR })}
-                          </div>
-                          <div className="flex items-center gap-1.5 text-muted-foreground">
-                            <Clock className="h-3 w-3" />
-                            {format(parseISO(searchResult.criado_em), "HH:mm")}
-                          </div>
-                        </div>
-
-                        {/* Items */}
-                        {searchItems.length > 0 && (
-                          <div className="pt-2 space-y-1">
-                            {searchItems.map(item => (
-                              <div key={item.id} className="flex items-center justify-between text-xs py-1">
-                                <span className="text-foreground">
-                                  <span className="font-medium">{item.quantidade}x</span> {item.nome_produto}
-                                  {item.nome_variacao && item.nome_variacao.toLowerCase() !== "unidade" && (
-                                    <span className="text-muted-foreground ml-1">({item.nome_variacao})</span>
-                                  )}
-                                </span>
-                                <span className="font-mono text-muted-foreground">R$ {Number(item.preco_total).toFixed(2)}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* Payment info */}
-                        {searchResult.forma_pagamento && (
-                          <div className="pt-2 border-t flex items-center gap-3 text-[11px]">
-                            {searchResult.forma_pagamento.pix > 0 && (
-                              <span className="flex items-center gap-1 text-muted-foreground">
-                                <Smartphone className="h-3 w-3" /> PIX R$ {searchResult.forma_pagamento.pix.toFixed(2)}
-                              </span>
-                            )}
-                            {searchResult.forma_pagamento.credito > 0 && (
-                              <span className="flex items-center gap-1 text-muted-foreground">
-                                <CreditCard className="h-3 w-3" /> Crédito R$ {searchResult.forma_pagamento.credito.toFixed(2)}
-                              </span>
-                            )}
-                            {searchResult.forma_pagamento.debito > 0 && (
-                              <span className="flex items-center gap-1 text-muted-foreground">
-                                <CreditCard className="h-3 w-3" /> Débito R$ {searchResult.forma_pagamento.debito.toFixed(2)}
-                              </span>
-                            )}
-                            {searchResult.forma_pagamento.dinheiro > 0 && (
-                              <span className="flex items-center gap-1 text-muted-foreground">
-                                <Banknote className="h-3 w-3" /> Dinheiro R$ {searchResult.forma_pagamento.dinheiro.toFixed(2)}
-                              </span>
-                            )}
-                          </div>
-                        )}
+                <Card className="shadow-none rounded-xl border border-border max-w-2xl">
+                  <CardContent className="p-3">
+                    {/* Header row */}
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Receipt className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        <span className="font-mono text-xs font-bold truncate">{searchResult.order_id}</span>
+                        <Badge variant="outline" className={`text-[9px] px-1.5 py-0 ${statusLabel(searchResult.status).className}`}>
+                          {statusLabel(searchResult.status).label}
+                        </Badge>
+                        <span className="text-[10px] text-muted-foreground">Mesa {String(searchResult.numero_mesa).padStart(2, "0")}</span>
+                        <span className="text-[10px] text-muted-foreground">·</span>
+                        <span className="text-[10px] text-muted-foreground">{searchResult.nome_pessoa || "Cliente"}</span>
+                        <span className="text-[10px] text-muted-foreground">·</span>
+                        <span className="text-[10px] text-muted-foreground">{format(parseISO(searchResult.criado_em), "dd/MM HH:mm")}</span>
                       </div>
                       <div className="text-right shrink-0">
-                        <div className="text-lg font-bold font-mono">R$ {Number(searchResult.total).toFixed(2)}</div>
-                        <div className="text-[10px] text-muted-foreground font-mono">Pedido #{searchResult.order_number}</div>
+                        <span className="text-sm font-bold font-mono">R$ {Number(searchResult.total).toFixed(2)}</span>
                       </div>
                     </div>
+
+                    {/* Items - compact inline */}
+                    {searchItems.length > 0 && (
+                      <div className="mt-2 pt-2 border-t flex flex-wrap gap-x-3 gap-y-0.5">
+                        {searchItems.map(item => (
+                          <span key={item.id} className="text-[11px] text-muted-foreground">
+                            <span className="text-foreground font-medium">{item.quantidade}x</span> {item.nome_produto}
+                            {item.nome_variacao && item.nome_variacao.toLowerCase() !== "unidade" && (
+                              <span className="opacity-60"> ({item.nome_variacao})</span>
+                            )}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Payment - compact inline */}
+                    {searchResult.forma_pagamento && (
+                      <div className="mt-1.5 pt-1.5 border-t flex items-center gap-3 text-[10px] text-muted-foreground">
+                        {searchResult.forma_pagamento.pix > 0 && (
+                          <span className="flex items-center gap-0.5"><Smartphone className="h-2.5 w-2.5" /> PIX R$ {searchResult.forma_pagamento.pix.toFixed(2)}</span>
+                        )}
+                        {searchResult.forma_pagamento.credito > 0 && (
+                          <span className="flex items-center gap-0.5"><CreditCard className="h-2.5 w-2.5" /> Crédito R$ {searchResult.forma_pagamento.credito.toFixed(2)}</span>
+                        )}
+                        {searchResult.forma_pagamento.debito > 0 && (
+                          <span className="flex items-center gap-0.5"><CreditCard className="h-2.5 w-2.5" /> Débito R$ {searchResult.forma_pagamento.debito.toFixed(2)}</span>
+                        )}
+                        {searchResult.forma_pagamento.dinheiro > 0 && (
+                          <span className="flex items-center gap-0.5"><Banknote className="h-2.5 w-2.5" /> Dinheiro R$ {searchResult.forma_pagamento.dinheiro.toFixed(2)}</span>
+                        )}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               )}
