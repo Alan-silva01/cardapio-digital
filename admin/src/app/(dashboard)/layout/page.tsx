@@ -13,7 +13,6 @@ import {
   DragOverlay,
   defaultDropAnimationSideEffects,
 } from "@dnd-kit/core";
-import { snapCenterToCursor, restrictToParentElement } from "@dnd-kit/modifiers";
 import { Loader2, MapPin, Maximize2, ZoomIn, ZoomOut, RotateCcw, Link2, Unlink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -539,7 +538,6 @@ export default function LayoutPage() {
           sensors={sensors} 
           onDragStart={handleDragStart} 
           onDragEnd={handleDragEnd}
-          modifiers={[restrictToParentElement]}
         >
           <div
             className="relative rounded-sm overflow-hidden"
