@@ -258,14 +258,8 @@ function ConfirmationDialog({
       <DialogContent className="sm:max-w-[380px]">
         <DialogHeader>
           <div className="flex items-center gap-3">
-            <div
-              className={`h-10 w-10 rounded-xl flex items-center justify-center ${
-                confirmVariant === "destructive"
-                  ? "bg-red-500/10 text-red-500"
-                  : "bg-brand/10 text-brand"
-              }`}
-            >
-              <Icon className="h-5 w-5" />
+            <div className={confirmVariant === "destructive" ? "text-red-500" : "text-brand"}>
+              <Icon className="h-6 w-6" />
             </div>
             <div>
               <DialogTitle>{title}</DialogTitle>
