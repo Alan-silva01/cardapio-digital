@@ -809,7 +809,7 @@ const App = () => {
                             padding: '0 20px',
                             textAlign: 'center',
                             width: '90%',
-                            marginBottom: '0px',
+                            marginBottom: '10px',
                             zIndex: 5
                         }}>
                             <h1 style={{
@@ -818,11 +818,7 @@ const App = () => {
                                 fontWeight: 900,
                                 color: '#222',
                                 textAlign: 'center',
-                                lineHeight: '1.2',
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                maxWidth: '100%'
+                                lineHeight: '1.2'
                             }}>
                                 {currentProduct.name}
                             </h1>
@@ -1047,13 +1043,10 @@ const App = () => {
                                             className="flavors-grid"
                                             style={{
                                                 display: 'flex',
-                                                flexWrap: 'nowrap',
-                                                overflowX: 'auto',
-                                                WebkitOverflowScrolling: 'touch',
+                                                flexWrap: 'wrap',
+                                                justifyContent: 'center',
                                                 gap: '8px',
-                                                padding: '0 10px 10px 10px', /* Adicionado padding bottom para scrollbar não cobrir botões */
-                                                justifyContent: 'flex-start', /* Essencial para não cortar o início no scroll */
-                                                width: '100%'
+                                                padding: '0 5px'
                                             }}
                                         >
 
