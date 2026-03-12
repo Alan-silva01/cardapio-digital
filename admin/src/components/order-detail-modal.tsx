@@ -50,7 +50,7 @@ interface ItemPedido {
 interface ComandaAgrupada {
   comanda_id: string;
   numero_mesa: number;
-  status: "recebido" | "preparando" | "pronto" | "entregue";
+  status: "recebido" | "preparando" | "pronto" | "entregue" | "cancelado";
   total: number;
   criado_em: string;
   pedido_ids: string[];
@@ -62,6 +62,7 @@ interface ComandaAgrupada {
     subtotal: number;
     itens: ItemPedido[];
     pago?: boolean;
+    cancelado?: boolean;
   }[];
 }
 
@@ -72,6 +73,7 @@ interface OrderDetailModalProps {
   onToggleItemServido: (itemId: string, currentValue: boolean) => void;
   onConfirmPayment?: (comandaId: string, forma: FormaPagamento) => void;
   onCancelOrder?: (comandaId: string) => void;
+  onReactivateOrder?: (comandaId: string) => void;
   onConfirmPaymentPerson?: (comandaId: string, nomePessoa: string, forma: FormaPagamento) => void;
   onPrintPerson?: (comanda: ComandaAgrupada, nomePessoa: string) => void;
   onPrintAll?: (comanda: ComandaAgrupada) => void;
@@ -82,6 +84,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   preparando: { label: "Preparando", color: "bg-amber-500/10 text-amber-500" },
   pronto: { label: "Servido", color: "bg-emerald-500/10 text-emerald-500" },
   entregue: { label: "Entregue", color: "bg-muted text-muted-foreground" },
+  cancelado: { label: "Cancelado", color: "bg-red-500/10 text-red-500" },
 };
 
 function formatElapsedTime(createdAt: string): string {
@@ -255,6 +258,7 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
   onToggleItemServido,
   onConfirmPayment,
   onCancelOrder,
+  onReactivateOrder,
   onConfirmPaymentPerson,
   onPrintPerson,
   onPrintAll,
@@ -285,10 +289,9 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
 
   const totalPendente = useMemo(() => {
     if (!comanda) return 0;
-    return comanda.pessoas.reduce(
-      (sum, p) => (p.pago ? sum : sum + p.subtotal),
-      0
-    );
+    const hasPagamentoTotal = !!comanda.forma_pagamento;
+    if (hasPagamentoTotal) return 0;
+    return comanda.total - comanda.pessoas.filter(p => p.pago).reduce((sum, p) => sum + p.subtotal, 0);
   }, [comanda]);
 
   const allPaid = useMemo(() => {
@@ -298,7 +301,7 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
 
   if (!comanda) return null;
 
-  const statusConfig = STATUS_CONFIG[comanda.status];
+  const statusConfig = STATUS_CONFIG[comanda.status] || STATUS_CONFIG.cancelado;
   const elapsed = formatElapsedTime(comanda.criado_em);
   const time = formatTime(comanda.criado_em);
 
@@ -358,10 +361,10 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
             <div className="px-6 py-4 divide-y divide-border">
               {comanda.pessoas.map((pessoa) => (
                 <div key={pessoa.nome} className="relative py-4 first:pt-0 last:pb-0">
-                  {pessoa.pago ? (
-                    /* ── PAID STATE: blur + overlay ── */
+                  {pessoa.pago || pessoa.cancelado ? (
+                    /* ── PAID OR CANCELED STATE: blur + overlay ── */
                     <div className="relative">
-                      <div className="blur-[2px] opacity-40 pointer-events-none space-y-1">
+                      <div className={`blur-[2px] opacity-40 pointer-events-none space-y-1 ${pessoa.cancelado ? 'grayscale' : ''}`}>
                         <div className="flex items-center justify-between mb-1 px-1">
                           <div className="flex items-center gap-2">
                             <User className="h-3.5 w-3.5 text-foreground" />
@@ -381,9 +384,11 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
                       </div>
                       {/* Overlay */}
                       <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                        <div className="flex items-center gap-1.5 text-emerald-500">
-                          <CheckCircle2 className="h-5 w-5" />
-                          <span className="text-sm font-bold">Comanda Fechada — Pago</span>
+                        <div className={`flex items-center gap-1.5 ${pessoa.cancelado ? "text-red-500" : "text-emerald-500"}`}>
+                          {pessoa.cancelado ? <Ban className="h-5 w-5" /> : <CheckCircle2 className="h-5 w-5" />}
+                          <span className="text-sm font-bold">
+                            {pessoa.cancelado ? "Comanda Cancelada" : "Comanda Fechada — Pago"}
+                          </span>
                         </div>
                         <button
                           type="button"
@@ -457,32 +462,45 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
           {/* Footer */}
           <div className="px-6 pt-3 pb-8 flex flex-col gap-3">
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                className="h-9 text-xs font-semibold text-muted-foreground hover:text-destructive hover:border-destructive/30 hover:bg-destructive/5"
-                onClick={() => setShowCancelConfirm(true)}
-              >
-                <Ban className="h-3.5 w-3.5 mr-1.5" />
-                Cancelar
-              </Button>
-              <Button
-                variant="outline"
-                className="h-9 text-xs font-semibold text-muted-foreground hover:text-foreground"
-                onClick={() => onPrintAll?.(comanda)}
-              >
-                <Printer className="h-3.5 w-3.5 mr-1.5" />
-                Imprimir
-              </Button>
-              <Button
-                className="flex-1 h-9 text-xs bg-brand hover:bg-brand/90 text-white font-semibold"
-                onClick={() => setShowPaymentModal(true)}
-                disabled={allPaid || totalPendente <= 0}
-              >
-                <CreditCard className="h-3.5 w-3.5 mr-1.5" />
-                {allPaid || totalPendente <= 0 
-                  ? "Totalmente Pago" 
-                  : `Cobrar Restante (R$ ${totalPendente.toFixed(2)})`}
-              </Button>
+              {comanda.status === "cancelado" ? (
+                <Button
+                  variant="outline"
+                  className="flex-1 h-9 text-xs font-semibold hover:text-foreground"
+                  onClick={() => onReactivateOrder?.(comanda.comanda_id)}
+                >
+                  <Clock className="h-3.5 w-3.5 mr-1.5" />
+                  Reativar Pedido
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    className="h-9 text-xs font-semibold text-muted-foreground hover:text-destructive hover:border-destructive/30 hover:bg-destructive/5"
+                    onClick={() => setShowCancelConfirm(true)}
+                  >
+                    <Ban className="h-3.5 w-3.5 mr-1.5" />
+                    Cancelar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-9 text-xs font-semibold text-muted-foreground hover:text-foreground"
+                    onClick={() => onPrintAll?.(comanda)}
+                  >
+                    <Printer className="h-3.5 w-3.5 mr-1.5" />
+                    Imprimir
+                  </Button>
+                  <Button
+                    className="flex-1 h-9 text-xs bg-brand hover:bg-brand/90 text-white font-semibold"
+                    onClick={() => setShowPaymentModal(true)}
+                    disabled={allPaid || totalPendente <= 0}
+                  >
+                    <CreditCard className="h-3.5 w-3.5 mr-1.5" />
+                    {allPaid || totalPendente <= 0 
+                      ? "Totalmente Pago" 
+                      : `Cobrar Restante (R$ ${totalPendente.toFixed(2)})`}
+                  </Button>
+                </>
+              )}
             </div>
             <div className="text-[10px] text-center text-muted-foreground/60 w-full flex items-center justify-center gap-1.5 select-all">
               ID: {comanda.order_id}

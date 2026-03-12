@@ -43,7 +43,7 @@ interface PedidoRaw {
   order_id: string;
   numero_mesa: number;
   nome_pessoa: string | null;
-  status: "recebido" | "preparando" | "pronto" | "entregue";
+  status: "recebido" | "preparando" | "pronto" | "entregue" | "cancelado";
   total: number;
   forma_pagamento?: FormaPagamento | null;
   criado_em: string;
@@ -54,7 +54,7 @@ interface PedidoRaw {
 export interface ComandaAgrupada {
   comanda_id: string;
   numero_mesa: number;
-  status: "recebido" | "preparando" | "pronto" | "entregue";
+  status: "recebido" | "preparando" | "pronto" | "entregue" | "cancelado";
   total: number;
   criado_em: string; // earliest pedido
   pedido_ids: string[];
@@ -66,10 +66,11 @@ export interface ComandaAgrupada {
     subtotal: number;
     itens: ItemPedido[];
     pago?: boolean;
+    cancelado?: boolean;
   }[];
 }
 
-const STATUS_ORDER = ["recebido", "preparando", "pronto", "entregue"];
+const STATUS_ORDER = ["recebido", "preparando", "pronto", "entregue", "cancelado"];
 
 const COLUMNS = [
   { id: "recebido", label: "Recebidos", color: "bg-blue-500/10 text-blue-500" },
@@ -105,26 +106,35 @@ function groupPedidosByComanda(pedidos: PedidoRaw[]): ComandaAgrupada[] {
     );
     const status = STATUS_ORDER[lowestStatusIdx] as ComandaAgrupada["status"];
 
-    const total = group.reduce((sum, p) => sum + Number(p.total), 0);
+    // If all pedidos are cancelado, total is 0. Else ignore cancelados.
+    const nonCanceledGroup = group.filter(p => p.status !== "cancelado");
+    const total = nonCanceledGroup.reduce((sum, p) => sum + Number(p.total), 0);
     const earliestPedido = group.reduce(
       (earliest, p) => (p.criado_em < earliest.criado_em ? p : earliest),
       group[0]
     );
     const earliestDate = earliestPedido.criado_em;
-    const formaPagamento = group.find((p) => p.forma_pagamento)?.forma_pagamento || undefined;
+    const formaPagamento = nonCanceledGroup.find((p) => p.forma_pagamento)?.forma_pagamento || undefined;
 
     // Group items by person with subtotals + payment status
-    const pessoasMap = new Map<string, { itens: ItemPedido[]; subtotal: number; allPaid: boolean; pedidoCount: number; paidCount: number }>();
+    const pessoasMap = new Map<string, { itens: ItemPedido[]; subtotal: number; allPaid: boolean; allCanceled: boolean; pedidoCount: number; paidCount: number; canceledCount: number; }>();
     group.forEach((p) => {
       const nome = p.nome_pessoa || "Cliente";
-      const existing = pessoasMap.get(nome) || { itens: [], subtotal: 0, allPaid: true, pedidoCount: 0, paidCount: 0 };
+      const existing = pessoasMap.get(nome) || { itens: [], subtotal: 0, allPaid: true, allCanceled: true, pedidoCount: 0, paidCount: 0, canceledCount: 0 };
       existing.itens.push(...p.itens_pedido);
-      existing.subtotal += Number(p.total);
+      
+      if (p.status !== "cancelado") {
+        existing.subtotal += Number(p.total);
+      } else {
+        existing.canceledCount += 1;
+      }
+      
       existing.pedidoCount += 1;
-      if (p.forma_pagamento) {
+      if (p.forma_pagamento && p.status !== "cancelado") {
         existing.paidCount += 1;
       }
-      existing.allPaid = existing.paidCount === existing.pedidoCount;
+      existing.allPaid = existing.paidCount === (existing.pedidoCount - existing.canceledCount);
+      existing.allCanceled = existing.canceledCount === existing.pedidoCount;
       pessoasMap.set(nome, existing);
     });
 
@@ -132,7 +142,8 @@ function groupPedidosByComanda(pedidos: PedidoRaw[]): ComandaAgrupada[] {
       nome,
       subtotal: data.subtotal,
       itens: data.itens,
-      pago: data.allPaid && data.pedidoCount > 0,
+      pago: data.allPaid && (data.pedidoCount - data.canceledCount) > 0,
+      cancelado: data.allCanceled && data.pedidoCount > 0,
     }));
 
     return {
@@ -158,7 +169,11 @@ function groupByStatus(comandas: ComandaAgrupada[]): ColumnsState {
     entregue: [],
   };
   comandas.forEach((c) => {
-    if (grouped[c.status]) grouped[c.status].push(c);
+    if (c.status === "cancelado") {
+      grouped.entregue.push(c);
+    } else if (grouped[c.status]) {
+      grouped[c.status].push(c);
+    }
   });
   return grouped;
 }
@@ -503,6 +518,7 @@ export default function PedidosPage() {
       const { error: pgError } = await supabase.from("pagamentos").insert(pagamentosToInsert);
       if (pgError) console.error("Erro ao inserir na tabela pagamentos:", pgError);
     }
+    setSelectedComanda(null);
   }, [fetchPedidos]);
 
   // ── Per-person thermal print ──
@@ -650,6 +666,72 @@ export default function PedidosPage() {
     printWindow.document.close();
   }, []);
 
+  // ── Cancel Order ──
+  const handleCancelOrder = useCallback(async (comandaId: string) => {
+    // Select current from DB to refresh or we can optimistically set totals to 0
+    // To ensure accuracy we just send the update and fetch
+    setColumns((prev) => {
+      const updated = { ...prev };
+      for (const statusVal of Object.keys(updated)) {
+        const comandaIndex = updated[statusVal].findIndex(c => c.comanda_id === comandaId);
+        if (comandaIndex >= 0) {
+          const comanda = updated[statusVal][comandaIndex];
+          updated[statusVal] = updated[statusVal].filter(c => c.comanda_id !== comandaId);
+          
+          const canceledComanda = { 
+            ...comanda, 
+            status: "cancelado" as ComandaAgrupada["status"],
+            total: 0, // Ignored logic means we can render 0 or the last value
+            pessoas: comanda.pessoas.map(p => ({
+              ...p,
+              subtotal: 0,
+              pago: false,
+              cancelado: true,
+            }))
+          };
+          updated["entregue"].push(canceledComanda);
+          break;
+        }
+      }
+      return updated;
+    });
+
+    setSelectedComanda((prev) => {
+      if (!prev || prev.comanda_id !== comandaId) return prev;
+      return {
+        ...prev,
+        status: "cancelado" as ComandaAgrupada["status"],
+        total: 0,
+        pessoas: prev.pessoas.map(p => ({ ...p, subtotal: 0, pago: false, cancelado: true })),
+      };
+    });
+
+    const { error } = await supabase
+      .from("pedidos")
+      .update({ status: "cancelado" })
+      .eq("comanda_id", comandaId);
+
+    if (error) {
+      console.error("Erro ao cancelar pedido:", error);
+      fetchPedidos();
+    }
+    setSelectedComanda(null);
+  }, [fetchPedidos]);
+
+  // ── Reactivate Order ──
+  const handleReactivateOrder = useCallback(async (comandaId: string) => {
+    const { error } = await supabase
+      .from("pedidos")
+      .update({ status: "recebido" })
+      .eq("comanda_id", comandaId);
+
+    if (error) {
+      console.error("Erro ao reativar pedido:", error);
+    }
+    fetchPedidos(); // Full refetch needed to recalculate totals safely
+    setSelectedComanda(null); 
+  }, [fetchPedidos]);
+
   if (!mounted) return null;
 
   if (loading) {
@@ -762,11 +844,15 @@ export default function PedidosPage() {
                                         <span className="font-semibold text-sm tracking-tight text-foreground">
                                           Mesa {String(comanda.numero_mesa).padStart(2, "0")}
                                         </span>
-                                        {comanda.pessoas.length > 0 && comanda.pessoas.every(p => p.pago) && (
+                                        {comanda.status === "cancelado" ? (
+                                          <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider bg-red-500/10 px-1.5 py-0.5 rounded ml-1">
+                                            Cancelado
+                                          </span>
+                                        ) : (comanda.pessoas.length > 0 && comanda.pessoas.every(p => p.pago) && (
                                           <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider bg-emerald-500/10 px-1.5 py-0.5 rounded ml-1">
                                             Pago
                                           </span>
-                                        )}
+                                        ))}
                                       </div>
                                       <div className={`flex items-center gap-1.5 text-[10px] font-medium px-2 py-1 rounded-full border ${isUrgent ? "text-red-500 bg-red-500/10 border-red-500/20" : "text-muted-foreground bg-muted"}`}>
                                         <Clock className="h-3 w-3" />
@@ -782,7 +868,11 @@ export default function PedidosPage() {
                                             <div className="flex items-center gap-1.5 text-[11px] text-foreground font-bold tracking-tight">
                                               <User className="h-3 w-3 shrink-0" />
                                               {pessoa.nome}
-                                              {pessoa.pago && (
+                                              {pessoa.cancelado ? (
+                                                <span className="text-[9px] font-bold text-red-500 uppercase tracking-wider bg-red-500/10 px-1 py-0 rounded ml-1">
+                                                  Cancelado
+                                                </span>
+                                              ) : pessoa.pago && (
                                                 <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-wider bg-emerald-500/10 px-1 py-0 rounded ml-1">
                                                   Pago
                                                 </span>
@@ -885,6 +975,8 @@ export default function PedidosPage() {
         onOpenChange={(open) => { if (!open) setSelectedComanda(null); }}
         onToggleItemServido={toggleItemServido}
         onConfirmPayment={handlePayAll}
+        onCancelOrder={handleCancelOrder}
+        onReactivateOrder={handleReactivateOrder}
         onConfirmPaymentPerson={handlePayPerson}
         onPrintPerson={handlePrintPerson}
         onPrintAll={handlePrintAll}
