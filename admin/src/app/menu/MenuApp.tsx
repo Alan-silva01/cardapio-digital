@@ -103,7 +103,7 @@ const App = () => {
     const [cartTab, setCartTab] = useState('carrinho'); // 'carrinho' | 'pedidos'
     const [itemObservations, setItemObservations] = useState({}); // { cartKey: 'sem cebola' }
     const [obsOpenFor, setObsOpenFor] = useState(null); // which cart item has obs input open
-    const [orderHistory, setOrderHistory] = useState([]);
+    const [orderHistory, setOrderHistory] = useState<any[]>([]);
     const [isFetchingHistory, setIsFetchingHistory] = useState(false);
 
     // SERVICE BUTTONS
@@ -458,12 +458,11 @@ const App = () => {
                 return;
             }
 
-            // 3. Get Pedidos for this Comanda + Person
-            const { data: pedidos } = await supabase
+            const { data: pedidos, error } = await supabase
                 .from('pedidos')
                 .select(`
                     id, 
-                    created_at, 
+                    criado_em, 
                     total, 
                     status,
                     itens_pedido (
@@ -472,7 +471,11 @@ const App = () => {
                 `)
                 .eq('comanda_id', comanda.id)
                 .eq('nome_pessoa', pessoaAtiva)
-                .order('created_at', { ascending: false });
+                .order('criado_em', { ascending: false });
+
+            if (error) {
+                console.error("Error fetching history:", error);
+            }
 
             setOrderHistory(pedidos || []);
         } catch (error) {
@@ -1633,7 +1636,7 @@ const App = () => {
                                                         <span className="order-card-id">Pedido #{pedido.id.toString().substring(0, 5)}</span>
                                                         <span className="order-card-time">
                                                             <Clock size={12} style={{display:'inline', marginRight:'4px'}}/>
-                                                            {new Date(pedido.created_at).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
+                                                            {new Date(pedido.criado_em).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
                                                         </span>
                                                     </div>
 
