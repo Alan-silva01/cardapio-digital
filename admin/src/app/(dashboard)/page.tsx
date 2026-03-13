@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -66,36 +66,32 @@ export default function DashboardPage() {
 
     // TTS Audio state and function
     const [activeServiceCalls, setActiveServiceCalls] = useState<{ mesa: string; type: 'garcom' | 'conta'; time: Date; id: string }[]>([]);
+    
+    // DB Audio logic
+    const audioAlertsRef = useRef<any[]>([]);
+    const [audioBlocked, setAudioBlocked] = useState(false);
 
-    const playAudioAlert = useCallback((mesaNumero: string, type: 'garcom' | 'conta') => {
-        // --- CUSTOM AUDIO (Cloudinary) ---
-        // For now, we only have Mesa 01 Garçom audio.
-        // Later we can expand this to fetch from `audio_alertas` table or a larger map.
-        if (mesaNumero === '1' && type === 'garcom') {
-            const audio = new Audio("https://res.cloudinary.com/ddhlqymvf/video/upload/v1773405622/garcon_mesa01_i0d77n.m4a");
-            audio.play().catch(e => {
-                console.error("Erro ao tocar áudio customizado:", e);
-                // Fallback to TTS if browser blocks autoplay
-                fallbackTTS(mesaNumero, type);
-            });
-            return;
+    const playAudioAlert = useCallback(async (mesaNumero: string, type: 'garcom' | 'conta') => {
+        const urlObj = audioAlertsRef.current.find(
+            (a: any) => String(a.mesa_numero) === String(mesaNumero) && a.tipo === type
+        );
+
+        if (urlObj && urlObj.audio_url) {
+            try {
+                const audio = new Audio(urlObj.audio_url);
+                audio.crossOrigin = "anonymous";
+                await audio.play();
+                setAudioBlocked(false); // Success!
+            } catch (error: any) {
+                console.warn("Áudio customizado bloqueado pelo navegador.", error);
+                if (error.name === 'NotAllowedError') {
+                    setAudioBlocked(true);
+                }
+            }
+        } else {
+            console.log(`Nenhum áudio cadastrado para Mesa ${mesaNumero} (${type})`);
         }
-
-        // --- FALLBACK (Browser Native TTS) ---
-        fallbackTTS(mesaNumero, type);
     }, []);
-
-    const fallbackTTS = (mesaNumero: string, type: 'garcom' | 'conta') => {
-        if (!('speechSynthesis' in window)) return;
-        const message = type === 'garcom' 
-            ? `Solicitação de garçom na mesa ${mesaNumero}`
-            : `Fechar conta da mesa ${mesaNumero}`;
-            
-        const utterance = new SpeechSynthesisUtterance(message);
-        utterance.lang = 'pt-BR';
-        utterance.rate = 0.9;
-        window.speechSynthesis.speak(utterance);
-    };
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -103,7 +99,7 @@ export default function DashboardPage() {
         const start7Days = startOfDay(subDays(now, 6)).toISOString();
         const endNow = endOfDay(now).toISOString();
 
-        const [pedidos7dRes, itensRes, estoqueRes, activeMesasRes] = await Promise.all([
+        const [pedidos7dRes, itensRes, estoqueRes, activeMesasRes, audioRes] = await Promise.all([
             supabase
                 .from("pedidos")
                 .select("id, status, total, criado_em")
@@ -140,8 +136,15 @@ export default function DashboardPage() {
              supabase
                 .from("mesas")
                 .select("id, numero, chamando_garcom, solicitando_conta")
-                .or('chamando_garcom.eq.true,solicitando_conta.eq.true')
+                .or('chamando_garcom.eq.true,solicitando_conta.eq.true'),
+            supabase
+                .from("audio_alertas")
+                .select("mesa_numero, tipo, audio_url")
         ]);
+
+        if (audioRes.data) {
+            audioAlertsRef.current = audioRes.data;
+        }
 
         const allPedidos = pedidos7dRes.data || [];
         setPedidos(allPedidos);
@@ -362,6 +365,31 @@ export default function DashboardPage() {
                         </Button>
                     </div>
                 </div>
+
+                {/* AUDIO BLOCKED BANNER */}
+                {audioBlocked && (
+                    <div className="flex items-center justify-between text-yellow-800 bg-yellow-100 p-3 rounded-md border border-yellow-200 shadow-sm mt-2">
+                        <div className="flex items-center gap-2">
+                            <span className="text-xl">⚠️</span>
+                            <div>
+                                <p className="font-semibold text-sm">Áudio Automático Bloqueado</p>
+                                <p className="text-xs">Seu navegador bloqueou os alertas sonoros. Clique no botão ao lado para habilitar.</p>
+                            </div>
+                        </div>
+                        <Button
+                            size="sm"
+                            className="bg-yellow-600 hover:bg-yellow-700 text-white"
+                            onClick={() => {
+                                // Toca um audio silencioso curto apenas para desbloquear a policy do browser
+                                const silence = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA");
+                                silence.play().catch(() => {});
+                                setAudioBlocked(false);
+                            }}
+                        >
+                            Habilitar Áudio
+                        </Button>
+                    </div>
+                )}
 
                 {/* ACTIVE SERVICE CALLS ALERTS */}
                 {activeServiceCalls.length > 0 && (
