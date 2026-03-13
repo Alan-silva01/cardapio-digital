@@ -800,52 +800,58 @@ const App = () => {
                             right: 0
                         }}
                     >
-                        {/* FLAG OVERLAY / PAIS ORIGEM */}
-                        {(currentProduct.flagUrl || currentProduct.paisOrigem) && (
-                            <div style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                gap: '2px',
-                                marginBottom: '2px',
-                                zIndex: 10
-                            }}>
-                                {currentProduct.flagUrl && (
-                                    <img
-                                        src={currentProduct.flagUrl}
-                                        alt="Origin Flag"
-                                        loading="eager"
-                                        decoding="async"
-                                        fetchPriority="high"
-                                        style={{
-                                            width: '24px',
-                                            height: 'auto',
-                                            filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
-                                        }}
-                                    />
-                                )}
-                                {currentProduct.paisOrigem && (
-                                    <span style={{
-                                        color: '#555555',
-                                        fontSize: '9px',
-                                        fontWeight: 800,
-                                        letterSpacing: '1px',
-                                        textTransform: 'uppercase'
-                                    }}>
-                                        {currentProduct.paisOrigem}
-                                    </span>
-                                )}
-                            </div>
-                        )}
+                        {/* FLAG OVERLAY / PAIS ORIGEM — FIXED HEIGHT TO PREVENT LAYOUT SHIFT */}
+                        <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            gap: '2px',
+                            marginBottom: '2px',
+                            zIndex: 10,
+                            height: '30px',
+                            minHeight: '30px'
+                        }}>
+                            {currentProduct.flagUrl && (
+                                <img
+                                    src={currentProduct.flagUrl}
+                                    alt="Origin Flag"
+                                    loading="eager"
+                                    decoding="async"
+                                    fetchPriority="high"
+                                    style={{
+                                        width: '24px',
+                                        height: 'auto',
+                                        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
+                                    }}
+                                />
+                            )}
+                            {currentProduct.paisOrigem && (
+                                <span style={{
+                                    color: '#555555',
+                                    fontSize: '9px',
+                                    fontWeight: 800,
+                                    letterSpacing: '1px',
+                                    textTransform: 'uppercase'
+                                }}>
+                                    {currentProduct.paisOrigem}
+                                </span>
+                            )}
+                        </div>
 
-                        {/* TITLE CONTAINER - AUTO HEIGHT FOR BALANCE */}
+                        {/* TITLE CONTAINER - FIXED HEIGHT TO PREVENT LAYOUT SHIFT */}
                         <div style={{
                             padding: '0 20px',
                             textAlign: 'center',
                             width: '90%',
                             marginBottom: '10px',
-                            zIndex: 5
+                            zIndex: 5,
+                            height: '34px',
+                            minHeight: '34px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            overflow: 'hidden'
                         }}>
                             <h1
                                 ref={heroTitleRef}
