@@ -96,6 +96,24 @@ const App = () => {
         }
     }, [currentIndex, products]);
 
+    // PREFETCH: preload adjacent product images + flags on swipe
+    useEffect(() => {
+        if (!products.length) return;
+        const offsets = [-2, -1, 1, 2];
+        offsets.forEach(offset => {
+            const idx = (currentIndex + offset + products.length) % products.length;
+            const p = products[idx];
+            if (p?.imageUrl) {
+                const img = new Image();
+                img.src = p.imageUrl;
+            }
+            if (p?.flagUrl) {
+                const img = new Image();
+                img.src = p.flagUrl;
+            }
+        });
+    }, [currentIndex, products]);
+
     // NEW COMANDAS STATE
     const [pessoaAtiva, setPessoaAtiva] = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('@Menu-PessoaAtiva') || '') : '');
     const [isPeopleDrawerOpen, setIsPeopleDrawerOpen] = useState(false);
@@ -797,8 +815,11 @@ const App = () => {
                                     <img
                                         src={currentProduct.flagUrl}
                                         alt="Origin Flag"
+                                        loading="eager"
+                                        decoding="async"
+                                        fetchPriority="high"
                                         style={{
-                                            width: '24px', /* Menor conforme pedido */
+                                            width: '24px',
                                             height: 'auto',
                                             filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))',
                                         }}
@@ -854,6 +875,9 @@ const App = () => {
                             <img
                                 src={displayImage}
                                 alt={currentProduct.name}
+                                loading="eager"
+                                decoding="async"
+                                fetchPriority="high"
                                 style={{
                                     maxHeight: '90%',
                                     width: 'auto',
