@@ -64,13 +64,29 @@ export default function DashboardPage() {
     const [estoqueBaixo, setEstoqueBaixo] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
+    // TTS Audio state and function
+    const [activeServiceCalls, setActiveServiceCalls] = useState<{ mesa: string; type: 'garcom' | 'conta'; time: Date; id: string }[]>([]);
+
+    const playAudioAlert = useCallback((mesaNumero: string, type: 'garcom' | 'conta') => {
+        if (!('speechSynthesis' in window)) return;
+        
+        const message = type === 'garcom' 
+            ? `Solicitação de garçom na mesa ${mesaNumero}`
+            : `Fechar conta da mesa ${mesaNumero}`;
+            
+        const utterance = new SpeechSynthesisUtterance(message);
+        utterance.lang = 'pt-BR';
+        utterance.rate = 0.9; // Slightly slower for clarity
+        window.speechSynthesis.speak(utterance);
+    }, []);
+
     const fetchData = useCallback(async () => {
         setLoading(true);
         const now = new Date();
         const start7Days = startOfDay(subDays(now, 6)).toISOString();
         const endNow = endOfDay(now).toISOString();
 
-        const [pedidos7dRes, itensRes, estoqueRes] = await Promise.all([
+        const [pedidos7dRes, itensRes, estoqueRes, activeMesasRes] = await Promise.all([
             supabase
                 .from("pedidos")
                 .select("id, status, total, criado_em")
@@ -103,7 +119,11 @@ export default function DashboardPage() {
                     produtos!inner(nome, imagem_url, categorias(nome))
                 `)
                 .eq("ativo", true)
-                .neq("estoque", -1)
+                .neq("estoque", -1),
+             supabase
+                .from("mesas")
+                .select("id, numero, chamando_garcom, solicitando_conta")
+                .or('chamando_garcom.eq.true,solicitando_conta.eq.true')
         ]);
 
         const allPedidos = pedidos7dRes.data || [];
@@ -114,6 +134,16 @@ export default function DashboardPage() {
         if (estoqueRes.data) {
             const lowStock = (estoqueRes.data as any[]).filter(item => item.estoque <= item.estoque_minimo);
             setEstoqueBaixo(lowStock.sort((a, b) => a.estoque - b.estoque));
+        }
+
+        if (activeMesasRes.data) {
+            const initialCalls = activeMesasRes.data.flatMap(mesa => {
+                const calls = [];
+                if (mesa.chamando_garcom) calls.push({ mesa: mesa.numero.toString(), type: 'garcom' as const, time: new Date(), id: `g-${mesa.id}` });
+                if (mesa.solicitando_conta) calls.push({ mesa: mesa.numero.toString(), type: 'conta' as const, time: new Date(), id: `c-${mesa.id}` });
+                return calls;
+            });
+            setActiveServiceCalls(initialCalls);
         }
 
         const todayStart = startOfDay(now).toISOString();
@@ -128,7 +158,61 @@ export default function DashboardPage() {
 
     useEffect(() => {
         fetchData();
-    }, [fetchData]);
+
+        // Realtime subscription for Mesas Service Calls
+        const channel = supabase.channel('mesas-service-calls')
+            .on(
+                'postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: 'mesas' },
+                (payload) => {
+                    const newMesa = payload.new;
+                    const oldMesa = payload.old;
+                    
+                    if (newMesa.chamando_garcom && !oldMesa.chamando_garcom) {
+                        playAudioAlert(newMesa.numero, 'garcom');
+                        setActiveServiceCalls(prev => {
+                            if (prev.some(c => c.id === `g-${newMesa.id}`)) return prev;
+                            return [...prev, { mesa: newMesa.numero.toString(), type: 'garcom', time: new Date(), id: `g-${newMesa.id}` }];
+                        });
+                    } else if (!newMesa.chamando_garcom && oldMesa.chamando_garcom) {
+                        setActiveServiceCalls(prev => prev.filter(c => c.id !== `g-${newMesa.id}`));
+                    }
+
+                    if (newMesa.solicitando_conta && !oldMesa.solicitando_conta) {
+                        playAudioAlert(newMesa.numero, 'conta');
+                        setActiveServiceCalls(prev => {
+                            if (prev.some(c => c.id === `c-${newMesa.id}`)) return prev;
+                            return [...prev, { mesa: newMesa.numero.toString(), type: 'conta', time: new Date(), id: `c-${newMesa.id}` }];
+                        });
+                    } else if (!newMesa.solicitando_conta && oldMesa.solicitando_conta) {
+                        setActiveServiceCalls(prev => prev.filter(c => c.id !== `c-${newMesa.id}`));
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [fetchData, playAudioAlert]);
+
+    const handleClearServiceCall = async (id: string, mesaNumero: string, type: 'garcom' | 'conta') => {
+        const resetField = type === 'garcom' ? { chamando_garcom: false } : { solicitando_conta: false };
+        try {
+            const { error } = await supabase
+                .from('mesas')
+                .update(resetField)
+                .eq('numero', parseInt(mesaNumero));
+            
+            if (error) {
+                console.error("Error clearing service call:", error);
+            } else {
+                 // Optimistic update done via realtime listener
+            }
+        } catch (e) {
+            console.error("Failed to clear service call", e);
+        }
+    };
 
     const pedidosHojeAtivos = useMemo(() => pedidosHoje.filter(p => p.status !== "cancelado"), [pedidosHoje]);
     const faturamentoHoje = useMemo(() => pedidosHojeAtivos.reduce((acc, p) => acc + Number(p.total), 0), [pedidosHojeAtivos]);
@@ -246,19 +330,52 @@ export default function DashboardPage() {
         <div className="flex flex-col h-[calc(100vh-3.5rem)] w-full overflow-y-auto">
             <div className="px-6 py-4 space-y-2.5">
             {/* HEADER */}
-            <div className="flex items-center justify-between shrink-0">
-                <div>
-                    <h1 className="text-xl font-semibold tracking-tight">Dashboard General</h1>
-                    <p className="text-sm text-muted-foreground">Visão geral da operação hoje</p>
+            <div className="flex flex-col gap-4 shrink-0">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-xl font-semibold tracking-tight">Dashboard General</h1>
+                        <p className="text-sm text-muted-foreground">Visão geral da operação hoje</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" render={<Link href="/pedidos" />}>
+                            Abrir Kanban
+                        </Button>
+                        <Button size="sm" className="bg-foreground hover:bg-foreground/90 text-background shadow-none" render={<Link href="/estoque" />}>
+                            Gerenciar Estoque
+                        </Button>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" render={<Link href="/pedidos" />}>
-                        Abrir Kanban
-                    </Button>
-                    <Button size="sm" className="bg-foreground hover:bg-foreground/90 text-background shadow-none" render={<Link href="/estoque" />}>
-                        Gerenciar Estoque
-                    </Button>
-                </div>
+
+                {/* ACTIVE SERVICE CALLS ALERTS */}
+                {activeServiceCalls.length > 0 && (
+                    <div className="flex flex-col gap-2">
+                        {activeServiceCalls.map(call => (
+                            <div key={call.id} className={`flex items-center justify-between p-3 rounded-lg border ${call.type === 'garcom' ? 'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400' : 'bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400'}`}>
+                                <div className="flex items-center gap-3">
+                                    <div className={`p-2 rounded-full ${call.type === 'garcom' ? 'bg-blue-500/20' : 'bg-red-500/20'}`}>
+                                        <AlertTriangle className="h-4 w-4" />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-sm font-semibold">
+                                            {call.type === 'garcom' ? `Mesa ${call.mesa} chamando garçom` : `Mesa ${call.mesa} solicitou a conta`}
+                                        </span>
+                                        <span className="text-xs opacity-80">
+                                            Solicitado às {format(call.time, "HH:mm")}
+                                        </span>
+                                    </div>
+                                </div>
+                                <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => handleClearServiceCall(call.id, call.mesa, call.type)}
+                                    className="bg-background/50 hover:bg-background"
+                                >
+                                    Atendido
+                                </Button>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* --- METRICS CARDS --- */}

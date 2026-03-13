@@ -807,6 +807,341 @@ body.is-pwa .cart-footer {
   text-transform: uppercase;
 }
 
+/* --- CART TABS --- */
+.cart-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: #0A0A0A;
+  padding: 0 16px;
+}
+
+.cart-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #555;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 14px 0;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.25s ease;
+}
+
+.cart-tab.active {
+  color: var(--accent-gold);
+}
+
+.cart-tab::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  background: var(--accent-gold);
+  border-radius: 2px;
+  transform: scaleX(0);
+  transition: transform 0.25s ease;
+}
+
+.cart-tab.active::after {
+  transform: scaleX(1);
+}
+
+/* --- ORDER HISTORY (Meus Pedidos) --- */
+.order-history-container {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.order-history-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 0;
+  opacity: 0.4;
+  gap: 12px;
+}
+
+.order-history-empty p {
+  color: #FFF;
+  font-size: 13px;
+}
+
+.order-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.order-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.order-card-id {
+  color: #666;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.order-card-time {
+  color: #444;
+  font-size: 11px;
+}
+
+.order-card-items {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.order-card-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #CCC;
+  font-size: 13px;
+}
+
+.order-card-item-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.order-card-item-qty {
+  color: #666;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.order-card-item-obs {
+  color: #888;
+  font-size: 11px;
+  font-style: italic;
+  padding-left: 18px;
+}
+
+.order-card-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  color: var(--accent-gold);
+  font-weight: 800;
+  font-size: 14px;
+}
+
+/* --- ORDER TIMELINE --- */
+.order-timeline {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 4px 0 0;
+}
+
+.timeline-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+}
+
+.timeline-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #222;
+  border: 2px solid #333;
+  position: relative;
+  z-index: 2;
+  transition: all 0.3s ease;
+}
+
+.timeline-step.done .timeline-dot {
+  background: var(--accent-gold);
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
+}
+
+.timeline-step.current .timeline-dot {
+  background: var(--accent-gold);
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.6);
+  animation: timeline-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes timeline-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(212, 175, 55, 0.4); }
+  50% { box-shadow: 0 0 16px rgba(212, 175, 55, 0.8); }
+}
+
+.timeline-label {
+  font-size: 9px;
+  color: #444;
+  margin-top: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.timeline-step.done .timeline-label,
+.timeline-step.current .timeline-label {
+  color: var(--accent-gold);
+}
+
+.timeline-line {
+  position: absolute;
+  top: 5px;
+  left: calc(50% + 7px);
+  right: calc(-50% + 7px);
+  height: 2px;
+  background: #222;
+  z-index: 1;
+}
+
+.timeline-step.done .timeline-line {
+  background: var(--accent-gold);
+}
+
+.timeline-step:last-child .timeline-line {
+  display: none;
+}
+
+/* --- SERVICE BUTTONS (garcom, conta) --- */
+.cart-service-buttons {
+  display: flex;
+  gap: 10px;
+  padding: 0 20px 12px;
+  background: #0A0A0A;
+}
+
+.service-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: #AAA;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.service-btn:active {
+  transform: scale(0.97);
+}
+
+.service-btn.active {
+  background: rgba(212, 175, 55, 0.12);
+  border-color: rgba(212, 175, 55, 0.3);
+  color: var(--accent-gold);
+}
+
+.service-btn.disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* --- ITEM OBSERVATION INPUT --- */
+.cart-item-obs-toggle {
+  background: transparent;
+  border: none;
+  color: #555;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s;
+}
+
+.cart-item-obs-toggle.has-obs {
+  color: var(--accent-gold);
+}
+
+.cart-item-obs-input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  color: #CCC;
+  font-size: 12px;
+  padding: 8px 10px;
+  outline: none;
+  margin-top: 8px;
+  font-style: italic;
+}
+
+.cart-item-obs-input:focus {
+  border-color: rgba(212, 175, 55, 0.3);
+}
+
+.cart-item-obs-input::placeholder {
+  color: #444;
+}
+
+/* --- COMANDA SELECTOR (premium native select) --- */
+.comanda-select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.comanda-native-select {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--accent-gold);
+  border-radius: 12px;
+  padding: 12px 40px 12px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  outline: none;
+  cursor: pointer;
+}
+
+.comanda-native-select:focus {
+  border-color: var(--accent-gold);
+}
+
+.comanda-native-select option {
+  background: #111;
+  color: #FFF;
+  padding: 8px;
+}
+
+.comanda-select-chevron {
+  position: absolute;
+  right: 14px;
+  pointer-events: none;
+  color: #666;
+}
+
 /* PEOPLE DRAWER */
 .people-drawer-overlay {
   position: absolute;
