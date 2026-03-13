@@ -13,8 +13,20 @@ import {
   Volume2,
   VolumeX,
   Check,
+  Bell,
+  CreditCard,
+  Search,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -194,6 +206,9 @@ export default function PedidosPage() {
     pronto: [],
     entregue: [],
   });
+  const [mesasStatus, setMesasStatus] = useState<Record<number, { garcom: boolean, conta: boolean }>>({});
+  const [searchQuery, setSearchQuery] = useState("");
+  const [serviceModal, setServiceModal] = useState<{ mesa: number, type: 'garcom' | 'conta' } | null>(null);
   const { playSound, enabled: soundEnabled, toggleSound } = useNotificationSound();
   const [selectedComanda, setSelectedComanda] = useState<ComandaAgrupada | null>(null);
 
@@ -231,6 +246,21 @@ export default function PedidosPage() {
         }
       }
     }
+
+    // Fetch active mesa statuses
+    const { data: mesasData } = await supabase
+      .from("mesas")
+      .select("numero, chamando_garcom, solicitando_conta")
+      .or("chamando_garcom.eq.true,solicitando_conta.eq.true");
+
+    if (mesasData) {
+      const statuses: Record<number, { garcom: boolean, conta: boolean }> = {};
+      mesasData.forEach((m) => {
+        statuses[m.numero] = { garcom: m.chamando_garcom, conta: m.solicitando_conta };
+      });
+      setMesasStatus(statuses);
+    }
+
     setLoading(false);
   }, []);
 
@@ -256,6 +286,17 @@ export default function PedidosPage() {
         { event: "UPDATE", schema: "public", table: "pedidos" },
         () => {
           fetchPedidos();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "mesas" },
+        (payload) => {
+          const newMesa = payload.new;
+          setMesasStatus((prev) => ({
+            ...prev,
+            [newMesa.numero]: { garcom: newMesa.chamando_garcom, conta: newMesa.solicitando_conta }
+          }));
         }
       )
       .subscribe();
@@ -373,6 +414,18 @@ export default function PedidosPage() {
         .update({ servido: true })
         .in("id", allItemIds);
     }
+  };
+
+  const clearMesaStatus = async (numero: number, type: 'garcom' | 'conta') => {
+    // Optimistic UI update
+    setMesasStatus((prev) => ({
+      ...prev,
+      [numero]: { ...prev[numero], [type]: false }
+    }));
+    setServiceModal(null);
+    
+    const field = type === 'garcom' ? { chamando_garcom: false } : { solicitando_conta: false };
+    await supabase.from("mesas").update(field).eq("numero", numero);
   };
 
   const getActionLabel = (status: string) => {
@@ -754,6 +807,63 @@ export default function PedidosPage() {
     setSelectedComanda(null); 
   }, [fetchPedidos]);
 
+  // --- FILTERING LOGIC ---
+  const filteredColumns = useMemo(() => {
+    if (!searchQuery.trim()) return columns;
+    const query = searchQuery.toLowerCase().trim();
+    
+    // Extracted prefixes for context-aware search
+    const isMesaQuery = query.startsWith("mesa");
+    const isPedidoQuery = query.startsWith("pedido");
+    const numericPart = query.replace(/[^0-9]/g, ''); // Extract just numbers from query
+
+    const matchComanda = (c: ComandaAgrupada) => {
+      // 1. Explicit Mesa Search (e.g., "mesa 3", "mesa 03")
+      if (isMesaQuery && numericPart) {
+        return parseInt(numericPart, 10) === c.numero_mesa;
+      }
+
+      // 2. Explicit Pedido Search (e.g., "pedido 3", "pedido 0003")
+      if (isPedidoQuery && numericPart) {
+        // match exact numeric equivalent to avoid "3" matching "00034"
+        return parseInt(numericPart, 10) === parseInt(c.order_number, 10) || c.order_number.toLowerCase().includes(numericPart);
+      }
+
+      // 3. Pure Number Search ("3", "03")
+      // If it's just a number, we check if it exactly matches the table OR exactly matches the order number
+      if (/^\d+$/.test(query)) {
+        const queryNum = parseInt(query, 10);
+        if (queryNum === c.numero_mesa) return true;
+        if (queryNum === parseInt(c.order_number, 10)) return true;
+        
+        // Also allow substring match on order_number just in case they type a very specific sequence like "0003"
+        if (c.order_number.includes(query)) return true;
+        return false;
+      }
+
+      // 4. Match Service Alert ("garcom", "conta")
+      // Alerts only apply to active orders, so filter out history
+      if (query.includes("garçom") || query.includes("garcom")) {
+        if (mesasStatus[c.numero_mesa]?.garcom && c.status !== "entregue" && c.status !== "cancelado") return true;
+      }
+      if (query.includes("conta")) {
+        if (mesasStatus[c.numero_mesa]?.conta && c.status !== "entregue" && c.status !== "cancelado") return true;
+      }
+
+      // 5. Match Person Name
+      if (c.pessoas.some(p => p.nome.toLowerCase().includes(query))) return true;
+
+      return false;
+    };
+
+    return {
+      recebido: columns.recebido.filter(matchComanda),
+      preparando: columns.preparando.filter(matchComanda),
+      pronto: columns.pronto.filter(matchComanda),
+      entregue: columns.entregue.filter(matchComanda),
+    };
+  }, [columns, searchQuery, mesasStatus]);
+
   if (!mounted) return null;
 
   if (loading) {
@@ -764,7 +874,7 @@ export default function PedidosPage() {
     );
   }
 
-  const totalComandas = Object.values(columns).flat().length;
+  const totalComandas = Object.values(filteredColumns).flat().length;
 
   return (
     <div className="flex-1 flex flex-col bg-background text-foreground h-screen max-h-screen overflow-hidden">
@@ -776,11 +886,22 @@ export default function PedidosPage() {
           <span className="text-foreground font-semibold">Kanban Live</span>
           {totalComandas > 0 && (
             <Badge variant="outline" className="ml-2 bg-muted border-none text-muted-foreground px-1.5 h-5 text-[10px]">
-              {totalComandas} hoje
+              {totalComandas} {searchQuery.trim() ? "encontrados" : "hoje"}
             </Badge>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
+          {/* SEARCH BAR */}
+          <div className="relative w-64">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Ex: Mesa 01, 0003, Garçom..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8 h-8 text-xs bg-muted/50 border-none focus-visible:ring-1 focus-visible:ring-brand"
+            />
+          </div>
+
           <Button
             variant="ghost"
             size="icon"
@@ -809,7 +930,7 @@ export default function PedidosPage() {
                       {column.label}
                     </h3>
                     <Badge variant="outline" className="bg-muted border-none text-muted-foreground px-1.5 h-5 text-[10px]">
-                      {columns[column.id].length}
+                      {filteredColumns[column.id as keyof ColumnsState].length}
                     </Badge>
                   </div>
                 </div>
@@ -823,13 +944,13 @@ export default function PedidosPage() {
                       className={`flex-1 overflow-y-auto flex flex-col gap-3 rounded-xl p-2 border transition-colors min-h-[150px] ${snapshot.isDraggingOver ? "bg-muted/50 border-primary/20" : "bg-muted/30 border-transparent"
                         }`}
                     >
-                      {columns[column.id].length === 0 && (
+                      {filteredColumns[column.id as keyof ColumnsState].length === 0 && (
                         <div className="flex items-center justify-center h-20 text-xs text-muted-foreground/50">
                           Nenhum pedido
                         </div>
                       )}
 
-                      {columns[column.id].map((comanda, index) => {
+                      {filteredColumns[column.id as keyof ColumnsState].map((comanda, index) => {
                         const elapsed = formatElapsedTime(comanda.criado_em);
                         const diffMin = Math.floor((Date.now() - new Date(comanda.criado_em).getTime()) / 60000);
                         const isUrgent = comanda.status === "preparando" && diffMin > 15;
@@ -864,24 +985,61 @@ export default function PedidosPage() {
                                       <div className="w-full h-full bg-card rounded-tr-xl" />
                                     </div>
                                   </div>
-                                  <CardContent className="p-3 space-y-2 pt-4">
+                                  <CardContent className="p-3 space-y-2 pt-4 relative">
                                     <div className="flex justify-between items-start">
                                       <div className="flex items-center gap-2">
                                         <div className="h-7 w-7 rounded-md bg-muted flex items-center justify-center shrink-0">
                                           <Utensils className="h-4 w-4 text-muted-foreground" />
                                         </div>
-                                        <span className="font-semibold text-sm tracking-tight text-foreground">
-                                          Mesa {String(comanda.numero_mesa).padStart(2, "0")}
-                                        </span>
-                                        {comanda.status === "cancelado" ? (
-                                          <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider bg-red-500/10 px-1.5 py-0.5 rounded ml-1">
-                                            Cancelado
-                                          </span>
-                                        ) : (comanda.pessoas.length > 0 && comanda.pessoas.every(p => p.pago) && (
-                                          <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider bg-emerald-500/10 px-1.5 py-0.5 rounded ml-1">
-                                            Pago
-                                          </span>
-                                        ))}
+                                        <div className="flex flex-col">
+                                          <div className="flex items-center gap-2">
+                                            <span className="font-semibold text-sm tracking-tight text-foreground">
+                                              Mesa {String(comanda.numero_mesa).padStart(2, "0")}
+                                            </span>
+                                            
+                                            {/* MINIMALIST SERVICE ALERTS */}
+                                            {(mesasStatus[comanda.numero_mesa]?.garcom || mesasStatus[comanda.numero_mesa]?.conta) && 
+                                             comanda.status !== "entregue" && 
+                                             comanda.status !== "cancelado" && (
+                                              <div className="flex items-center gap-2 ml-1">
+                                                {mesasStatus[comanda.numero_mesa]?.garcom && (
+                                                  <button 
+                                                    onClick={(e) => { e.stopPropagation(); setServiceModal({ mesa: comanda.numero_mesa, type: 'garcom' }); }}
+                                                    className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 uppercase tracking-wider cursor-pointer hover:opacity-70 transition-opacity"
+                                                  >
+                                                    <span className="relative flex h-1.5 w-1.5">
+                                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                                                    </span>
+                                                    Garçom
+                                                  </button>
+                                                )}
+                                                {mesasStatus[comanda.numero_mesa]?.conta && (
+                                                  <button
+                                                    onClick={(e) => { e.stopPropagation(); setServiceModal({ mesa: comanda.numero_mesa, type: 'conta' }); }}
+                                                    className="inline-flex items-center gap-1.5 text-[10px] font-bold text-red-600 uppercase tracking-wider cursor-pointer hover:opacity-70 transition-opacity"
+                                                  >
+                                                    <span className="relative flex h-1.5 w-1.5">
+                                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
+                                                    </span>
+                                                    Conta
+                                                  </button>
+                                                )}
+                                              </div>
+                                            )}
+
+                                            {comanda.status === "cancelado" ? (
+                                              <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider bg-red-500/10 px-1.5 py-0.5 rounded ml-1">
+                                                Cancelado
+                                              </span>
+                                            ) : (comanda.pessoas.length > 0 && comanda.pessoas.every(p => p.pago) && (
+                                              <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider bg-emerald-500/10 px-1.5 py-0.5 rounded ml-1">
+                                                Pago
+                                              </span>
+                                            ))}
+                                          </div>
+                                        </div>
                                       </div>
                                       <div className={`flex items-center gap-1.5 text-[10px] font-medium px-2 py-1 rounded-full border ${isUrgent ? "text-red-500 bg-red-500/10 border-red-500/20" : "text-muted-foreground bg-muted"}`}>
                                         <Clock className="h-3 w-3" />
@@ -1018,6 +1176,47 @@ export default function PedidosPage() {
         onPrintPerson={handlePrintPerson}
         onPrintAll={handlePrintAll}
       />
+
+      {/* SERVICE CALL MODAL — ULTRA COMPACT */}
+      <Dialog open={!!serviceModal} onOpenChange={(open) => !open && setServiceModal(null)}>
+        <DialogContent className="sm:max-w-[400px] p-0 gap-0 overflow-hidden" showCloseButton={true}>
+          <div className="px-6 pt-5 pb-4">
+            <div className="flex items-center gap-2.5">
+              <Bell className="h-4 w-4 text-muted-foreground" />
+              <div>
+                <DialogTitle className="text-sm font-bold tracking-tight">
+                  Mesa {String(serviceModal?.mesa).padStart(2, "0")} — {serviceModal?.type === 'garcom' ? 'Garçom' : 'Conta'}
+                </DialogTitle>
+                <DialogDescription className="text-[10px] uppercase tracking-widest font-medium opacity-60">
+                  Solicitação em aberto
+                </DialogDescription>
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          <div className="px-6 pt-3 pb-5 flex gap-2">
+            <Button 
+                variant="outline" 
+                onClick={() => setServiceModal(null)}
+                className="flex-1 h-9 text-[11px] font-bold"
+            >
+                Voltar
+            </Button>
+            <Button 
+                className={`flex-1 h-9 text-[11px] font-bold shadow-xs ${
+                  serviceModal?.type === 'garcom' 
+                    ? 'bg-orange-600 hover:bg-orange-700' 
+                    : 'bg-red-600 hover:bg-red-700'
+                } text-white`}
+                onClick={() => serviceModal && clearMesaStatus(serviceModal.mesa, serviceModal.type)}
+            >
+                Marcar como Atendido
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

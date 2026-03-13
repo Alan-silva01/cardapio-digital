@@ -64,34 +64,7 @@ export default function DashboardPage() {
     const [estoqueBaixo, setEstoqueBaixo] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // TTS Audio state and function
-    const [activeServiceCalls, setActiveServiceCalls] = useState<{ mesa: string; type: 'garcom' | 'conta'; time: Date; id: string }[]>([]);
-    
-    // DB Audio logic
-    const audioAlertsRef = useRef<any[]>([]);
-    const [audioBlocked, setAudioBlocked] = useState(false);
 
-    const playAudioAlert = useCallback(async (mesaNumero: string, type: 'garcom' | 'conta') => {
-        const urlObj = audioAlertsRef.current.find(
-            (a: any) => String(a.mesa_numero) === String(mesaNumero) && a.tipo === type
-        );
-
-        if (urlObj && urlObj.audio_url) {
-            try {
-                const audio = new Audio(urlObj.audio_url);
-                audio.crossOrigin = "anonymous";
-                await audio.play();
-                setAudioBlocked(false); // Success!
-            } catch (error: any) {
-                console.warn("Áudio customizado bloqueado pelo navegador.", error);
-                if (error.name === 'NotAllowedError') {
-                    setAudioBlocked(true);
-                }
-            }
-        } else {
-            console.log(`Nenhum áudio cadastrado para Mesa ${mesaNumero} (${type})`);
-        }
-    }, []);
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -99,7 +72,7 @@ export default function DashboardPage() {
         const start7Days = startOfDay(subDays(now, 6)).toISOString();
         const endNow = endOfDay(now).toISOString();
 
-        const [pedidos7dRes, itensRes, estoqueRes, activeMesasRes, audioRes] = await Promise.all([
+        const [pedidos7dRes, itensRes, estoqueRes] = await Promise.all([
             supabase
                 .from("pedidos")
                 .select("id, status, total, criado_em")
@@ -178,61 +151,9 @@ export default function DashboardPage() {
 
     useEffect(() => {
         fetchData();
+    }, [fetchData]);
 
-        // Realtime subscription for Mesas Service Calls
-        const channel = supabase.channel('mesas-service-calls')
-            .on(
-                'postgres_changes',
-                { event: 'UPDATE', schema: 'public', table: 'mesas' },
-                (payload) => {
-                    const newMesa = payload.new;
-                    const oldMesa = payload.old;
-                    
-                    if (newMesa.chamando_garcom && !oldMesa.chamando_garcom) {
-                        playAudioAlert(newMesa.numero, 'garcom');
-                        setActiveServiceCalls(prev => {
-                            if (prev.some(c => c.id === `g-${newMesa.id}`)) return prev;
-                            return [...prev, { mesa: newMesa.numero.toString(), type: 'garcom', time: new Date(), id: `g-${newMesa.id}` }];
-                        });
-                    } else if (!newMesa.chamando_garcom && oldMesa.chamando_garcom) {
-                        setActiveServiceCalls(prev => prev.filter(c => c.id !== `g-${newMesa.id}`));
-                    }
 
-                    if (newMesa.solicitando_conta && !oldMesa.solicitando_conta) {
-                        playAudioAlert(newMesa.numero, 'conta');
-                        setActiveServiceCalls(prev => {
-                            if (prev.some(c => c.id === `c-${newMesa.id}`)) return prev;
-                            return [...prev, { mesa: newMesa.numero.toString(), type: 'conta', time: new Date(), id: `c-${newMesa.id}` }];
-                        });
-                    } else if (!newMesa.solicitando_conta && oldMesa.solicitando_conta) {
-                        setActiveServiceCalls(prev => prev.filter(c => c.id !== `c-${newMesa.id}`));
-                    }
-                }
-            )
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, [fetchData, playAudioAlert]);
-
-    const handleClearServiceCall = async (id: string, mesaNumero: string, type: 'garcom' | 'conta') => {
-        const resetField = type === 'garcom' ? { chamando_garcom: false } : { solicitando_conta: false };
-        try {
-            const { error } = await supabase
-                .from('mesas')
-                .update(resetField)
-                .eq('numero', parseInt(mesaNumero));
-            
-            if (error) {
-                console.error("Error clearing service call:", error);
-            } else {
-                 // Optimistic update done via realtime listener
-            }
-        } catch (e) {
-            console.error("Failed to clear service call", e);
-        }
-    };
 
     const pedidosHojeAtivos = useMemo(() => pedidosHoje.filter(p => p.status !== "cancelado"), [pedidosHoje]);
     const faturamentoHoje = useMemo(() => pedidosHojeAtivos.reduce((acc, p) => acc + Number(p.total), 0), [pedidosHojeAtivos]);
@@ -366,61 +287,6 @@ export default function DashboardPage() {
                     </div>
                 </div>
 
-                {/* AUDIO BLOCKED BANNER */}
-                {audioBlocked && (
-                    <div className="flex items-center justify-between text-yellow-800 bg-yellow-100 p-3 rounded-md border border-yellow-200 shadow-sm mt-2">
-                        <div className="flex items-center gap-2">
-                            <span className="text-xl">⚠️</span>
-                            <div>
-                                <p className="font-semibold text-sm">Áudio Automático Bloqueado</p>
-                                <p className="text-xs">Seu navegador bloqueou os alertas sonoros. Clique no botão ao lado para habilitar.</p>
-                            </div>
-                        </div>
-                        <Button
-                            size="sm"
-                            className="bg-yellow-600 hover:bg-yellow-700 text-white"
-                            onClick={() => {
-                                // Toca um audio silencioso curto apenas para desbloquear a policy do browser
-                                const silence = new Audio("data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA");
-                                silence.play().catch(() => {});
-                                setAudioBlocked(false);
-                            }}
-                        >
-                            Habilitar Áudio
-                        </Button>
-                    </div>
-                )}
-
-                {/* ACTIVE SERVICE CALLS ALERTS */}
-                {activeServiceCalls.length > 0 && (
-                    <div className="flex flex-col gap-2">
-                        {activeServiceCalls.map(call => (
-                            <div key={call.id} className={`flex items-center justify-between p-3 rounded-lg border ${call.type === 'garcom' ? 'bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-400' : 'bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400'}`}>
-                                <div className="flex items-center gap-3">
-                                    <div className={`p-2 rounded-full ${call.type === 'garcom' ? 'bg-blue-500/20' : 'bg-red-500/20'}`}>
-                                        <AlertTriangle className="h-4 w-4" />
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <span className="text-sm font-semibold">
-                                            {call.type === 'garcom' ? `Mesa ${call.mesa} chamando garçom` : `Mesa ${call.mesa} solicitou a conta`}
-                                        </span>
-                                        <span className="text-xs opacity-80">
-                                            Solicitado às {format(call.time, "HH:mm")}
-                                        </span>
-                                    </div>
-                                </div>
-                                <Button 
-                                    variant="outline" 
-                                    size="sm" 
-                                    onClick={() => handleClearServiceCall(call.id, call.mesa, call.type)}
-                                    className="bg-background/50 hover:bg-background"
-                                >
-                                    Atendido
-                                </Button>
-                            </div>
-                        ))}
-                    </div>
-                )}
             </div>
 
             {/* --- METRICS CARDS --- */}

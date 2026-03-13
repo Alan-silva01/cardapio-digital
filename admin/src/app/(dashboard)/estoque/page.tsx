@@ -36,38 +36,13 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import { countryFlags as COUNTRY_FLAGS } from "@/lib/countryFlags";
 import {
     HoverCard,
     HoverCardContent,
     HoverCardTrigger,
 } from "@/components/ui/hover-card";
 
-// --- Country Flag Mapping ---
-const COUNTRY_FLAGS: Record<string, string> = {
-    'Brasil': '/flags/brasil.png',
-    'Escócia': '/flags/escocia.png',
-    'Reino Unido': '/flags/reino_unido.png',
-    'Inglaterra': '/flags/reino_unido.png',
-    'México': '/flags/mexico.png',
-    'EUA': '/flags/eua.png',
-    'Estados Unidos (EUA)': '/flags/eua.png',
-    'Itália': '/flags/Italia 100x60.png',
-    'Portugal': '/flags/Portugal 100x60.png',
-    'França': '/flags/franca.png',
-    'Holanda': '/flags/holanda.png',
-    'Suécia': '/flags/Suecia 100x60.png',
-    'Alemanha': '/flags/Bandeira Alemanha 100x60.png',
-    'Espanha': '/flags/Espanha 100x60.png',
-    'Japão': '/flags/Japão 100x60.png',
-    'Polônia': '/flags/Polonia 100x60.png',
-    'Porto Rico': '/flags/Porto Rico 100x60.png',
-    'Rússia': '/flags/Russia 100x60.png',
-    'Cuba': '/flags/Cuba 100x60.png',
-    'Áustria': '/flags/Austria 100x60.png',
-    'África do Sul': '/flags/África do Sul 100x60.png',
-    'Bélgica': '/flags/belgica.png',
-    'Suíça': '/flags/Suica 100x60.png',
-};
 
 // --- Custom Select Component ---
 function SearchableSelect({

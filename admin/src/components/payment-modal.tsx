@@ -177,26 +177,28 @@ export function PaymentModal({
 
         <Separator />
 
-        <DialogFooter className="px-6 py-3 gap-2 sm:gap-2">
-          <Button
-            variant="outline"
-            className="flex-1 h-9 text-xs"
-            onClick={() => onOpenChange(false)}
-          >
-            Voltar
-          </Button>
-          <Button
-            className="flex-1 h-9 text-xs bg-brand hover:bg-brand/90 text-white font-semibold"
-            disabled={!isValid}
-            onClick={() => {
-              onConfirm(values);
-              onOpenChange(false);
-            }}
-          >
-            <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
-            Confirmar Pagamento
-          </Button>
-        </DialogFooter>
+        <div className="px-6 pt-3 pb-5 flex flex-col gap-3">
+          <div className="flex gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              className="flex-1 h-9 text-xs font-semibold"
+              onClick={() => onOpenChange(false)}
+            >
+              Voltar
+            </Button>
+            <Button
+              className="flex-1 h-9 text-xs bg-brand hover:bg-brand/90 text-white font-semibold shadow-xs"
+              disabled={!isValid}
+              onClick={() => {
+                onConfirm(values);
+                onOpenChange(false);
+              }}
+            >
+              <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+              Confirmar Pagamento
+            </Button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
