@@ -81,6 +81,20 @@ const App = () => {
     const [isCheckingOut, setIsCheckingOut] = useState(false); // Loading state for checkout
     const [orderSuccess, setOrderSuccess] = useState(false); // Success screen after order
     const cartIconRef = useRef(null);
+    const heroTitleRef = useRef(null);
+
+    // AUTO-FIT: shrink hero title font until it fits on 1 line
+    useEffect(() => {
+        const el = heroTitleRef.current;
+        if (!el) return;
+        // Reset to max size first
+        el.style.fontSize = '24px';
+        let size = 24;
+        while (el.scrollWidth > el.clientWidth && size > 12) {
+            size -= 0.5;
+            el.style.fontSize = `${size}px`;
+        }
+    }, [currentIndex, products]);
 
     // NEW COMANDAS STATE
     const [pessoaAtiva, setPessoaAtiva] = useState(() => typeof window !== 'undefined' ? (localStorage.getItem('@Menu-PessoaAtiva') || '') : '');
@@ -812,14 +826,19 @@ const App = () => {
                             marginBottom: '10px',
                             zIndex: 5
                         }}>
-                            <h1 style={{
-                                fontFamily: 'Playfair Display, serif',
-                                fontSize: '24px',
-                                fontWeight: 900,
-                                color: '#222',
-                                textAlign: 'center',
-                                lineHeight: '1.2'
-                            }}>
+                            <h1
+                                ref={heroTitleRef}
+                                style={{
+                                    fontFamily: 'Playfair Display, serif',
+                                    fontSize: '24px',
+                                    fontWeight: 900,
+                                    color: '#222',
+                                    textAlign: 'center',
+                                    lineHeight: '1.2',
+                                    whiteSpace: 'nowrap',
+                                    maxWidth: '100%'
+                                }}
+                            >
                                 {currentProduct.name}
                             </h1>
                         </div>
@@ -924,7 +943,7 @@ const App = () => {
                             transition={{ duration: 0.2 }}
                             style={{ display: 'flex', flexDirection: 'column' }}
                         >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', width: '100%', marginTop: '4px', position: 'relative' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'clamp(4px, 1.5vw, 8px)', width: '100%', marginTop: '4px', position: 'relative' }}>
                                 {/* Left Container: Rating & Category */}
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', zIndex: 1 }}>
                                     <div className="rating" style={{ display: 'flex', gap: '2px', alignItems: 'center' }}>
@@ -982,13 +1001,13 @@ const App = () => {
                             </div>
 
                             <div className="info-header" style={{ marginBottom: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
-                                <div className="product-name" style={{ fontSize: '20px', textAlign: 'center' }}>
+                                <div className="product-name" style={{ fontSize: 'clamp(14px, 4.5vw, 20px)', textAlign: 'center' }}>
                                     {currentProduct.name}
                                 </div>
                             </div>
 
                             {/* ELITE METADATA LINE */}
-                            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '10px', opacity: 0.8, alignItems: 'center', flexWrap: 'wrap' }}>
+                            <div style={{ display: 'flex', justifyContent: 'center', gap: 'clamp(4px, 1.5vw, 8px)', marginBottom: 'clamp(4px, 2vw, 10px)', opacity: 0.8, alignItems: 'center', flexWrap: 'wrap' }}>
                                 {currentProduct.tipo_vinho && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '10px', color: '#A0A0A0' }}>
                                         <Droplet size={10} fill={currentProduct.tipo_vinho === 'tinto' ? '#722F37' : currentProduct.tipo_vinho === 'rose' ? '#DB7093' : '#F5F5F5'} color={currentProduct.tipo_vinho === 'tinto' ? '#722F37' : currentProduct.tipo_vinho === 'rose' ? '#DB7093' : '#F5F5F5'} /> {currentProduct.tipo_vinho === 'rose' ? 'Rosé' : currentProduct.tipo_vinho === 'tinto' ? 'Tinto' : 'Branco'}
@@ -1015,8 +1034,8 @@ const App = () => {
                             </div>
 
                             <p className="description" style={{
-                                marginBottom: '10px',
-                                fontSize: '12px',
+                                marginBottom: 'clamp(4px, 2vw, 10px)',
+                                fontSize: 'clamp(10px, 2.8vw, 12px)',
                                 color: '#ccc',
                                 textAlign: 'center',
                                 lineHeight: '1.4'
@@ -1027,15 +1046,15 @@ const App = () => {
                             {/* MULTI-FLAVOR / VARIATION SELECTION (HORIZONTAL SCROLL STYLE) */}
                             {((currentProduct.variations && Object.keys(currentProduct.variations).length > 1) ||
                                 (currentProduct.slug && (currentProduct.slug.startsWith('ice-') || currentProduct.slug.startsWith('skol-beats-')))) && (
-                                    <div style={{ marginTop: '0px', marginBottom: '20px', width: '100%' }}>
+                                    <div style={{ marginTop: '0px', marginBottom: 'clamp(8px, 3vw, 20px)', width: '100%' }}>
                                         <div style={{
                                             textAlign: 'center',
-                                            fontSize: '9px',
+                                            fontSize: 'clamp(7px, 2vw, 9px)',
                                             fontWeight: '800',
                                             color: 'var(--accent-gold)',
                                             letterSpacing: '1.2px',
                                             textTransform: 'uppercase',
-                                            marginBottom: '10px'
+                                            marginBottom: 'clamp(4px, 2vw, 10px)'
                                         }}>
                                             Escolha sua Opção
                                         </div>
@@ -1045,7 +1064,7 @@ const App = () => {
                                                 display: 'flex',
                                                 flexWrap: 'wrap',
                                                 justifyContent: 'center',
-                                                gap: '8px',
+                                                gap: 'clamp(4px, 1.5vw, 8px)',
                                                 padding: '0 5px'
                                             }}
                                         >
@@ -1086,12 +1105,12 @@ const App = () => {
                                                                 }
                                                             }}
                                                             style={{
-                                                                padding: '8px 14px',
+                                                                padding: 'clamp(5px, 1.5vw, 8px) clamp(8px, 3vw, 14px)',
                                                                 borderRadius: '18px',
                                                                 border: `1.1px solid ${isSelected ? '#D4AF37' : 'rgba(255,255,255,0.1)'}`,
                                                                 background: isSelected ? 'rgba(212, 175, 55, 0.15)' : 'rgba(255,255,255,0.03)',
                                                                 color: isSelected ? '#D4AF37' : '#999',
-                                                                fontSize: '11px',
+                                                                fontSize: 'clamp(9px, 2.5vw, 11px)',
                                                                 fontWeight: '700',
                                                                 textTransform: 'uppercase',
                                                                 letterSpacing: '0.5px',
@@ -1121,12 +1140,12 @@ const App = () => {
                                                                 setSelectedVariation(variant);
                                                             }}
                                                             style={{
-                                                                padding: '8px 14px',
+                                                                padding: 'clamp(5px, 1.5vw, 8px) clamp(8px, 3vw, 14px)',
                                                                 borderRadius: '18px',
                                                                 border: `1.1px solid ${isSelected ? 'var(--accent-gold)' : 'rgba(255,255,255,0.1)'}`,
                                                                 background: isSelected ? 'rgba(212, 175, 55, 0.15)' : 'rgba(255,255,255,0.03)',
                                                                 color: isSelected ? 'var(--accent-gold)' : '#999',
-                                                                fontSize: '11px',
+                                                                fontSize: 'clamp(9px, 2.5vw, 11px)',
                                                                 fontWeight: '700',
                                                                 textTransform: 'uppercase',
                                                                 letterSpacing: '0.5px',
