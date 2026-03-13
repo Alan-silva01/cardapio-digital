@@ -68,17 +68,34 @@ export default function DashboardPage() {
     const [activeServiceCalls, setActiveServiceCalls] = useState<{ mesa: string; type: 'garcom' | 'conta'; time: Date; id: string }[]>([]);
 
     const playAudioAlert = useCallback((mesaNumero: string, type: 'garcom' | 'conta') => {
+        // --- CUSTOM AUDIO (Cloudinary) ---
+        // For now, we only have Mesa 01 Garçom audio.
+        // Later we can expand this to fetch from `audio_alertas` table or a larger map.
+        if (mesaNumero === '1' && type === 'garcom') {
+            const audio = new Audio("https://res.cloudinary.com/ddhlqymvf/video/upload/v1773405622/garcon_mesa01_i0d77n.m4a");
+            audio.play().catch(e => {
+                console.error("Erro ao tocar áudio customizado:", e);
+                // Fallback to TTS if browser blocks autoplay
+                fallbackTTS(mesaNumero, type);
+            });
+            return;
+        }
+
+        // --- FALLBACK (Browser Native TTS) ---
+        fallbackTTS(mesaNumero, type);
+    }, []);
+
+    const fallbackTTS = (mesaNumero: string, type: 'garcom' | 'conta') => {
         if (!('speechSynthesis' in window)) return;
-        
         const message = type === 'garcom' 
             ? `Solicitação de garçom na mesa ${mesaNumero}`
             : `Fechar conta da mesa ${mesaNumero}`;
             
         const utterance = new SpeechSynthesisUtterance(message);
         utterance.lang = 'pt-BR';
-        utterance.rate = 0.9; // Slightly slower for clarity
+        utterance.rate = 0.9;
         window.speechSynthesis.speak(utterance);
-    }, []);
+    };
 
     const fetchData = useCallback(async () => {
         setLoading(true);
