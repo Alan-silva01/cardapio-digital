@@ -78,6 +78,8 @@ interface OrderDetailModalProps {
   onConfirmPaymentPerson?: (comandaId: string, nomePessoa: string, forma: FormaPagamento) => void;
   onPrintPerson?: (comanda: ComandaAgrupada, nomePessoa: string) => void;
   onPrintAll?: (comanda: ComandaAgrupada) => void;
+  mesasStatus?: Record<number, { garcom: boolean; conta: boolean }>;
+  onClearService?: (mesa: number, type: 'garcom' | 'conta') => void;
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
@@ -265,6 +267,8 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
   onConfirmPaymentPerson,
   onPrintPerson,
   onPrintAll,
+  mesasStatus = {},
+  onClearService,
 }: OrderDetailModalProps) {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -320,9 +324,43 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
                   <Receipt className="h-4.5 w-4.5 text-muted-foreground" />
                 </div>
                 <div className="min-w-0">
-                  <DialogTitle className="text-base font-bold tracking-tight">
-                    Pedido: {comanda.order_number} — Mesa {String(comanda.numero_mesa).padStart(2, "0")}
-                  </DialogTitle>
+                  <div className="flex items-center gap-2">
+                    <DialogTitle className="text-base font-bold tracking-tight">
+                      Pedido: {comanda.order_number} — Mesa {String(comanda.numero_mesa).padStart(2, "0")}
+                    </DialogTitle>
+                    {(mesasStatus[comanda.numero_mesa]?.garcom || mesasStatus[comanda.numero_mesa]?.conta) && 
+                      comanda.status !== "entregue" && 
+                      comanda.status !== "cancelado" && (
+                      <div className="flex items-center gap-2">
+                        {mesasStatus[comanda.numero_mesa]?.garcom && (
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); onClearService?.(comanda.numero_mesa, 'garcom'); }}
+                            className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 uppercase tracking-wider cursor-pointer hover:opacity-70 transition-opacity"
+                            title="Desmarcar alerta de Garçom"
+                          >
+                            <span className="relative flex h-1.5 w-1.5">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                            </span>
+                            Garçom
+                          </button>
+                        )}
+                        {mesasStatus[comanda.numero_mesa]?.conta && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); onClearService?.(comanda.numero_mesa, 'conta'); }}
+                            className="inline-flex items-center gap-1.5 text-[10px] font-bold text-red-600 uppercase tracking-wider cursor-pointer hover:opacity-70 transition-opacity"
+                            title="Desmarcar alerta de Conta"
+                          >
+                            <span className="relative flex h-1.5 w-1.5">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
+                            </span>
+                            Conta
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   <DialogDescription className="flex items-center gap-1.5 text-xs mt-0.5">
                     <Clock className="h-3 w-3" />
                     {elapsed}

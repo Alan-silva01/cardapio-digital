@@ -1175,6 +1175,8 @@ export default function PedidosPage() {
         onConfirmPaymentPerson={handlePayPerson}
         onPrintPerson={handlePrintPerson}
         onPrintAll={handlePrintAll}
+        mesasStatus={mesasStatus}
+        onClearService={clearMesaStatus}
       />
 
       {/* SERVICE CALL MODAL — ULTRA COMPACT */}
