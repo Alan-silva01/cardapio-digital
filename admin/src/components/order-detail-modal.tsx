@@ -338,28 +338,28 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
                           <Badge 
                             variant="destructive"
                             onClick={(e) => { e.stopPropagation(); onClearService?.(comanda.numero_mesa, 'garcom'); }}
-                            className="inline-flex cursor-pointer items-center justify-center gap-1.5 px-2.5 py-0.5 text-[9px] font-semibold text-white uppercase tracking-wider transition-colors whitespace-nowrap shadow-sm hover:bg-destructive/80"
+                            className="inline-flex cursor-pointer items-center justify-center gap-1.5 px-2.5 py-0.5 text-[9px] font-semibold text-white bg-brand hover:bg-brand/90 border-transparent uppercase tracking-wider transition-colors whitespace-nowrap shadow-sm"
                             title="Desmarcar alerta de Garçom"
                           >
                             <span className="relative flex h-1.5 w-1.5 shrink-0">
                               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
                             </span>
-                            Garçom
+                            Chamando Garçom
                           </Badge>
                         )}
                         {mesasStatus[comanda.numero_mesa]?.conta && (
                           <Badge
                             variant="destructive"
                             onClick={(e) => { e.stopPropagation(); onClearService?.(comanda.numero_mesa, 'conta'); }}
-                            className="inline-flex cursor-pointer items-center justify-center gap-1.5 px-2.5 py-0.5 text-[9px] font-semibold text-white uppercase tracking-wider transition-colors whitespace-nowrap shadow-sm hover:bg-destructive/80"
+                            className="inline-flex cursor-pointer items-center justify-center gap-1.5 px-2.5 py-0.5 text-[9px] font-semibold text-white bg-brand hover:bg-brand/90 border-transparent uppercase tracking-wider transition-colors whitespace-nowrap shadow-sm"
                             title="Desmarcar alerta de Conta"
                           >
                             <span className="relative flex h-1.5 w-1.5 shrink-0">
                               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
                               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
                             </span>
-                            Conta
+                            Fechar Conta
                           </Badge>
                         )}
                       </div>
