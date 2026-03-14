@@ -842,11 +842,24 @@ export default function PedidosPage() {
       }
 
       // 4. Match Service Alert ("garcom", "conta", "chamando", "fechar")
+      // We allow partial matches like "cha" for "chamando" or "fe" for "fechar"
       // Alerts only apply to active orders, so filter out history
-      if (query.includes("garçom") || query.includes("garcom") || query.includes("chamando")) {
+      if (
+        "garçom".includes(query) || 
+        "garcom".includes(query) || 
+        "chamando".includes(query) ||
+        (query.length >= 2 && "chamando".startsWith(query)) ||
+        query.includes("garçom") || query.includes("garcom") || query.includes("chamando")
+      ) {
         if (mesasStatus[c.numero_mesa]?.garcom && c.status !== "entregue" && c.status !== "cancelado") return true;
       }
-      if (query.includes("conta") || query.includes("fechar")) {
+      
+      if (
+        "conta".includes(query) || 
+        "fechar".includes(query) ||
+        (query.length >= 2 && "fechar".startsWith(query)) ||
+        query.includes("conta") || query.includes("fechar")
+      ) {
         if (mesasStatus[c.numero_mesa]?.conta && c.status !== "entregue" && c.status !== "cancelado") return true;
       }
 
