@@ -21,13 +21,16 @@ export function GlobalServiceNotifier() {
 
     // Fetch audio URLs and initial mesa states from the database
     useEffect(() => {
-        async function fetchInitialData() {
-            // 1. Fetch audio alerts
+        async function fetchAudioAlerts() {
             const { data: audioData } = await supabase
                 .from("audio_alertas")
                 .select("mesa_numero, tipo, audio_url");
             if (audioData) audioAlertsRef.current = audioData;
+        }
 
+        async function fetchInitialData() {
+            // 1. Fetch audio alerts initially
+            await fetchAudioAlerts();
             // 2. Fetch initial mesas states
             // This prevents playing sounds for old alerts when a new unrelated update happens
             const { data: mesasData } = await supabase
@@ -45,6 +48,22 @@ export function GlobalServiceNotifier() {
             }
         }
         fetchInitialData();
+
+        // 3. Listen to changes in audio_alertas so new audios work without refresh
+        const audioChannel = supabase
+            .channel("global-audio-alerts")
+            .on(
+                "postgres_changes",
+                { event: "*", schema: "public", table: "audio_alertas" },
+                () => {
+                    fetchAudioAlerts(); // Refresh the list in the background
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(audioChannel);
+        };
     }, []);
 
     // Silent unlock on first interaction (same pattern as useNotificationSound)
@@ -88,15 +107,27 @@ export function GlobalServiceNotifier() {
             if (playingRef.current.has(key)) return;
 
             try {
-                const audio = new Audio(urlObj.audio_url);
+                // Add a cache-busting query parameter so the browser doesn't block it 
+                // if it thinks it's already played or cached aggressively.
+                const audioUrlWithCacheBust = `${urlObj.audio_url}?t=${Date.now()}`;
+                const audio = new Audio(audioUrlWithCacheBust);
+                
                 audio.crossOrigin = "anonymous";
-                audio.volume = 0.7;
+                audio.volume = 1.0; // Max volume for service alerts
 
                 // Play ONCE — no loop
                 playingRef.current.add(key);
+
+                // Fallback timeout to clear the ref if the 'ended' event never fires
+                // (e.g. if the audio is 5 seconds long, we clear it after 10s just in case)
+                const fallbackTimeoutId = setTimeout(() => {
+                    playingRef.current.delete(key);
+                }, 10000);
+
                 audio.addEventListener(
                     "ended",
                     () => {
+                        clearTimeout(fallbackTimeoutId);
                         playingRef.current.delete(key);
                     },
                     { once: true }
