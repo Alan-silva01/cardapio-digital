@@ -992,42 +992,42 @@ export default function PedidosPage() {
                                           <Utensils className="h-4 w-4 text-muted-foreground" />
                                         </div>
                                         <div className="flex flex-col">
-                                          <div className="flex items-center gap-2">
-                                            <span className="font-semibold text-sm tracking-tight text-foreground">
-                                              Mesa {String(comanda.numero_mesa).padStart(2, "0")}
-                                            </span>
-                                            
-                                            {/* MINIMALIST SERVICE ALERTS */}
+                                            {/* MINIMALIST SERVICE ALERTS (MOVED ABOVE TABLE NAME) */}
                                             {(mesasStatus[comanda.numero_mesa]?.garcom || mesasStatus[comanda.numero_mesa]?.conta) && 
                                              comanda.status !== "entregue" && 
                                              comanda.status !== "cancelado" && (
-                                              <div className="flex items-center gap-2 ml-1">
+                                              <div className="flex flex-nowrap items-center justify-center gap-1 sm:gap-1.5 mb-1.5 w-full overflow-hidden">
                                                 {mesasStatus[comanda.numero_mesa]?.garcom && (
                                                   <button 
                                                     onClick={(e) => { e.stopPropagation(); setServiceModal({ mesa: comanda.numero_mesa, type: 'garcom' }); }}
-                                                    className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 uppercase tracking-wider cursor-pointer hover:opacity-70 transition-opacity"
+                                                    className="inline-flex shrink-0 items-center gap-1 sm:gap-1.5 text-[8.5px] sm:text-[9px] font-bold text-emerald-600 uppercase tracking-tight sm:tracking-wider cursor-pointer hover:opacity-70 transition-opacity whitespace-nowrap"
                                                   >
-                                                    <span className="relative flex h-1.5 w-1.5">
+                                                    <span className="relative flex h-1.5 w-1.5 shrink-0">
                                                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                                       <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
                                                     </span>
-                                                    Garçom
+                                                    <span className="truncate">Chamando Garçom</span>
                                                   </button>
                                                 )}
                                                 {mesasStatus[comanda.numero_mesa]?.conta && (
                                                   <button
                                                     onClick={(e) => { e.stopPropagation(); setServiceModal({ mesa: comanda.numero_mesa, type: 'conta' }); }}
-                                                    className="inline-flex items-center gap-1.5 text-[10px] font-bold text-red-600 uppercase tracking-wider cursor-pointer hover:opacity-70 transition-opacity"
+                                                    className="inline-flex shrink-0 items-center gap-1 sm:gap-1.5 text-[8.5px] sm:text-[9px] font-bold text-red-600 uppercase tracking-tight sm:tracking-wider cursor-pointer hover:opacity-70 transition-opacity whitespace-nowrap"
                                                   >
-                                                    <span className="relative flex h-1.5 w-1.5">
+                                                    <span className="relative flex h-1.5 w-1.5 shrink-0">
                                                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                                                       <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
                                                     </span>
-                                                    Conta
+                                                    <span className="truncate">Fechar Conta</span>
                                                   </button>
                                                 )}
                                               </div>
                                             )}
+
+                                          <div className="flex items-center gap-2">
+                                            <span className="font-semibold text-sm tracking-tight text-foreground">
+                                              Mesa {String(comanda.numero_mesa).padStart(2, "0")}
+                                            </span>
 
                                             {comanda.status === "cancelado" ? (
                                               <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider bg-red-500/10 px-1.5 py-0.5 rounded ml-1">
