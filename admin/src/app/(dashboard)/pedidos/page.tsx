@@ -1007,11 +1007,11 @@ export default function PedidosPage() {
                                         {mesasStatus[comanda.numero_mesa]?.garcom && (
                                           <button 
                                             onClick={(e) => { e.stopPropagation(); setServiceModal({ mesa: comanda.numero_mesa, type: 'garcom' }); }}
-                                            className="inline-flex shrink-0 items-center gap-1 sm:gap-1.5 text-[8.5px] sm:text-[9px] font-bold text-emerald-600 uppercase tracking-tight sm:tracking-wider cursor-pointer hover:opacity-70 transition-opacity whitespace-nowrap"
+                                            className="inline-flex shrink-0 items-center justify-center gap-1.5 px-2.5 py-0.5 text-[9px] font-semibold text-destructive-foreground uppercase tracking-wider bg-destructive hover:bg-destructive/80 transition-colors rounded-full whitespace-nowrap shadow-sm"
                                           >
                                             <span className="relative flex h-1.5 w-1.5 shrink-0">
-                                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                                              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
                                             </span>
                                             <span className="truncate">Chamando Garçom</span>
                                           </button>
@@ -1019,11 +1019,11 @@ export default function PedidosPage() {
                                         {mesasStatus[comanda.numero_mesa]?.conta && (
                                           <button
                                             onClick={(e) => { e.stopPropagation(); setServiceModal({ mesa: comanda.numero_mesa, type: 'conta' }); }}
-                                            className="inline-flex shrink-0 items-center gap-1 sm:gap-1.5 text-[8.5px] sm:text-[9px] font-bold text-red-600 uppercase tracking-tight sm:tracking-wider cursor-pointer hover:opacity-70 transition-opacity whitespace-nowrap"
+                                            className="inline-flex shrink-0 items-center justify-center gap-1.5 px-2.5 py-0.5 text-[9px] font-semibold text-destructive-foreground uppercase tracking-wider bg-destructive hover:bg-destructive/80 transition-colors rounded-full whitespace-nowrap shadow-sm"
                                           >
                                             <span className="relative flex h-1.5 w-1.5 shrink-0">
-                                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
+                                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                                              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
                                             </span>
                                             <span className="truncate">Fechar Conta</span>
                                           </button>
