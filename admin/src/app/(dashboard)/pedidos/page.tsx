@@ -986,44 +986,44 @@ export default function PedidosPage() {
                                     </div>
                                   </div>
                                   <CardContent className="p-3 space-y-2 pt-4 relative">
-                                    <div className="flex justify-between items-start">
+                                    {/* MINIMALIST SERVICE ALERTS (MOVED FULL WIDTH ABOVE MESA INFO) */}
+                                    {(mesasStatus[comanda.numero_mesa]?.garcom || mesasStatus[comanda.numero_mesa]?.conta) && 
+                                     comanda.status !== "entregue" && 
+                                     comanda.status !== "cancelado" && (
+                                      <div className="flex flex-nowrap items-center justify-center gap-1 sm:gap-2 mb-3 w-full overflow-hidden">
+                                        {mesasStatus[comanda.numero_mesa]?.garcom && (
+                                          <button 
+                                            onClick={(e) => { e.stopPropagation(); setServiceModal({ mesa: comanda.numero_mesa, type: 'garcom' }); }}
+                                            className="inline-flex shrink-0 items-center gap-1 sm:gap-1.5 text-[8.5px] sm:text-[9px] font-bold text-emerald-600 uppercase tracking-tight sm:tracking-wider cursor-pointer hover:opacity-70 transition-opacity whitespace-nowrap"
+                                          >
+                                            <span className="relative flex h-1.5 w-1.5 shrink-0">
+                                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                                            </span>
+                                            <span className="truncate">Chamando Garçom</span>
+                                          </button>
+                                        )}
+                                        {mesasStatus[comanda.numero_mesa]?.conta && (
+                                          <button
+                                            onClick={(e) => { e.stopPropagation(); setServiceModal({ mesa: comanda.numero_mesa, type: 'conta' }); }}
+                                            className="inline-flex shrink-0 items-center gap-1 sm:gap-1.5 text-[8.5px] sm:text-[9px] font-bold text-red-600 uppercase tracking-tight sm:tracking-wider cursor-pointer hover:opacity-70 transition-opacity whitespace-nowrap"
+                                          >
+                                            <span className="relative flex h-1.5 w-1.5 shrink-0">
+                                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
+                                            </span>
+                                            <span className="truncate">Fechar Conta</span>
+                                          </button>
+                                        )}
+                                      </div>
+                                    )}
+
+                                    <div className="flex justify-between items-center">
                                       <div className="flex items-center gap-2">
                                         <div className="h-7 w-7 rounded-md bg-muted flex items-center justify-center shrink-0">
                                           <Utensils className="h-4 w-4 text-muted-foreground" />
                                         </div>
                                         <div className="flex flex-col">
-                                            {/* MINIMALIST SERVICE ALERTS (MOVED ABOVE TABLE NAME) */}
-                                            {(mesasStatus[comanda.numero_mesa]?.garcom || mesasStatus[comanda.numero_mesa]?.conta) && 
-                                             comanda.status !== "entregue" && 
-                                             comanda.status !== "cancelado" && (
-                                              <div className="flex flex-nowrap items-center justify-center gap-1 sm:gap-1.5 mb-1.5 w-full overflow-hidden">
-                                                {mesasStatus[comanda.numero_mesa]?.garcom && (
-                                                  <button 
-                                                    onClick={(e) => { e.stopPropagation(); setServiceModal({ mesa: comanda.numero_mesa, type: 'garcom' }); }}
-                                                    className="inline-flex shrink-0 items-center gap-1 sm:gap-1.5 text-[8.5px] sm:text-[9px] font-bold text-emerald-600 uppercase tracking-tight sm:tracking-wider cursor-pointer hover:opacity-70 transition-opacity whitespace-nowrap"
-                                                  >
-                                                    <span className="relative flex h-1.5 w-1.5 shrink-0">
-                                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-                                                    </span>
-                                                    <span className="truncate">Chamando Garçom</span>
-                                                  </button>
-                                                )}
-                                                {mesasStatus[comanda.numero_mesa]?.conta && (
-                                                  <button
-                                                    onClick={(e) => { e.stopPropagation(); setServiceModal({ mesa: comanda.numero_mesa, type: 'conta' }); }}
-                                                    className="inline-flex shrink-0 items-center gap-1 sm:gap-1.5 text-[8.5px] sm:text-[9px] font-bold text-red-600 uppercase tracking-tight sm:tracking-wider cursor-pointer hover:opacity-70 transition-opacity whitespace-nowrap"
-                                                  >
-                                                    <span className="relative flex h-1.5 w-1.5 shrink-0">
-                                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
-                                                    </span>
-                                                    <span className="truncate">Fechar Conta</span>
-                                                  </button>
-                                                )}
-                                              </div>
-                                            )}
-
                                           <div className="flex items-center gap-2">
                                             <span className="font-semibold text-sm tracking-tight text-foreground">
                                               Mesa {String(comanda.numero_mesa).padStart(2, "0")}
@@ -1041,9 +1041,9 @@ export default function PedidosPage() {
                                           </div>
                                         </div>
                                       </div>
-                                      <div className={`flex items-center gap-1.5 text-[10px] font-medium px-2 py-1 rounded-full border ${isUrgent ? "text-red-500 bg-red-500/10 border-red-500/20" : "text-muted-foreground bg-muted"}`}>
-                                        <Clock className="h-3 w-3" />
-                                        {elapsed}
+                                      <div className={`flex shrink-0 items-center gap-1.5 text-[10px] font-medium px-2 py-1 rounded-full border ${isUrgent ? "text-red-500 bg-red-500/10 border-red-500/20" : "text-muted-foreground bg-muted"}`}>
+                                        <Clock className="h-3 w-3 shrink-0" />
+                                        <span>{elapsed}</span>
                                       </div>
                                     </div>
 
