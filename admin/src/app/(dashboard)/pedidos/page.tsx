@@ -841,12 +841,12 @@ export default function PedidosPage() {
         return false;
       }
 
-      // 4. Match Service Alert ("garcom", "conta")
+      // 4. Match Service Alert ("garcom", "conta", "chamando", "fechar")
       // Alerts only apply to active orders, so filter out history
-      if (query.includes("garçom") || query.includes("garcom")) {
+      if (query.includes("garçom") || query.includes("garcom") || query.includes("chamando")) {
         if (mesasStatus[c.numero_mesa]?.garcom && c.status !== "entregue" && c.status !== "cancelado") return true;
       }
-      if (query.includes("conta")) {
+      if (query.includes("conta") || query.includes("fechar")) {
         if (mesasStatus[c.numero_mesa]?.conta && c.status !== "entregue" && c.status !== "cancelado") return true;
       }
 
@@ -1041,7 +1041,7 @@ export default function PedidosPage() {
                                           </div>
                                         </div>
                                       </div>
-                                      <div className={`flex shrink-0 items-center gap-1.5 text-[10px] font-medium px-2 py-1 rounded-full border ${isUrgent ? "text-red-500 bg-red-500/10 border-red-500/20" : "text-muted-foreground bg-muted"}`}>
+                                      <div className="flex shrink-0 items-center gap-1.5 text-[10px] font-medium px-2 py-1 rounded-full border text-muted-foreground bg-muted border-transparent">
                                         <Clock className="h-3 w-3 shrink-0" />
                                         <span>{elapsed}</span>
                                       </div>
@@ -1117,12 +1117,7 @@ export default function PedidosPage() {
                                       ))}
                                     </div>
 
-                                    {isUrgent && (
-                                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-red-500 uppercase tracking-wider bg-red-500/10 px-2 py-1 rounded w-fit">
-                                        <AlertCircle className="h-3 w-3" />
-                                        ATRASADO
-                                      </div>
-                                    )}
+
                                   </CardContent>
                                   <Separator />
                                   <CardFooter className="px-3 py-2 flex justify-between items-center bg-muted/20">
