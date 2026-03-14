@@ -82,12 +82,12 @@ interface OrderDetailModalProps {
   onClearService?: (mesa: number, type: 'garcom' | 'conta') => void;
 }
 
-const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
-  recebido: { label: "Recebido", color: "bg-muted text-muted-foreground" },
-  preparando: { label: "Preparando", color: "bg-amber-500/10 text-amber-500" },
-  pronto: { label: "Servido", color: "bg-emerald-500/10 text-emerald-500" },
-  entregue: { label: "Entregue", color: "bg-muted text-muted-foreground" },
-  cancelado: { label: "Cancelado", color: "bg-red-500/10 text-red-500" },
+const STATUS_CONFIG: Record<string, { label: string; color: string; icon?: any }> = {
+  recebido: { label: "Recebido", color: "bg-orange-500/10 text-orange-600" },
+  preparando: { label: "Preparando", color: "bg-brand text-white border-transparent" },
+  pronto: { label: "Pronto", color: "bg-emerald-500/10 text-emerald-600" },
+  entregue: { label: "Entregue", color: "bg-blue-500/10 text-blue-600" },
+  cancelado: { label: "Cancelado", color: "bg-red-500/10 text-red-600" },
 };
 
 function formatElapsedTime(createdAt: string): string {
@@ -324,39 +324,43 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
                   <Receipt className="h-4.5 w-4.5 text-muted-foreground" />
                 </div>
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <DialogTitle className="text-base font-bold tracking-tight">
-                      Pedido: {comanda.order_number} — Mesa {String(comanda.numero_mesa).padStart(2, "0")}
-                    </DialogTitle>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <DialogTitle className="text-base font-bold tracking-tight">
+                        Pedido: {comanda.order_number} — Mesa {String(comanda.numero_mesa).padStart(2, "0")}
+                      </DialogTitle>
+                    </div>
                     {(mesasStatus[comanda.numero_mesa]?.garcom || mesasStatus[comanda.numero_mesa]?.conta) && 
                       comanda.status !== "entregue" && 
                       comanda.status !== "cancelado" && (
                       <div className="flex items-center gap-2">
                         {mesasStatus[comanda.numero_mesa]?.garcom && (
-                          <button 
+                          <Badge 
+                            variant="destructive"
                             onClick={(e) => { e.stopPropagation(); onClearService?.(comanda.numero_mesa, 'garcom'); }}
-                            className="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 uppercase tracking-wider cursor-pointer hover:opacity-70 transition-opacity"
+                            className="inline-flex cursor-pointer items-center justify-center gap-1.5 px-2.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider transition-colors whitespace-nowrap shadow-sm hover:bg-destructive/80"
                             title="Desmarcar alerta de Garçom"
                           >
-                            <span className="relative flex h-1.5 w-1.5">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                            <span className="relative flex h-1.5 w-1.5 shrink-0">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
                             </span>
                             Garçom
-                          </button>
+                          </Badge>
                         )}
                         {mesasStatus[comanda.numero_mesa]?.conta && (
-                          <button
+                          <Badge
+                            variant="destructive"
                             onClick={(e) => { e.stopPropagation(); onClearService?.(comanda.numero_mesa, 'conta'); }}
-                            className="inline-flex items-center gap-1.5 text-[10px] font-bold text-red-600 uppercase tracking-wider cursor-pointer hover:opacity-70 transition-opacity"
+                            className="inline-flex cursor-pointer items-center justify-center gap-1.5 px-2.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider transition-colors whitespace-nowrap shadow-sm hover:bg-destructive/80"
                             title="Desmarcar alerta de Conta"
                           >
-                            <span className="relative flex h-1.5 w-1.5">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500"></span>
+                            <span className="relative flex h-1.5 w-1.5 shrink-0">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
                             </span>
                             Conta
-                          </button>
+                          </Badge>
                         )}
                       </div>
                     )}
