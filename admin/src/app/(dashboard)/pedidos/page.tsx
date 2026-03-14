@@ -1007,7 +1007,7 @@ export default function PedidosPage() {
                                         {mesasStatus[comanda.numero_mesa]?.garcom && (
                                           <button 
                                             onClick={(e) => { e.stopPropagation(); setServiceModal({ mesa: comanda.numero_mesa, type: 'garcom' }); }}
-                                            className="inline-flex shrink-0 items-center justify-center gap-1.5 px-2.5 py-0.5 text-[9px] font-semibold text-destructive-foreground uppercase tracking-wider bg-destructive hover:bg-destructive/80 transition-colors rounded-full whitespace-nowrap shadow-sm"
+                                            className="inline-flex shrink-0 items-center justify-center gap-1.5 px-2.5 py-0.5 text-[9px] font-semibold text-white uppercase tracking-wider bg-destructive hover:bg-destructive/80 transition-colors rounded-full whitespace-nowrap shadow-sm"
                                           >
                                             <span className="relative flex h-1.5 w-1.5 shrink-0">
                                               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
@@ -1019,7 +1019,7 @@ export default function PedidosPage() {
                                         {mesasStatus[comanda.numero_mesa]?.conta && (
                                           <button
                                             onClick={(e) => { e.stopPropagation(); setServiceModal({ mesa: comanda.numero_mesa, type: 'conta' }); }}
-                                            className="inline-flex shrink-0 items-center justify-center gap-1.5 px-2.5 py-0.5 text-[9px] font-semibold text-destructive-foreground uppercase tracking-wider bg-destructive hover:bg-destructive/80 transition-colors rounded-full whitespace-nowrap shadow-sm"
+                                            className="inline-flex shrink-0 items-center justify-center gap-1.5 px-2.5 py-0.5 text-[9px] font-semibold text-white uppercase tracking-wider bg-destructive hover:bg-destructive/80 transition-colors rounded-full whitespace-nowrap shadow-sm"
                                           >
                                             <span className="relative flex h-1.5 w-1.5 shrink-0">
                                               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
