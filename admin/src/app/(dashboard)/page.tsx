@@ -63,8 +63,8 @@ export default function DashboardPage() {
     const [itensPedido, setItensPedido] = useState<any[]>([]);
     const [estoqueBaixo, setEstoqueBaixo] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-
-
+    const [activeServiceCalls, setActiveServiceCalls] = useState<any[]>([]);
+    const audioAlertsRef = useRef<any[]>([]);
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -72,7 +72,7 @@ export default function DashboardPage() {
         const start7Days = startOfDay(subDays(now, 6)).toISOString();
         const endNow = endOfDay(now).toISOString();
 
-        const [pedidos7dRes, itensRes, estoqueRes] = await Promise.all([
+        const [pedidos7dRes, itensRes, estoqueRes, activeMesasRes, audioRes] = await Promise.all([
             supabase
                 .from("pedidos")
                 .select("id, status, total, criado_em")
