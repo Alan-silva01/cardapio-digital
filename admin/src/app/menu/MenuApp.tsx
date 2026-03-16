@@ -746,6 +746,17 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null 
         window.matchMedia('(display-mode: standalone)').addEventListener('change', checkMode);
     }, []);
 
+    // Apply dark theme to body while MenuApp is active
+    useEffect(() => {
+        document.documentElement.classList.add('theme-dark');
+        document.body.classList.add('theme-dark');
+        
+        return () => {
+            document.documentElement.classList.remove('theme-dark');
+            document.body.classList.remove('theme-dark');
+        };
+    }, []);
+
     // Reset variation when product changes
     useEffect(() => {
         if (currentProduct && currentProduct.variations) {
