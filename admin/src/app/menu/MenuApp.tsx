@@ -1502,7 +1502,7 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                             <span className="cart-title">Comanda</span>
                             <button
                                 onClick={() => setIsCartOpen(false)}
-                                style={{ background: 'transparent', border: 'none', color: '#FFF', cursor: 'pointer', padding: '4px' }}
+                                style={{ background: 'transparent', border: 'none', color: '#111827', cursor: 'pointer', padding: '4px' }}
                             >
                                 <X size={24} />
                             </button>
@@ -1529,8 +1529,8 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                             {pessoaAtiva && (
                                 <div className="cart-person-section" style={{marginBottom: '24px'}}>
                                     <h4>Comanda Identificada</h4>
-                                    <div className="cart-person-active" style={{marginTop: '8px', padding: '12px', background: 'rgba(0,0,0,0.4)', borderColor: 'rgba(255,255,255,0.1)'}}>
-                                        <span className="cart-person-active-name" style={{color: '#FFF'}}>
+                                    <div className="cart-person-active" style={{marginTop: '8px', padding: '12px', background: '#F3F4F6', border: '1px solid #E5E7EB', borderRadius: '12px'}}>
+                                        <span className="cart-person-active-name" style={{color: '#111827', fontWeight: 600}}>
                                             <div style={{width: '28px', height: '28px', borderRadius: '50%', background: 'var(--accent-gold)', color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 900}}>
                                                 {pessoaAtiva.charAt(0).toUpperCase()}
                                             </div>
@@ -1549,7 +1549,7 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                                     {Object.keys(cart).length === 0 ? (
                                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.5, marginTop: '40px' }}>
                                             <ShoppingCart size={48} color="#888" style={{ marginBottom: '16px' }} />
-                                            <p style={{ color: '#FFF', fontSize: '14px', textAlign: 'center' }}>Seu carrinho está vazio.</p>
+                                            <p style={{ color: '#6B7280', fontSize: '14px', textAlign: 'center' }}>Seu carrinho está vazio.</p>
                                         </div>
                                     ) : (
                                         Object.entries(cart).map(([key, qty]) => {
@@ -1818,8 +1818,8 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                             {cartTab === 'pedidos' && (
                                 <div className="cart-footer" style={{position: 'relative', borderTop: 'none', padding: '0 20px 24px'}}>
                                     <div className="cart-subtotal-row" style={{marginBottom: 0}}>
-                                        <span className="cart-subtotal-label" style={{color: '#888'}}>Total da Conta (Seu Consumo)</span>
-                                        <span className="cart-subtotal-value" style={{color: '#FFF'}}>
+                                        <span className="cart-subtotal-label">Total da Conta (Seu Consumo)</span>
+                                        <span className="cart-subtotal-value">
                                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
                                                 orderHistory.reduce((sum, ped) => sum + ped.total, 0)
                                             )}
