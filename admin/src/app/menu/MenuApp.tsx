@@ -900,7 +900,11 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
 
     return (
         <div className="app-container" style={{
-            background: `url('https://res.cloudinary.com/ddhlqymvf/image/upload/f_auto,q_auto,w_450/v1771525899/App_Bar_1080x1920_2_afm0f1.png') center/cover no-repeat`,
+            backgroundColor: '#000',
+            backgroundImage: `url('https://res.cloudinary.com/ddhlqymvf/image/upload/f_auto,q_auto,w_450/v1771525899/App_Bar_1080x1920_2_afm0f1.png')`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
             transition: 'background 0.5s ease-in-out'
         }}>
             {/* Background Tint Overlay */}
