@@ -750,19 +750,24 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
     useEffect(() => {
         const themeMetaTag = document.querySelector('meta[name="theme-color"]');
         
+        const rootEl = document.getElementById('root');
+        
         if (isActive) {
             document.documentElement.classList.add('theme-dark');
             document.body.classList.add('theme-dark');
+            if (rootEl) rootEl.classList.add('theme-dark');
             if (themeMetaTag) themeMetaTag.setAttribute('content', '#000000');
         } else {
             document.documentElement.classList.remove('theme-dark');
             document.body.classList.remove('theme-dark');
+            if (rootEl) rootEl.classList.remove('theme-dark');
             if (themeMetaTag) themeMetaTag.setAttribute('content', '#e8e8e8');
         }
         
         return () => {
             document.documentElement.classList.remove('theme-dark');
             document.body.classList.remove('theme-dark');
+            if (rootEl) rootEl.classList.remove('theme-dark');
             if (themeMetaTag) themeMetaTag.setAttribute('content', '#e8e8e8');
         };
     }, [isActive]);
