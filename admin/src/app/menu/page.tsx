@@ -74,6 +74,7 @@ export default function MenuPage() {
       {/* MenuApp — always mounted after first render, hidden when on home */}
       <div style={{ display: view === "menu" ? "block" : "none" }}>
         <MenuApp
+          isActive={view === "menu"}
           filterCategories={filterCategories}
           searchProductName={searchProductName}
           onBack={handleBackToHome}

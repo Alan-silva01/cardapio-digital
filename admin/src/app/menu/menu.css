@@ -150,15 +150,6 @@ body.is-browser .hero {
   /* Subtle separator */
 }
 
-body.is-browser .sheet-footer {
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-body.is-pwa .sheet-footer {
-  padding-bottom: calc(0px + env(safe-area-inset-bottom));
-  padding-top: 10px;
-}
-
 .drag-handle {
   width: 50px;
   height: 4px;

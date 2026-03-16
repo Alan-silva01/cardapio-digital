@@ -41,7 +41,7 @@ const HeartParticle = ({ x, y, onComplete }) => {
 };
 
 
-const App = ({ filterCategories = null, searchProductName = null, onBack = null }) => {
+const App = ({ filterCategories = null, searchProductName = null, onBack = null, isActive = true }) => {
     const [products, setProducts] = useState([]);
     const allProductsRef = useRef([]);
     const [loading, setLoading] = useState(true);
@@ -746,16 +746,21 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null 
         window.matchMedia('(display-mode: standalone)').addEventListener('change', checkMode);
     }, []);
 
-    // Apply dark theme to body while MenuApp is active
+    // Apply dark theme to body ONLY when MenuApp is active
     useEffect(() => {
-        document.documentElement.classList.add('theme-dark');
-        document.body.classList.add('theme-dark');
+        if (isActive) {
+            document.documentElement.classList.add('theme-dark');
+            document.body.classList.add('theme-dark');
+        } else {
+            document.documentElement.classList.remove('theme-dark');
+            document.body.classList.remove('theme-dark');
+        }
         
         return () => {
             document.documentElement.classList.remove('theme-dark');
             document.body.classList.remove('theme-dark');
         };
-    }, []);
+    }, [isActive]);
 
     // Reset variation when product changes
     useEffect(() => {
