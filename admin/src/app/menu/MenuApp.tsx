@@ -41,7 +41,7 @@ const HeartParticle = ({ x, y, onComplete }) => {
 };
 
 
-const App = () => {
+const App = ({ filterCategories = null, searchProductName = null, onBack = null }) => {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -664,7 +664,17 @@ const App = () => {
                 }
             }
 
-            setProducts(enrichedProducts);
+            // CATEGORY FILTER: when launched from Home with specific categories
+            if (filterCategories && filterCategories.length > 0) {
+                const filtered = enrichedProducts.filter(p => filterCategories.includes(p.category));
+                setProducts(filtered.length > 0 ? filtered : enrichedProducts);
+            } else if (searchProductName) {
+                const term = searchProductName.toLowerCase();
+                const filtered = enrichedProducts.filter(p => p.name.toLowerCase().includes(term));
+                setProducts(filtered.length > 0 ? filtered : enrichedProducts);
+            } else {
+                setProducts(enrichedProducts);
+            }
         } catch (error) {
             console.error('Error fetching menu from Supabase:', error);
         } finally {
@@ -800,16 +810,22 @@ const App = () => {
 
     if (loading) {
         return (
-            <div className="app-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#111' }}>
-                <Loader2 className="animate-spin text-white" size={48} />
+            <div className="app-container" style={{
+                position: "fixed",
+                top: 0, left: 0, right: 0, bottom: 0,
+                width: "100vw", height: "100vh",
+                zIndex: 99999, margin: 0, padding: 0, maxWidth: "none",
+                display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f5f5f5'
+            }}>
+                <Loader2 className="animate-spin" style={{ color: '#999' }} size={36} />
             </div>
         );
     }
 
     if (!currentProduct) {
         return (
-            <div className="app-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#111', color: '#fff' }}>
-                <p>Nenhum produto disponível no momento.</p>
+            <div className="app-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f5f5f5', color: '#999', width: '100%' }}>
+                <p>Nenhum produto encontrado.</p>
             </div>
         );
     }
@@ -841,7 +857,7 @@ const App = () => {
 
             {/* FIXED TOP NAV */}
             <div className="top-nav">
-                <ArrowLeft className="icon" />
+                <ArrowLeft className="icon" style={{ cursor: onBack ? 'pointer' : 'default' }} onClick={() => onBack && onBack()} />
                 <div className="page-title">{currentProduct.category}</div>
                 <div ref={cartIconRef} style={{ position: 'relative', cursor: 'pointer' }} onClick={handleOpenCartClick}>
                     <ShoppingCart className="icon" />

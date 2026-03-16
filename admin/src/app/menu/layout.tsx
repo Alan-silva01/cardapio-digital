@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Playfair_Display } from "next/font/google";
 import "./menu.css";
+import "./home.css";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
