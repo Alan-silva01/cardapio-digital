@@ -13,7 +13,7 @@ const HomeApp = dynamic(() => import("./HomeApp"), {
         justifyContent: "center",
         alignItems: "center",
         height: "100dvh",
-        background: "#f5f5f5",
+        background: "#e8e8e8",
       }}
     >
       <Loader2 className="animate-spin" style={{ color: "#999" }} size={36} />

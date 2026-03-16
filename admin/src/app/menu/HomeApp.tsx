@@ -125,7 +125,7 @@ const CATEGORIES: CategoryDef[] = [
     subtitle: "Porções & Tábuas",
     emoji: "🍟",
     icon: CookingPot,
-    image: "https://images.unsplash.com/photo-1585325701165-351af679e600?w=400&q=80",
+    image: "/images/petiscos.png",
     itemCount: 5,
     subs: [
       { id: "petiscos-all", label: "Todos os Petiscos", emoji: "🍖", dbCategories: ["Petiscos"] },

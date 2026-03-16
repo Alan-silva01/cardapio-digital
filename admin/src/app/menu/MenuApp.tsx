@@ -43,7 +43,10 @@ const HeartParticle = ({ x, y, onComplete }) => {
 
 const App = ({ filterCategories = null, searchProductName = null, onBack = null }) => {
     const [products, setProducts] = useState([]);
+    const allProductsRef = useRef([]);
     const [loading, setLoading] = useState(true);
+    const [isFiltering, setIsFiltering] = useState(false);
+    const prevFilterRef = useRef({ filterCategories, searchProductName });
     const [currentIndex, setCurrentIndex] = useState(0);
     const [direction, setDirection] = useState(0); // 1 = right, -1 = left
     const [isInternalSpin, setIsInternalSpin] = useState(false); // true when clicking a flavor button
@@ -664,17 +667,9 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null 
                 }
             }
 
-            // CATEGORY FILTER: when launched from Home with specific categories
-            if (filterCategories && filterCategories.length > 0) {
-                const filtered = enrichedProducts.filter(p => filterCategories.includes(p.category));
-                setProducts(filtered.length > 0 ? filtered : enrichedProducts);
-            } else if (searchProductName) {
-                const term = searchProductName.toLowerCase();
-                const filtered = enrichedProducts.filter(p => p.name.toLowerCase().includes(term));
-                setProducts(filtered.length > 0 ? filtered : enrichedProducts);
-            } else {
-                setProducts(enrichedProducts);
-            }
+            // Store all products in ref for reactive filtering
+            allProductsRef.current = enrichedProducts;
+            setProducts(enrichedProducts);
         } catch (error) {
             console.error('Error fetching menu from Supabase:', error);
         } finally {
@@ -686,6 +681,41 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null 
     useEffect(() => {
         fetchMenu(true);
     }, [fetchMenu]);
+
+    // Mark as filtering immediately when props change (prevents old product flash)
+    if (
+        prevFilterRef.current.filterCategories !== filterCategories ||
+        prevFilterRef.current.searchProductName !== searchProductName
+    ) {
+        prevFilterRef.current = { filterCategories, searchProductName };
+        if (!isFiltering && allProductsRef.current.length > 0) {
+            setIsFiltering(true);
+        }
+    }
+
+    // Reactively filter products when Home changes the filter/search props
+    useEffect(() => {
+        const all = allProductsRef.current;
+        if (!all || all.length === 0) {
+            setIsFiltering(false);
+            return;
+        }
+
+        if (filterCategories && filterCategories.length > 0) {
+            const filtered = all.filter(p => filterCategories.includes(p.category));
+            setProducts(filtered.length > 0 ? filtered : all);
+            setCurrentIndex(0);
+        } else if (searchProductName) {
+            const term = searchProductName.toLowerCase();
+            const filtered = all.filter(p => p.name.toLowerCase().includes(term));
+            setProducts(filtered.length > 0 ? filtered : all);
+            setCurrentIndex(0);
+        } else {
+            setProducts(all);
+            setCurrentIndex(0);
+        }
+        setIsFiltering(false);
+    }, [filterCategories, searchProductName]);
 
     // Realtime subscriptions: auto-refresh on any DB change
     useEffect(() => {
@@ -808,14 +838,14 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null 
         },
     };
 
-    if (loading) {
+    if (loading || isFiltering) {
         return (
             <div className="app-container" style={{
                 position: "fixed",
                 top: 0, left: 0, right: 0, bottom: 0,
                 width: "100vw", height: "100vh",
                 zIndex: 99999, margin: 0, padding: 0, maxWidth: "none",
-                display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f5f5f5'
+                display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#e8e8e8'
             }}>
                 <Loader2 className="animate-spin" style={{ color: '#999' }} size={36} />
             </div>
@@ -824,7 +854,7 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null 
 
     if (!currentProduct) {
         return (
-            <div className="app-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#f5f5f5', color: '#999', width: '100%' }}>
+            <div className="app-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#e8e8e8', color: '#999', width: '100%' }}>
                 <p>Nenhum produto encontrado.</p>
             </div>
         );
