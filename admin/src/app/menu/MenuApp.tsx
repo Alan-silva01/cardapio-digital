@@ -1655,29 +1655,31 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
 
                                     {/* UPSELL SECTION */}
                                     {Object.keys(cart).length > 0 && products.length > 0 && (
-                                        <div className="cart-upsell-container" style={{padding: '24px 0', borderTop: 'none'}}>
+                                        <div className="cart-upsell-container">
                                             <h4 className="upsell-title">Que tal adicionar?</h4>
                                             <div className="upsell-scroll">
-                                                {products
-                                                    .filter(p => !cart[p.id] && !Object.keys(cart).some(k => k.startsWith(p.id)) && p.id !== currentProduct?.id)
-                                                    .slice(0, 5)
-                                                    .map(p => (
-                                                        <div key={p.id} className="upsell-item" onClick={() => {
-                                                            setCart(prev => ({ ...prev, [p.id]: (prev[p.id] || 0) + 1 }));
-                                                        }}>
-                                                            <div className="upsell-img-box">
-                                                                <img src={p.imageUrl} alt={p.name} />
+                                                <div className="upsell-marquee">
+                                                    {products
+                                                        .filter(p => !cart[p.id] && !Object.keys(cart).some(k => k.startsWith(p.id)) && p.id !== currentProduct?.id)
+                                                        .slice(0, 5)
+                                                        .map(p => (
+                                                            <div key={p.id} className="upsell-item" onClick={() => {
+                                                                setCart(prev => ({ ...prev, [p.id]: (prev[p.id] || 0) + 1 }));
+                                                            }}>
+                                                                <div className="upsell-img-box">
+                                                                    <img src={p.imageUrl} alt={p.name} />
+                                                                </div>
+                                                                <div className="upsell-info">
+                                                                    <span className="upsell-name">{p.name}</span>
+                                                                    <span className="upsell-price">
+                                                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.price)}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="upsell-add-icon">+</div>
                                                             </div>
-                                                            <div className="upsell-info">
-                                                                <span className="upsell-name">{p.name}</span>
-                                                                <span className="upsell-price">
-                                                                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.price)}
-                                                                </span>
-                                                            </div>
-                                                            <div className="upsell-add-icon">+</div>
-                                                        </div>
-                                                    ))
-                                                }
+                                                        ))
+                                                    }
+                                                </div>
                                             </div>
                                         </div>
                                     )}
