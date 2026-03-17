@@ -318,10 +318,16 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
   return (
     <div className="home-shell">
       {/* ── Top Bar ── */}
-      <header className="home-topbar" style={{ justifyContent: 'center' }}>
-        <div>
-          <h1 className="home-brand" style={{ textAlign: 'center' }}>Seu Manel</h1>
-        </div>
+      <header className="home-topbar" style={{
+        justifyContent: 'center',
+        background: 'linear-gradient(180deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 70%, transparent 100%)',
+        padding: '14px 0 18px',
+      }}>
+        <img
+          src="/images/logo_bar.png"
+          alt="Logo"
+          style={{ height: '40px', objectFit: 'contain' }}
+        />
       </header>
 
       {/* ── Search ── */}
