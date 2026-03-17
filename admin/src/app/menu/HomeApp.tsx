@@ -396,33 +396,36 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
 
   return (
     <div className="home-shell">
+      {/* ── Hero Video — OUTSIDE scroll container for Safari autoplay ── */}
+      <div className="home-hero-video" id="home-hero-video">
+        <video
+          ref={videoRefCallback}
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          className="home-hero-bg"
+        >
+          <source
+            src="https://res.cloudinary.com/ddhlqymvf/video/upload/q_auto:best,ac_none,f_mp4,w_720/v1773770640/Vi%CC%81deo_1280x720_1_c0grzn.mp4"
+            type="video/mp4"
+          />
+        </video>
+        <div className="home-hero-overlay" />
+        <div className="home-hero-content">
+          <img
+            src="/images/logo_bar.png"
+            alt="Logo"
+            className="home-hero-logo"
+          />
+        </div>
+      </div>
+
       {/* ── Scrollable Content ── */}
       <div className="home-scroll">
-        {/* ── Hero Video Section ── */}
-        <div className="home-hero-video">
-          <video
-            ref={videoRefCallback}
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="auto"
-            className="home-hero-bg"
-          >
-            <source
-              src="https://res.cloudinary.com/ddhlqymvf/video/upload/q_auto:best,f_mp4,w_720/v1773770640/Vi%CC%81deo_1280x720_1_c0grzn.mp4"
-              type="video/mp4"
-            />
-          </video>
-          <div className="home-hero-overlay" />
-          <div className="home-hero-content">
-            <img
-              src="/images/logo_bar.png"
-              alt="Logo"
-              className="home-hero-logo"
-            />
-          </div>
-        </div>
+        {/* Spacer to push content below the hero video */}
+        <div className="home-hero-spacer" />
 
         {/* ── Search ── */}
         <div className="home-search-wrap">
