@@ -5,7 +5,7 @@
 
 /* Override menu.css body styles when Home is visible */
 body:has(.home-shell) {
-  background-color: #000000 !important;
+  background-color: #F5F5F5 !important;
   display: block !important;
   width: 100% !important;
   max-width: 100% !important;
@@ -16,7 +16,7 @@ body:has(.home-shell) {
 .home-shell {
   width: 100%;
   height: 100dvh;
-  background: #000000;
+  background: #F5F5F5;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -40,7 +40,7 @@ body:has(.home-shell) {
   align-items: center;
   padding: 16px 20px 8px;
   padding-top: calc(16px + env(safe-area-inset-top));
-  background: #000000;
+  background: transparent;
   z-index: 20;
 }
 
@@ -55,7 +55,7 @@ body.is-browser .home-topbar {
 .home-greeting {
   font-size: 12px;
   font-weight: 500;
-  color: #6B7280;
+  color: #999999;
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
@@ -64,7 +64,7 @@ body.is-browser .home-topbar {
   font-family: var(--font-playfair), 'Playfair Display', serif;
   font-size: 26px;
   font-weight: 900;
-  color: #FFFFFF;
+  color: #1A1A1A;
   letter-spacing: -0.5px;
   line-height: 1.1;
 }
@@ -102,12 +102,12 @@ body.is-browser .home-topbar {
   width: 100%;
   height: 46px;
   border-radius: 12px;
-  border: 1.5px solid #1A1A1A;
-  background: #0A0A0A;
+  border: 1.5px solid #E0E0E0;
+  background: #FFFFFF;
   padding: 0 16px 0 44px;
   font-size: 14px;
   font-weight: 500;
-  color: #FFFFFF;
+  color: #1A1A1A;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   font-family: inherit;
@@ -119,8 +119,8 @@ body.is-browser .home-topbar {
 }
 
 .home-search-input:focus {
-  border-color: #FFFFFF;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06);
+  border-color: #1A1A1A;
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
 }
 
 .home-search-clear {
@@ -132,8 +132,8 @@ body.is-browser .home-topbar {
   height: 28px;
   border-radius: 50%;
   border: none;
-  background: #1A1A1A;
-  color: #A1A1AA;
+  background: #EEEEEE;
+  color: #666666;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -163,7 +163,7 @@ body.is-browser .home-topbar {
   padding: 10px 12px;
   border-radius: 12px;
   border: none;
-  background: #0A0A0A;
+  background: #FFFFFF;
   cursor: pointer;
   transition: background 0.15s ease;
   font-family: inherit;
@@ -171,7 +171,7 @@ body.is-browser .home-topbar {
 }
 
 .search-result-item:active {
-  background: #1A1A1A;
+  background: #F0F0F0;
 }
 
 .search-result-img {
@@ -195,7 +195,7 @@ body.is-browser .home-topbar {
 .search-result-name {
   font-size: 14px;
   font-weight: 700;
-  color: #FFFFFF;
+  color: #1A1A1A;
 }
 
 .search-result-cat {
@@ -240,7 +240,7 @@ body.is-browser .home-topbar {
   border-radius: 16px;
   overflow: hidden;
   margin-bottom: 20px;
-  background: #0A0A0A;
+  background: #EEEEEE;
 }
 
 .home-video {
@@ -302,7 +302,7 @@ body.is-browser .home-topbar {
 .home-section-title {
   font-size: 20px;
   font-weight: 800;
-  color: #FFFFFF;
+  color: #1A1A1A;
   letter-spacing: -0.3px;
 }
 
@@ -325,7 +325,7 @@ body.is-browser .home-topbar {
 
 .home-card {
   position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.15); /* Thin white border */
+  border: none;
   border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
@@ -334,13 +334,13 @@ body.is-browser .home-topbar {
   text-align: left;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
-  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
 
 .home-card:active {
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
-  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  transform: scale(0.97);
 }
 
 /* ── Image Area ── */
@@ -454,8 +454,8 @@ body.is-browser .home-topbar {
   align-items: center;
   height: 64px;
   padding-bottom: env(safe-area-inset-bottom);
-  background: #000000;
-  border-top: 1px solid #1A1A1A;
+  background: #FFFFFF;
+  border-top: 1px solid #E5E5E5;
   z-index: 100;
 }
 
@@ -472,7 +472,7 @@ body.is-pwa .home-bottom-nav {
   border: none;
   cursor: pointer;
   padding: 6px 16px;
-  color: #6B7280;
+  color: #AAAAAA;
   transition: color 0.2s ease;
   font-family: inherit;
 }
@@ -484,7 +484,7 @@ body.is-pwa .home-bottom-nav {
 }
 
 .home-nav-active {
-  color: #FFFFFF;
+  color: #1A1A1A;
 }
 
 /* ═══════════════════════════════════════════

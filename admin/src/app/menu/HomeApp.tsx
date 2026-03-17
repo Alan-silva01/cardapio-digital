@@ -320,7 +320,6 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
       {/* ── Top Bar ── */}
       <header className="home-topbar" style={{
         justifyContent: 'center',
-        background: 'linear-gradient(180deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 70%, transparent 100%)',
         padding: '14px 0 18px',
       }}>
         <img
