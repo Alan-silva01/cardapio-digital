@@ -169,6 +169,7 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
     const [novaPessoaNome, setNovaPessoaNome] = useState('');
     const [isAddMode, setIsAddMode] = useState(false);
     const [isCartPending, setIsCartPending] = useState(false);
+    const [pendingProductToAdd, setPendingProductToAdd] = useState<any>(null);
 
     // CART TABS & HISTORY
     const [cartTab, setCartTab] = useState('carrinho'); // 'carrinho' | 'pedidos'
@@ -1522,6 +1523,11 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                                     onClick={(e) => {
                                         if (isOutOfStock) return;
                                         const addQty = pendingQty;
+                                        if (!pessoaAtiva) {
+                                            setPendingProductToAdd({ product: currentProduct, qty: addQty, variation: selectedVariation });
+                                            setIsPeopleDrawerOpen(true);
+                                            return;
+                                        }
                                         const btnRect = e.currentTarget.getBoundingClientRect();
                                         const cartEl = cartIconRef.current;
                                         if (cartEl) {
@@ -2077,14 +2083,36 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                                         placeholder="Digite o novo nome..."
                                         value={novaPessoaNome}
                                         onChange={(e) => setNovaPessoaNome(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.preventDefault();
+                                                const btn = document.getElementById('people-ok-btn');
+                                                if(btn) btn.click();
+                                            }
+                                        }}
                                         autoFocus
                                     />
                                     <button 
+                                        id="people-ok-btn"
+                                        type="button"
                                         className="cart-person-btn"
                                         onClick={() => {
                                             if (novaPessoaNome.trim()) {
                                                 setPessoaAtiva(novaPessoaNome.trim());
                                                 setIsPeopleDrawerOpen(false);
+                                                
+                                                if (pendingProductToAdd) {
+                                                    const { product, qty, variation } = pendingProductToAdd;
+                                                    setCart(prev => ({
+                                                        ...prev,
+                                                        [variation ? `${product.id}-${variation}` : product.id]: (prev[variation ? `${product.id}-${variation}` : product.id] || 0) + qty
+                                                    }));
+                                                    setPendingProductToAdd(null);
+                                                    setPendingQty(1);
+                                                    setIsCartOpen(true);
+                                                    setCartTab('carrinho');
+                                                    if (onTabChange) onTabChange('sacola');
+                                                }
                                             }
                                         }}
                                     >
@@ -2106,6 +2134,18 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                                                     onClick={() => {
                                                         setPessoaAtiva(nome);
                                                         setIsPeopleDrawerOpen(false);
+                                                        if (pendingProductToAdd) {
+                                                            const { product, qty, variation } = pendingProductToAdd;
+                                                            setCart(prev => ({
+                                                                ...prev,
+                                                                [variation ? `${product.id}-${variation}` : product.id]: (prev[variation ? `${product.id}-${variation}` : product.id] || 0) + qty
+                                                            }));
+                                                            setPendingProductToAdd(null);
+                                                            setPendingQty(1);
+                                                            setIsCartOpen(true);
+                                                            setCartTab('carrinho');
+                                                            if (onTabChange) onTabChange('sacola');
+                                                        }
                                                     }}
                                                 >
                                                     <Users size={16} />

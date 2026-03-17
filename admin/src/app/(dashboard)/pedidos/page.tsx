@@ -530,6 +530,17 @@ export default function PedidosPage() {
 
     if (remainingPedidos && remainingPedidos.length === 0) {
       await supabase.from("comandas").update({ status: "fechada" }).eq("id", comandaId);
+      
+      // Limpar chamados da mesa caso seja o último pedido daquela comanda a fechar (mesa encerrada virtualmente)
+      // Como comandaId não é o nr da mesa, procuraremos na array current
+      const comanda = columns["entregue"].find(c => c.comanda_id === comandaId) 
+                  || columns["pronto"].find(c => c.comanda_id === comandaId)
+                  || columns["recebido"].find(c => c.comanda_id === comandaId)
+                  || columns["preparando"].find(c => c.comanda_id === comandaId);
+      if (comanda) {
+        await supabase.from("mesas").update({ chamando_garcom: false, solicitando_conta: false }).eq("numero", comanda.numero_mesa);
+        setMesasStatus(prev => ({ ...prev, [comanda.numero_mesa]: { garcom: false, conta: false } }));
+      }
     }
 
     // DB: insert into pagamentos table
@@ -581,6 +592,16 @@ export default function PedidosPage() {
 
     // Close the comanda since everything is paid
     await supabase.from("comandas").update({ status: "fechada" }).eq("id", comandaId);
+    
+    // Limpar chamados da mesa
+    const comandaToClose = columns["entregue"].find(c => c.comanda_id === comandaId) 
+                        || columns["pronto"].find(c => c.comanda_id === comandaId)
+                        || columns["recebido"].find(c => c.comanda_id === comandaId)
+                        || columns["preparando"].find(c => c.comanda_id === comandaId);
+    if (comandaToClose) {
+      await supabase.from("mesas").update({ chamando_garcom: false, solicitando_conta: false }).eq("numero", comandaToClose.numero_mesa);
+      setMesasStatus(prev => ({ ...prev, [comandaToClose.numero_mesa]: { garcom: false, conta: false } }));
+    }
 
     // DB: insert into pagamentos table
     const pagamentosToInsert: { comanda_id: string; metodo: string; valor: number; tipo: string }[] = [];
