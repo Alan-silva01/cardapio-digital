@@ -17,7 +17,7 @@ const HomeApp = dynamic(() => import("./HomeApp"), {
         background: "#000000",
       }}
     >
-      <img src="/images/loading.gif" alt="Carregando..." style={{ width: 36, height: 36 }} />
+      <Loader2 className="animate-spin" style={{ color: "#333" }} size={36} />
     </div>
   ),
 });
