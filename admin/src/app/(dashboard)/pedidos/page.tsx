@@ -43,6 +43,7 @@ interface ItemPedido {
   preco_unitario: number;
   preco_total: number;
   servido: boolean;
+  observacao?: string | null;
   criado_em?: string;
   produtos?: {
     imagem_url: string | null;
@@ -222,7 +223,7 @@ export default function PedidosPage() {
 
     const { data, error } = await supabase
       .from("pedidos")
-      .select("id, comanda_id, order_number, order_id, numero_mesa, nome_pessoa, status, total, criado_em, forma_pagamento, itens_pedido (id, quantidade, nome_produto, nome_variacao, servido, preco_unitario, preco_total, produtos (imagem_url))")
+      .select("id, comanda_id, order_number, order_id, numero_mesa, nome_pessoa, status, total, criado_em, forma_pagamento, itens_pedido (id, quantidade, nome_produto, nome_variacao, servido, preco_unitario, preco_total, observacao, produtos (imagem_url))")
       .gte("criado_em", today.toISOString())
       .order("criado_em", { ascending: true });
 
@@ -618,7 +619,7 @@ export default function PedidosPage() {
           `<tr>
             <td style="padding:2px 0; padding-right:8px;">${item.quantidade}x ${item.nome_produto}${(item.nome_variacao && item.nome_variacao.toLowerCase() !== 'unidade') ? ` (${item.nome_variacao})` : ""}</td>
             <td style="padding:2px 0; text-align:right; white-space:nowrap;">R$ ${Number(item.preco_total).toFixed(2)}</td>
-          </tr>`
+          </tr>${item.observacao ? `<tr><td colspan="2" style="padding:0 0 4px 12px; font-size:10px; font-style:italic; color:#555;">📝 ${item.observacao}</td></tr>` : ""}`
       )
       .join("");
 
@@ -684,7 +685,7 @@ export default function PedidosPage() {
                 `<tr>
                    <td style="padding:2px 0; padding-right:8px;">${item.quantidade}x ${item.nome_produto}${(item.nome_variacao && item.nome_variacao.toLowerCase() !== 'unidade') ? ` (${item.nome_variacao})` : ""}</td>
                    <td style="padding:2px 0; text-align:right; white-space:nowrap;">R$ ${Number(item.preco_total).toFixed(2)}</td>
-                 </tr>`
+                 </tr>${item.observacao ? `<tr><td colspan="2" style="padding:0 0 4px 12px; font-size:10px; font-style:italic; color:#555;">📝 ${item.observacao}</td></tr>` : ""}`
             )
             .join("");
           return `
@@ -1138,6 +1139,11 @@ export default function PedidosPage() {
                                                       )}
                                                     </div>
                                                   </div>
+                                                  {item.observacao && (
+                                                    <div className="ml-[24px] mt-0.5 text-[10px] text-amber-600 italic bg-amber-500/5 px-1.5 py-0.5 rounded">
+                                                      📝 {item.observacao}
+                                                    </div>
+                                                  )}
                                                 </div>
                                               );
                                             })}

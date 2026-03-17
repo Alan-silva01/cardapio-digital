@@ -44,6 +44,7 @@ interface ItemPedido {
   preco_unitario: number;
   preco_total: number;
   servido: boolean;
+  observacao?: string | null;
   criado_em?: string;
   produtos?: any;
 }
@@ -163,6 +164,11 @@ function ItemCheckbox({
             )}
           </div>
         </div>
+        {item.observacao && (
+          <div className="ml-[30px] -mt-1 mb-1 text-[11px] text-amber-600 italic bg-amber-500/5 px-2 py-0.5 rounded">
+            📝 {item.observacao}
+          </div>
+        )}
       </div>
 
       {/* Render Image Icon if imageUrl exists */}
