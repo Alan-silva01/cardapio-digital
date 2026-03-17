@@ -648,41 +648,21 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
     };
     const fetchMenu = useCallback(async (isInitial = false) => {
         try {
-            // Fetch categories to map names to products
-            const { data: catData, error: catError } = await supabase
-                .from('categorias')
-                .select('id, nome, icone')
-                .eq('ativo', true);
+            const [
+                { data: catData, error: catError },
+                { data: prodData, error: prodError },
+                { data: varData, error: varError },
+                { data: wineData, error: wineError }
+            ] = await Promise.all([
+                supabase.from('categorias').select('id, nome, icone').eq('ativo', true),
+                supabase.from('produtos').select('*').eq('disponivel', true).order('ordem', { ascending: true }),
+                supabase.from('variacoes_produto').select('*').eq('ativo', true).order('ordem', { ascending: true }),
+                supabase.from('tipos_vinho').select('tipo, imagem_taca_url')
+            ]);
 
             if (catError) throw catError;
-
-            const catMap = catData.reduce((acc, cat) => {
-                acc[cat.id] = cat.nome;
-                return acc;
-            }, {});
-
-            // Fetch products that are available
-            const { data: prodData, error: prodError } = await supabase
-                .from('produtos')
-                .select('*')
-                .eq('disponivel', true)
-                .order('ordem', { ascending: true });
-
             if (prodError) throw prodError;
-
-            // Fetch active variants
-            const { data: varData, error: varError } = await supabase
-                .from('variacoes_produto')
-                .select('*')
-                .eq('ativo', true)
-                .order('ordem', { ascending: true });
-
             if (varError) throw varError;
-
-            // Fetch wine glass images
-            const { data: wineData, error: wineError } = await supabase
-                .from('tipos_vinho')
-                .select('tipo, imagem_taca_url');
 
             let glassMapToPreload = null;
             if (!wineError && wineData) {
