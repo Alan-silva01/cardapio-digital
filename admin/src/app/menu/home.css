@@ -22,6 +22,7 @@ body:has(.home-shell) {
   flex-direction: column;
   overflow: hidden;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  will-change: transform, opacity;
 }
 
 @media (min-width: 450px) {
@@ -324,21 +325,22 @@ body.is-browser .home-topbar {
 
 .home-card {
   position: relative;
-  border: 1px solid #2A2A2A;
+  border: 1px solid rgba(255, 255, 255, 0.15); /* Thin white border */
   border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
-  background: #111111;
+  background: #1A1A1A;
   padding: 0;
   text-align: left;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
-  transition: border-color 0.3s ease;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
 .home-card:active {
-  border-color: #444444;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 /* ── Image Area ── */
@@ -347,7 +349,7 @@ body.is-browser .home-topbar {
   width: calc(100% - 10px);
   aspect-ratio: 5 / 4;
   overflow: hidden;
-  background: #1A1A1A;
+  background: #2A2A2A;
   border-radius: 12px;
   margin: 5px auto 0;
 }
@@ -428,7 +430,7 @@ body.is-browser .home-topbar {
 .hc-count {
   font-size: 10px;
   font-weight: 600;
-  color: #6B7280;
+  color: #888888;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -436,7 +438,7 @@ body.is-browser .home-topbar {
 .hc-subtitle {
   font-size: 11px;
   font-weight: 400;
-  color: #6B7280;
+  color: #777777;
   margin: 2px 0 0;
   line-height: 1.3;
 }

@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import dynamic from "next/dynamic";
-import { motion } from "framer-motion";
-import { Loader2, Home, ShoppingBag, ClipboardList } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Loader2 } from "lucide-react";
 
 const HomeApp = dynamic(() => import("./HomeApp"), {
   ssr: false,
@@ -38,65 +38,17 @@ const CATEGORY_MAP: Record<string, string[]> = {
   sobremesas: ["Sobremesas"],
 };
 
-/* ── Bottom Nav Item ── */
-function NavItem({
-  icon: Icon,
-  label,
-  active,
-  onTap,
-  badge,
-}: {
-  icon: React.ElementType;
-  label: string;
-  active: boolean;
-  onTap: () => void;
-  badge?: number;
-}) {
-  return (
-    <motion.button
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: "2px",
-        background: "none",
-        border: "none",
-        cursor: "pointer",
-        padding: "6px 16px",
-        color: active ? "#FFFFFF" : "#6B7280",
-        transition: "color 0.2s ease",
-        fontFamily: "inherit",
-        position: "relative",
-      }}
-      whileTap={{ scale: 0.85 }}
-      onClick={onTap}
-    >
-      <div style={{ position: "relative" }}>
-        <Icon size={22} strokeWidth={active ? 2.5 : 1.8} />
-        {badge && badge > 0 && (
-          <div style={{
-            position: "absolute",
-            top: "-5px",
-            right: "-8px",
-            background: "#FFFFFF",
-            color: "#000000",
-            fontSize: "9px",
-            fontWeight: "800",
-            width: "16px",
-            height: "16px",
-            borderRadius: "50%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}>
-            {badge}
-          </div>
-        )}
-      </div>
-      <span style={{ fontSize: "10px", fontWeight: "600", letterSpacing: "0.2px" }}>{label}</span>
-    </motion.button>
-  );
-}
+/* ── Page transition variants ── */
+const pageVariants = {
+  enter: { opacity: 0, x: 30 },
+  center: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -30 },
+};
+
+const pageTransition = {
+  duration: 0.25,
+  ease: [0.32, 0.72, 0, 1] as const,
+};
 
 export default function MenuPage() {
   const [view, setView] = useState<"home" | "menu">("home");
@@ -136,28 +88,44 @@ export default function MenuPage() {
   };
 
   return (
-    <>
-      {/* HomeApp — always mounted, hidden when on menu */}
-      <div style={{ display: view === "home" ? "block" : "none" }}>
-        <HomeApp
-          onCategorySelect={handleCategorySelect}
-          onProductSearch={handleProductSearch}
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-        />
-      </div>
-
-      {/* MenuApp — always mounted after first render, hidden when on home */}
-      <div style={{ display: view === "menu" ? "block" : "none" }}>
-        <MenuApp
-          isActive={view === "menu"}
-          filterCategories={filterCategories}
-          searchProductName={searchProductName}
-          onBack={handleBackToHome}
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-        />
-      </div>
-    </>
+    <AnimatePresence mode="wait">
+      {view === "home" ? (
+        <motion.div
+          key="home"
+          variants={pageVariants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          transition={pageTransition}
+          style={{ position: "absolute", inset: 0, willChange: "transform, opacity" }}
+        >
+          <HomeApp
+            onCategorySelect={handleCategorySelect}
+            onProductSearch={handleProductSearch}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+          />
+        </motion.div>
+      ) : (
+        <motion.div
+          key="menu"
+          variants={pageVariants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          transition={pageTransition}
+          style={{ position: "absolute", inset: 0, willChange: "transform, opacity" }}
+        >
+          <MenuApp
+            isActive={view === "menu"}
+            filterCategories={filterCategories}
+            searchProductName={searchProductName}
+            onBack={handleBackToHome}
+            activeTab={activeTab}
+            onTabChange={handleTabChange}
+          />
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

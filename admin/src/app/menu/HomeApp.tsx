@@ -5,8 +5,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
   Home,
-  ShoppingCart,
-  User,
   Beer,
   Wine,
   GlassWater,
@@ -19,6 +17,14 @@ import {
   ChevronRight,
   ShoppingBag,
   ClipboardList,
+  Star,
+  Snowflake,
+  Sparkles,
+  Music,
+  UtensilsCrossed,
+  Leaf,
+  Cake,
+  Ban,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -26,7 +32,7 @@ import { supabase } from "@/lib/supabase";
 interface SubCategory {
   id: string;
   label: string;
-  emoji: string;
+  icon: React.ElementType;
   dbCategories: string[];
 }
 
@@ -34,7 +40,6 @@ interface CategoryDef {
   id: string;
   label: string;
   subtitle: string;
-  emoji: string;
   icon: React.ElementType;
   image: string;
   itemCount: number;
@@ -54,106 +59,98 @@ const CATEGORIES: CategoryDef[] = [
     id: "cervejas",
     label: "Cervejas",
     subtitle: "Long Necks & Garrafas",
-    emoji: "🍺",
     icon: Beer,
     image: "https://images.unsplash.com/photo-1535958636474-b021ee887b13?w=400&q=80",
     itemCount: 14,
     subs: [
-      { id: "cervejas-all", label: "Todas as Cervejas", emoji: "🍻", dbCategories: ["Cervejas"] },
-      { id: "cervejas-premium", label: "Premium & Importadas", emoji: "⭐", dbCategories: ["Cervejas"] },
-      { id: "cervejas-zero", label: "Sem Álcool", emoji: "0️⃣", dbCategories: ["Cervejas"] },
+      { id: "cervejas-all", label: "Todas as Cervejas", icon: Beer, dbCategories: ["Cervejas"] },
+      { id: "cervejas-premium", label: "Premium & Importadas", icon: Star, dbCategories: ["Cervejas"] },
+      { id: "cervejas-zero", label: "Sem Álcool", icon: Ban, dbCategories: ["Cervejas"] },
     ],
   },
   {
     id: "drinks",
     label: "Drinks",
     subtitle: "Coquetéis & Shots",
-    emoji: "🍹",
     icon: Martini,
     image: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=400&q=80",
     itemCount: 7,
     subs: [
-      { id: "drinks-all", label: "Todos os Drinks", emoji: "🍸", dbCategories: ["Drinks"] },
-      { id: "drinks-gins", label: "Gins", emoji: "🫒", dbCategories: ["Gins"] },
-      { id: "drinks-coqueteis", label: "Coquetéis", emoji: "🍹", dbCategories: ["Drinks"] },
+      { id: "drinks-all", label: "Todos os Drinks", icon: Martini, dbCategories: ["Drinks"] },
+      { id: "drinks-gins", label: "Gins", icon: Martini, dbCategories: ["Gins"] },
+      { id: "drinks-coqueteis", label: "Coquetéis", icon: Wine, dbCategories: ["Drinks"] },
     ],
   },
   {
     id: "destilados",
     label: "Destilados",
     subtitle: "Garrafas, Doses & Combos",
-    emoji: "🥃",
     icon: GlassWater,
     image: "https://images.unsplash.com/photo-1569529465841-dfecdab7503b?w=400&q=80",
     itemCount: 9,
     subs: [
-      { id: "dest-whiskeys", label: "Whiskeys", emoji: "🥃", dbCategories: ["Whiskeys"] },
-      { id: "dest-vodkas", label: "Vodkas", emoji: "🧊", dbCategories: ["Vodkas"] },
-      { id: "dest-gins", label: "Gins", emoji: "🫒", dbCategories: ["Gins"] },
-      { id: "dest-outros", label: "Licores & Outros", emoji: "🍷", dbCategories: ["Destilados"] },
-      { id: "dest-combos", label: "Combos", emoji: "🎉", dbCategories: ["Combos"] },
+      { id: "dest-whiskeys", label: "Whiskeys", icon: GlassWater, dbCategories: ["Whiskeys"] },
+      { id: "dest-vodkas", label: "Vodkas", icon: Snowflake, dbCategories: ["Vodkas"] },
+      { id: "dest-gins", label: "Gins", icon: Martini, dbCategories: ["Gins"] },
+      { id: "dest-outros", label: "Licores & Outros", icon: Wine, dbCategories: ["Destilados"] },
+      { id: "dest-combos", label: "Combos", icon: Sparkles, dbCategories: ["Combos"] },
     ],
   },
   {
     id: "vinhos",
     label: "Vinhos",
     subtitle: "Tintos, Brancos & Rosés",
-    emoji: "🍷",
     icon: Wine,
     image: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=400&q=80",
     itemCount: 13,
     subs: [
-      { id: "vinhos-all", label: "Todos os Vinhos", emoji: "🍷", dbCategories: ["Vinhos"] },
-      { id: "vinhos-espumante", label: "Espumantes", emoji: "🥂", dbCategories: ["Vinhos"] },
+      { id: "vinhos-all", label: "Todos os Vinhos", icon: Wine, dbCategories: ["Vinhos"] },
+      { id: "vinhos-espumante", label: "Espumantes", icon: Sparkles, dbCategories: ["Vinhos"] },
     ],
   },
   {
     id: "nao-alcoolicos",
     label: "Sem Álcool",
     subtitle: "Ice, Beats & Energéticos",
-    emoji: "🥤",
     icon: Citrus,
     image: "https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=400&q=80",
     itemCount: 11,
     subs: [
-      { id: "bebidas-all", label: "Todas as Bebidas", emoji: "🥤", dbCategories: ["Bebidas"] },
-      { id: "bebidas-ice", label: "Ice", emoji: "🧊", dbCategories: ["Bebidas"] },
-      { id: "bebidas-beats", label: "Skol Beats", emoji: "🎵", dbCategories: ["Bebidas"] },
+      { id: "bebidas-all", label: "Todas as Bebidas", icon: Citrus, dbCategories: ["Bebidas"] },
+      { id: "bebidas-ice", label: "Ice", icon: Snowflake, dbCategories: ["Bebidas"] },
+      { id: "bebidas-beats", label: "Skol Beats", icon: Music, dbCategories: ["Bebidas"] },
     ],
   },
   {
     id: "petiscos",
     label: "Petiscos",
     subtitle: "Porções & Tábuas",
-    emoji: "🍟",
     icon: CookingPot,
     image: "/images/petiscos.png",
     itemCount: 5,
     subs: [
-      { id: "petiscos-all", label: "Todos os Petiscos", emoji: "🍖", dbCategories: ["Petiscos"] },
-      { id: "petiscos-pasteis", label: "Pastéis", emoji: "🥟", dbCategories: ["Pastéis"] },
+      { id: "petiscos-all", label: "Todos os Petiscos", icon: CookingPot, dbCategories: ["Petiscos"] },
+      { id: "petiscos-pasteis", label: "Pastéis", icon: UtensilsCrossed, dbCategories: ["Pastéis"] },
     ],
   },
   {
     id: "grelha",
     label: "Da Grelha",
     subtitle: "Espetos, Pratos & Executivos",
-    emoji: "🥩",
     icon: Flame,
     image: "https://images.unsplash.com/photo-1544025162-d76694265947?w=400&q=80",
     itemCount: 8,
     subs: [
-      { id: "grelha-espetinhos", label: "Espetinhos", emoji: "🍢", dbCategories: ["Espetinhos"] },
-      { id: "grelha-pratos", label: "Pratos & Executivos", emoji: "🍽️", dbCategories: ["Pratos & Executivos"] },
-      { id: "grelha-guarnicoes", label: "Guarnições", emoji: "🥗", dbCategories: ["Guarnições"] },
+      { id: "grelha-espetinhos", label: "Espetinhos", icon: Flame, dbCategories: ["Espetinhos"] },
+      { id: "grelha-pratos", label: "Pratos & Executivos", icon: UtensilsCrossed, dbCategories: ["Pratos & Executivos"] },
+      { id: "grelha-guarnicoes", label: "Guarnições", icon: Leaf, dbCategories: ["Guarnições"] },
     ],
   },
   {
     id: "sobremesas",
     label: "Sobremesas",
     subtitle: "Pudim & Brownie",
-    emoji: "🍰",
-    icon: IceCreamCone,
+    icon: Cake,
     image: "https://images.unsplash.com/photo-1551024601-bec78aea704b?w=400&q=80",
     itemCount: 3,
     subs: [],
@@ -163,25 +160,23 @@ const CATEGORIES: CategoryDef[] = [
 /* ─── Animations ─── */
 const containerVariants = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.07, delayChildren: 0.1 } },
+  show: { transition: { staggerChildren: 0.04, delayChildren: 0.05 } },
 };
 
 const cardVariants = {
-  hidden: { opacity: 0, y: 40, scale: 0.95 },
+  hidden: { opacity: 0, y: 20 },
   show: {
     opacity: 1,
     y: 0,
-    scale: 1,
-    transition: { type: "spring" as const, stiffness: 260, damping: 22 },
+    transition: { duration: 0.3, ease: "easeOut" as const },
   },
 };
 
 const heroVariants = {
-  hidden: { opacity: 0, scale: 0.97 },
+  hidden: { opacity: 0 },
   show: {
     opacity: 1,
-    scale: 1,
-    transition: { type: "spring" as const, stiffness: 200, damping: 24, delay: 0.05 },
+    transition: { duration: 0.25, ease: "easeOut" as const },
   },
 };
 
@@ -289,10 +284,9 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
   return (
     <div className="home-shell">
       {/* ── Top Bar ── */}
-      <header className="home-topbar">
+      <header className="home-topbar" style={{ justifyContent: 'center' }}>
         <div>
-          <p className="home-greeting">Bem-vindo ao</p>
-          <h1 className="home-brand">Seu Manel</h1>
+          <h1 className="home-brand" style={{ textAlign: 'center' }}>Seu Manel</h1>
         </div>
       </header>
 
@@ -367,16 +361,16 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
               initial="hidden"
               animate="show"
             >
-              <video
-                autoPlay
-                loop
-                muted
-                playsInline
-                poster="https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=600&q=80"
+              <img
+                src="https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=600&q=80"
+                alt="Novidades"
+                loading="eager"
+                decoding="async"
                 className="home-video"
+                style={{ objectFit: 'cover', width: '100%', height: '100%' }}
               />
               <div className="home-video-overlay">
-                <span className="home-video-badge">🔥 Novidades</span>
+                <span className="home-video-badge"><Flame size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Novidades</span>
                 <p className="home-video-text">Conheça nossos drinks especiais</p>
               </div>
               {/* Dots on video banner */}
@@ -458,12 +452,12 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
-              transition={{ type: "spring" as const, stiffness: 300, damping: 30 }}
+              transition={{ duration: 0.3, ease: "easeOut" }}
             >
               <div className="sheet-handle" />
               <div className="sheet-header">
                 <div className="sheet-header-info">
-                  <span className="sheet-emoji">{openSheet.emoji}</span>
+                  {(() => { const SheetIcon = openSheet.icon; return <SheetIcon size={22} strokeWidth={2} style={{ color: '#FFFFFF' }} />; })()}
                   <h3 className="sheet-title">{openSheet.label}</h3>
                 </div>
                 <button className="sheet-close" onClick={() => setOpenSheet(null)}>
@@ -477,10 +471,10 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
                     className="sheet-item"
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.05, type: "spring" as const, stiffness: 300, damping: 25 }}
+                    transition={{ delay: i * 0.03, duration: 0.2, ease: "easeOut" }}
                     onClick={() => handleSubSelect(sub)}
                   >
-                    <span className="sheet-item-emoji">{sub.emoji}</span>
+                    {(() => { const SubIcon = sub.icon; return <SubIcon size={18} strokeWidth={1.8} style={{ color: '#9CA3AF', flexShrink: 0 }} />; })()}
                     <span className="sheet-item-label">{sub.label}</span>
                     <ChevronRight size={18} className="sheet-item-arrow" />
                   </motion.button>
@@ -489,13 +483,13 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
                   className="sheet-item sheet-item-all"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: openSheet.subs.length * 0.05, type: "spring" as const, stiffness: 300, damping: 25 }}
+                  transition={{ delay: openSheet.subs.length * 0.03, duration: 0.2, ease: "easeOut" }}
                   onClick={() => {
                     setOpenSheet(null);
                     onCategorySelect?.(openSheet.id);
                   }}
                 >
-                  <span className="sheet-item-emoji">📋</span>
+                  <ClipboardList size={18} strokeWidth={1.8} style={{ color: '#9CA3AF', flexShrink: 0 }} />
                   <span className="sheet-item-label">Ver tudo</span>
                   <ChevronRight size={18} className="sheet-item-arrow" />
                 </motion.button>

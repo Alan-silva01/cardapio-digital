@@ -3,8 +3,68 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { countryFlags } from "@/lib/countryFlags";
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, ShoppingCart, ArrowLeft, Loader2, Heart, Users, User, Droplet, Plus, Minus, Trash2, X, Bell, Receipt, MessageSquare, Clock, ChevronDown, Check } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ShoppingCart, ArrowLeft, Loader2, Heart, Users, User, Droplet, Plus, Minus, Trash2, X, Bell, Receipt, MessageSquare, Clock, ChevronDown, Check, Home, ShoppingBag, ClipboardList } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+
+/* ── Bottom Nav Item ── */
+function NavItem({
+  icon: Icon,
+  label,
+  active,
+  onTap,
+  badge,
+}: {
+  icon: React.ElementType;
+  label: string;
+  active: boolean;
+  onTap: () => void;
+  badge?: number;
+}) {
+  return (
+    <motion.button
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: "2px",
+        background: "none",
+        border: "none",
+        cursor: "pointer",
+        padding: "6px 16px",
+        color: active ? "#FFFFFF" : "#6B7280",
+        transition: "color 0.2s ease",
+        fontFamily: "inherit",
+        position: "relative",
+      }}
+      whileTap={{ scale: 0.85 }}
+      onClick={onTap}
+    >
+      <div style={{ position: "relative" }}>
+        <Icon size={22} strokeWidth={active ? 2.5 : 1.8} />
+        {badge && badge > 0 && (
+          <div style={{
+            position: "absolute",
+            top: "-5px",
+            right: "-8px",
+            background: "#FFFFFF",
+            color: "#000000",
+            fontSize: "9px",
+            fontWeight: "800",
+            width: "16px",
+            height: "16px",
+            borderRadius: "50%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
+            {badge}
+          </div>
+        )}
+      </div>
+      <span style={{ fontSize: "10px", fontWeight: "600", letterSpacing: "0.2px" }}>{label}</span>
+    </motion.button>
+  );
+}
 
 // Cloudinary URL optimizer: injects format/quality/width transforms
 const optimizeCloudinaryUrl = (url, width = 450) => {
@@ -715,13 +775,14 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
         }
 
         if (filterCategories && filterCategories.length > 0) {
-            const filtered = all.filter(p => filterCategories.includes(p.category));
-            setProducts(filtered.length > 0 ? filtered : all);
+            const sanitizedFilters = filterCategories.map(f => f.toLowerCase().trim());
+            const filtered = all.filter(p => sanitizedFilters.includes(p.category.toLowerCase().trim()));
+            setProducts(filtered);
             setCurrentIndex(0);
         } else if (searchProductName) {
-            const term = searchProductName.toLowerCase();
+            const term = searchProductName.toLowerCase().trim();
             const filtered = all.filter(p => p.name.toLowerCase().includes(term));
-            setProducts(filtered.length > 0 ? filtered : all);
+            setProducts(filtered);
             setCurrentIndex(0);
         } else {
             setProducts(all);
@@ -852,9 +913,9 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
         enter: ({ direction, isFood, isIce, isSkolBeats, isInternalSpin, isWineSpin }) => {
             const isCircular = isFood || ((isIce || isSkolBeats) && isInternalSpin) || isWineSpin;
             return {
-                x: direction > 0 ? (isCircular ? 150 : 50) : (isCircular ? -150 : -50),
-                y: isCircular ? 50 : 0,
-                rotate: isCircular ? (direction > 0 ? 15 : -15) : 0,
+                x: direction > 0 ? (isCircular ? 80 : 30) : (isCircular ? -80 : -30),
+                y: isCircular ? 30 : 0,
+                rotate: isCircular ? (direction > 0 ? 10 : -10) : 0,
                 opacity: 0,
             };
         },
@@ -869,9 +930,9 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
             const isCircular = isFood || ((isIce || isSkolBeats) && isInternalSpin) || isWineSpin;
             return {
                 zIndex: 0,
-                x: direction < 0 ? (isCircular ? 150 : 50) : (isCircular ? -150 : -50),
-                y: isCircular ? 50 : 0,
-                rotate: isCircular ? (direction < 0 ? 15 : -15) : 0,
+                x: direction < 0 ? (isCircular ? 80 : 30) : (isCircular ? -80 : -30),
+                y: isCircular ? 30 : 0,
+                rotate: isCircular ? (direction < 0 ? 10 : -10) : 0,
                 opacity: 0,
             };
         },
@@ -884,16 +945,16 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                 top: 0, left: 0, right: 0, bottom: 0,
                 width: "100vw", height: "100vh",
                 zIndex: 99999, margin: 0, padding: 0, maxWidth: "none",
-                display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#e8e8e8'
+                display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#000000'
             }}>
-                <Loader2 className="animate-spin" style={{ color: '#999' }} size={36} />
+                <Loader2 className="animate-spin" style={{ color: '#555' }} size={36} />
             </div>
         );
     }
 
     if (!currentProduct) {
         return (
-            <div className="app-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#e8e8e8', color: '#999', width: '100%' }}>
+            <div className="app-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#000000', color: '#666', width: '100%' }}>
                 <p>Nenhum produto encontrado.</p>
             </div>
         );
@@ -933,7 +994,7 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                 <ArrowLeft className="icon" style={{ cursor: onBack ? 'pointer' : 'default' }} onClick={() => onBack && onBack()} />
                 <div className="page-title">{currentProduct.category}</div>
                 <div ref={cartIconRef} style={{ position: 'relative', cursor: 'pointer' }} onClick={handleOpenCartClick}>
-                    <ShoppingCart className="icon" />
+                    <ShoppingBag className="icon" />
                     {totalCartItems > 0 && (
                         <div style={{
                             position: 'absolute',
@@ -1518,12 +1579,12 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                         initial={{ y: '100%' }}
                         animate={{ y: 0 }}
                         exit={{ y: '100%' }}
-                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+                        transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
                     >
                         <div className="cart-header" style={{ justifyContent: 'flex-start', alignItems: 'center' }}>
                             <ArrowLeft 
                                 size={22} 
-                                color="#111827" 
+                                color="#FFFFFF" 
                                 style={{ cursor: 'pointer', marginRight: '16px' }} 
                                 onClick={() => setIsCartOpen(false)} 
                             />
@@ -1536,7 +1597,7 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                                 className={`cart-tab ${cartTab === 'carrinho' ? 'active' : ''}`}
                                 onClick={() => setCartTab('carrinho')}
                             >
-                                Carrinho
+                                Sacola
                             </button>
                             <button 
                                 className={`cart-tab ${cartTab === 'pedidos' ? 'active' : ''}`}
@@ -1600,9 +1661,18 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                                     )}
 
                                     {Object.keys(cart).length === 0 ? (
-                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.5, marginTop: '40px' }}>
-                                            <ShoppingCart size={48} color="#888" style={{ marginBottom: '16px' }} />
-                                            <p style={{ color: '#6B7280', fontSize: '14px', textAlign: 'center' }}>Seu carrinho está vazio.</p>
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.8, marginTop: '40px' }}>
+                                            <ShoppingCart size={48} color="#FFFFFF" style={{ marginBottom: '16px' }} />
+                                            <p style={{ color: '#999999', fontSize: '14px', textAlign: 'center', marginBottom: '24px' }}>Sua sacola está vazia.</p>
+                                            <button 
+                                                onClick={() => {
+                                                    setIsCartOpen(false);
+                                                    if (onTabChange) onTabChange('menu');
+                                                }}
+                                                style={{ background: '#FFFFFF', color: '#000000', padding: '12px 24px', borderRadius: '30px', fontWeight: 700, fontSize: '12px', border: 'none' }}
+                                            >
+                                                FAZER PEDIDO
+                                            </button>
                                         </div>
                                     ) : (
                                         Object.entries(cart).map(([key, qty]) => {
@@ -1779,7 +1849,7 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                         </div>
 
                         {/* FOOTER SECTION (Service Buttons + Subtotal + Checkout) */}
-                        <div style={{ background: '#FFFFFF', borderTop: 'none', position: 'absolute', bottom: 0, left: 0, right: 0, paddingTop: '12px', zIndex: 100 }}>
+                        <div style={{ background: '#000000', borderTop: 'none', position: 'absolute', bottom: 0, left: 0, right: 0, paddingTop: '12px', zIndex: 100 }}>
                             <div className="cart-service-buttons">
                                 <button 
                                     className={`service-btn ${(garcomCalled || garcomCooldown) ? 'active' : ''}`}
@@ -1802,7 +1872,7 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                             {cartTab === 'carrinho' && (
                                 <div className="cart-footer" style={{position: 'relative', borderTop: 'none'}}>
                                     <div className="cart-subtotal-row" style={{marginBottom: '10px'}}>
-                                        <span className="cart-subtotal-label">Subtotal</span>
+                                        <span className="cart-subtotal-label">Total do Pedido</span>
                                         <span className="cart-subtotal-value">
                                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
                                                 Object.entries(cart).reduce((sum, [key, qty]) => {
@@ -2031,6 +2101,13 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                     </motion.div>
                 )}
             </AnimatePresence>
+
+            {/* ── Bottom Nav ── */}
+            <nav className="home-bottom-nav" style={{ zIndex: 110 }}>
+                <NavItem icon={Home} label="Menu" active={activeTab === "menu"} onTap={() => onTabChange?.("menu")} />
+                <NavItem icon={ShoppingBag} label="Sacola" badge={totalCartItems} active={activeTab === "sacola"} onTap={() => onTabChange?.("sacola")} />
+                <NavItem icon={ClipboardList} label="Pedidos" active={activeTab === "pedidos"} onTap={() => onTabChange?.("pedidos")} />
+            </nav>
         </div>
     );
 };
