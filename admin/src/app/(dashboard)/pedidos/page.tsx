@@ -1126,6 +1126,11 @@ export default function PedidosPage() {
                                                     <span className="truncate pr-2 border-b border-transparent border-dashed">
                                                       {item.quantidade}x {item.nome_produto}
                                                       {(item.nome_variacao && item.nome_variacao.toLowerCase() !== 'unidade') && <span className="opacity-70 text-muted-foreground font-normal text-xs ml-1">({item.nome_variacao})</span>}
+                                                      {item.observacao && (
+                                                        <div className="mt-0.5 text-[10px] text-muted-foreground italic font-normal">
+                                                          Obs: {item.observacao}
+                                                        </div>
+                                                      )}
                                                     </span>
                                                     <div className="flex flex-col items-end shrink-0 pt-0.5 min-w-[60px]">
                                                       <span className="font-mono text-[11px] text-muted-foreground font-medium">
@@ -1139,11 +1144,6 @@ export default function PedidosPage() {
                                                       )}
                                                     </div>
                                                   </div>
-                                                  {item.observacao && (
-                                                    <div className="ml-[24px] mt-0.5 text-[10px] text-muted-foreground italic">
-                                                      Obs: {item.observacao}
-                                                    </div>
-                                                  )}
                                                 </div>
                                               );
                                             })}

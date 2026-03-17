@@ -151,6 +151,11 @@ function ItemCheckbox({
                 ({item.nome_variacao})
               </span>
             )}
+            {item.observacao && (
+              <div className="mt-0.5 text-[10px] text-muted-foreground italic font-normal">
+                Obs: {item.observacao}
+              </div>
+            )}
           </span>
           <div className="flex flex-col items-end shrink-0 pt-[2px] min-w-[60px]">
             <span className="font-mono text-[11px] text-muted-foreground">
@@ -164,11 +169,6 @@ function ItemCheckbox({
             )}
           </div>
         </div>
-        {item.observacao && (
-          <div className="ml-[30px] -mt-0.5 mb-1 text-[10px] text-muted-foreground italic">
-            Obs: {item.observacao}
-          </div>
-        )}
       </div>
 
       {/* Render Image Icon if imageUrl exists */}
