@@ -295,19 +295,23 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
             setIsCartPending(true);
             setIsPeopleDrawerOpen(true);
         } else {
+            setCartTab('carrinho');
             setIsCartOpen(true);
+            if (onTabChange) onTabChange('sacola');
         }
-    }, [pessoaAtiva]);
+    }, [pessoaAtiva, onTabChange]);
 
     // Function to handle selecting an existing person
     const handlePessoaSelect = useCallback((nome) => {
         setPessoaAtiva(nome);
         if (isCartPending) {
             setIsCartPending(false);
+            setCartTab('carrinho');
             setIsCartOpen(true);
+            if (onTabChange) onTabChange('sacola');
         }
         setIsPeopleDrawerOpen(false);
-    }, [isCartPending]);
+    }, [isCartPending, onTabChange]);
 
     // Function to handle adding a new person
     const handlePessoaAdd = useCallback(async () => {
@@ -326,7 +330,9 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
             setIsPeopleDrawerOpen(false);
             if (isCartPending) {
                 setIsCartPending(false);
+                setCartTab('carrinho');
                 setIsCartOpen(true);
+                if (onTabChange) onTabChange('sacola');
             }
         };
 
@@ -1622,7 +1628,10 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                                 size={22} 
                                 color="#FFFFFF" 
                                 style={{ cursor: 'pointer', marginRight: '16px' }} 
-                                onClick={() => setIsCartOpen(false)} 
+                                onClick={() => {
+                                    setIsCartOpen(false);
+                                    if (onTabChange) onTabChange('menu');
+                                }} 
                             />
                             <span className="cart-title">Comanda</span>
                         </div>

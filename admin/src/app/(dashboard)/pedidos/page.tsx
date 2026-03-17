@@ -194,6 +194,10 @@ function groupByStatus(comandas: ComandaAgrupada[]): ColumnsState {
       grouped[c.status].push(c);
     }
   });
+
+  // A coluna Histórico (entregue/cancelado) deve ser do mais recente para o mais antigo.
+  grouped.entregue.reverse();
+
   return grouped;
 }
 
@@ -391,7 +395,11 @@ export default function PedidosPage() {
     setColumns((prev) => {
       const updated = { ...prev };
       updated[comanda.status] = prev[comanda.status].filter((c) => c.comanda_id !== comanda.comanda_id);
-      updated[nextStatus] = [...prev[nextStatus], updatedComanda];
+      if (nextStatus === "entregue") {
+        updated[nextStatus] = [updatedComanda, ...prev[nextStatus]];
+      } else {
+        updated[nextStatus] = [...prev[nextStatus], updatedComanda];
+      }
       return updated;
     });
 
@@ -1046,11 +1054,15 @@ export default function PedidosPage() {
                                               <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider bg-red-500/10 px-1.5 py-0.5 rounded ml-1">
                                                 Cancelado
                                               </span>
-                                            ) : (comanda.pessoas.length > 0 && comanda.pessoas.every(p => p.pago) && (
+                                            ) : comanda.pessoas.length > 0 && comanda.pessoas.every(p => p.pago) ? (
                                               <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider bg-emerald-500/10 px-1.5 py-0.5 rounded ml-1">
                                                 Pago
                                               </span>
-                                            ))}
+                                            ) : comanda.status === "entregue" ? (
+                                              <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider bg-red-500/10 px-1.5 py-0.5 rounded ml-1">
+                                                Fechar Conta
+                                              </span>
+                                            ) : null}
                                           </div>
                                         </div>
                                       </div>
@@ -1072,11 +1084,15 @@ export default function PedidosPage() {
                                                 <span className="text-[9px] font-bold text-red-500 uppercase tracking-wider bg-red-500/10 px-1 py-0 rounded ml-1">
                                                   Cancelado
                                                 </span>
-                                              ) : pessoa.pago && (
+                                              ) : pessoa.pago ? (
                                                 <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-wider bg-emerald-500/10 px-1 py-0 rounded ml-1">
                                                   Pago
                                                 </span>
-                                              )}
+                                              ) : comanda.status === "entregue" ? (
+                                                <span className="text-[9px] font-bold text-red-500 uppercase tracking-wider bg-red-500/10 px-1 py-0 rounded ml-1">
+                                                  Fechar Conta
+                                                </span>
+                                              ) : null}
                                             </div>
                                             <span className="text-[11px] text-muted-foreground font-mono font-medium">
                                               R$ {pessoa.subtotal.toFixed(2)}
