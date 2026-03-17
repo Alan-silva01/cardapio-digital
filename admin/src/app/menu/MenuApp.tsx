@@ -982,7 +982,7 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                 zIndex: 99999, margin: 0, padding: 0, maxWidth: "none",
                 display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#000000'
             }}>
-                <Loader2 className="animate-spin" style={{ color: '#555' }} size={36} />
+                <img src="/images/loading.gif" alt="Carregando" width={36} height={36} />
             </div>
         );
     }
@@ -1811,7 +1811,7 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                                 <div className="order-history-container">
                                     {isFetchingHistory && orderHistory.length === 0 ? (
                                         <div className="order-history-empty">
-                                            <Loader2 size={32} color="var(--accent-gold)" className="animate-spin" />
+                                            <img src="/images/loading.gif" alt="Carregando" width={32} height={32} />
                                             <p>Carregando histórico...</p>
                                         </div>
                                     ) : orderHistory.length === 0 ? (
@@ -1938,7 +1938,7 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                                         style={{ opacity: (Object.keys(cart).length === 0 || isCheckingOut) ? 0.5 : 1 }}
                                     >
                                         {isCheckingOut ? (
-                                            <><Loader2 size={18} className="animate-spin" style={{ marginRight: '8px' }} /> ENVIANDO...</>
+                                            <><img src="/images/loading.gif" alt="Carregando" width={18} height={18} style={{ marginRight: '8px' }} /> ENVIANDO...</>
                                         ) : (
                                             <span style={{ fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>FINALIZAR PEDIDO</span>
                                         )}
@@ -2101,7 +2101,7 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                                     <div className="people-list">
                                         {isFetchingPessoas ? (
                                             <div style={{ display: 'flex', justifyContent: 'center', padding: '20px', color: '#888' }}>
-                                                <Loader2 size={24} className="animate-spin" />
+                                                <img src="/images/loading.gif" alt="Carregando" width={24} height={24} />
                                             </div>
                                         ) : pessoasNaMesa.length > 0 ? (
                                             pessoasNaMesa.map((nome, idx) => (
