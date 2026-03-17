@@ -320,8 +320,8 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
       {/* ── Top Bar ── */}
       <header className="home-topbar" style={{
         justifyContent: 'center',
-        background: 'linear-gradient(180deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 70%, transparent 100%)',
-        padding: '14px 0 18px',
+        background: 'linear-gradient(180deg, rgba(0,0,0,1) 0%, rgba(0,0,0,0.9) 40%, rgba(0,0,0,0.5) 75%, transparent 100%)',
+        padding: '16px 0 24px',
       }}>
         <img
           src="/images/logo_bar.png"
@@ -401,13 +401,15 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
               initial="hidden"
               animate="show"
             >
-              <img
-                src="https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=600&q=80"
-                alt="Novidades"
-                loading="eager"
-                decoding="async"
+              <video
+                src="/images/hero_video.mp4"
+                autoPlay
+                loop
+                muted
+                playsInline
                 className="home-video"
                 style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                poster="https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=600&q=80"
               />
               <div className="home-video-overlay">
                 <span className="home-video-badge"><Flame size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Novidades</span>
