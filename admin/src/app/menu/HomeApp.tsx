@@ -318,51 +318,50 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
 
   return (
     <div className="home-shell">
-      {/* ── Hero Video Section ── */}
-      <div className="home-hero-video">
-        <video
-          ref={videoRef}
-          src="https://res.cloudinary.com/ddhlqymvf/video/upload/v1773770640/Vi%CC%81deo_1280x720_1_c0grzn.mp4"
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="home-hero-bg"
-          onCanPlay={() => videoRef.current?.play().catch(() => {})}
-        />
-        <div className="home-hero-overlay" />
-        <div className="home-hero-content">
-          <img
-            src="/images/logo_bar.png"
-            alt="Logo"
-            className="home-hero-logo"
-          />
-        </div>
-      </div>
-
-      {/* ── Search ── */}
-      <div className="home-search-wrap">
-        <Search size={18} className="home-search-icon" />
-        <input
-          ref={searchRef}
-          type="text"
-          placeholder="Buscar produto... ex: Corona, Caipirinha"
-          className="home-search-input"
-          value={searchQuery}
-          onChange={(e) => handleSearchChange(e.target.value)}
-        />
-        {searchQuery && (
-          <button
-            className="home-search-clear"
-            onClick={() => { setSearchQuery(""); setSearchResults([]); }}
-          >
-            <X size={16} />
-          </button>
-        )}
-      </div>
-
       {/* ── Scrollable Content ── */}
       <div className="home-scroll">
+        {/* ── Hero Video Section ── */}
+        <div className="home-hero-video">
+          <video
+            ref={videoRef}
+            src="https://res.cloudinary.com/ddhlqymvf/video/upload/v1773770640/Vi%CC%81deo_1280x720_1_c0grzn.mp4"
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="home-hero-bg"
+            onCanPlay={() => videoRef.current?.play().catch(() => {})}
+          />
+          <div className="home-hero-overlay" />
+          <div className="home-hero-content">
+            <img
+              src="/images/logo_bar.png"
+              alt="Logo"
+              className="home-hero-logo"
+            />
+          </div>
+        </div>
+
+        {/* ── Search ── */}
+        <div className="home-search-wrap">
+          <Search size={18} className="home-search-icon" />
+          <input
+            ref={searchRef}
+            type="text"
+            placeholder="Buscar produto... ex: Corona, Caipirinha"
+            className="home-search-input"
+            value={searchQuery}
+            onChange={(e) => handleSearchChange(e.target.value)}
+          />
+          {searchQuery && (
+            <button
+              className="home-search-clear"
+              onClick={() => { setSearchQuery(""); setSearchResults([]); }}
+            >
+              <X size={16} />
+            </button>
+          )}
+        </div>
 
         {/* Search Results Dropdown */}
         {showSearchResults && (
