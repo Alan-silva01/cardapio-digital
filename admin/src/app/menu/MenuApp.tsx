@@ -1507,14 +1507,14 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                         exit={{ y: '100%' }}
                         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                     >
-                        <div className="cart-header">
+                        <div className="cart-header" style={{ justifyContent: 'flex-start', alignItems: 'center' }}>
+                            <ArrowLeft 
+                                size={28} 
+                                color="#111827" 
+                                style={{ cursor: 'pointer', marginRight: '16px' }} 
+                                onClick={() => setIsCartOpen(false)} 
+                            />
                             <span className="cart-title">Comanda</span>
-                            <button
-                                onClick={() => setIsCartOpen(false)}
-                                style={{ background: 'transparent', border: 'none', color: '#111827', cursor: 'pointer', padding: '4px' }}
-                            >
-                                <X size={24} />
-                            </button>
                         </div>
                         
                         {/* TABS */}
@@ -1721,7 +1721,7 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                                                     </div>
 
                                                     <div className="order-timeline">
-                                                        {['Recebido', 'Preparando', 'Pronto', 'Servido'].map((label, idx) => {
+                                                        {['Recebido', 'Preparando', 'Servido', 'Concluído'].map((label, idx) => {
                                                             const stepNum = idx + 1;
                                                             const isDone = stepNum < currentStep;
                                                             const isCurrent = stepNum === currentStep;
@@ -1766,7 +1766,7 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                         </div>
 
                         {/* FOOTER SECTION (Service Buttons + Subtotal + Checkout) */}
-                        <div style={{ background: '#0A0A0A', borderTop: '1px solid rgba(255, 255, 255, 0.05)', position: 'absolute', bottom: 0, left: 0, right: 0, paddingTop: '16px', zIndex: 100 }}>
+                        <div style={{ background: '#FFFFFF', borderTop: 'none', position: 'absolute', bottom: 0, left: 0, right: 0, paddingTop: '12px', zIndex: 100 }}>
                             <div className="cart-service-buttons">
                                 <button 
                                     className={`service-btn ${(garcomCalled || garcomCooldown) ? 'active' : ''}`}
