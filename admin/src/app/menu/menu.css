@@ -586,8 +586,8 @@ body.is-pwa .cart-header {
   right: 0;
   background: #FFFFFF;
   border-top: 1px solid #F0EDE6;
-  padding: 16px 20px 24px;
-  padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  padding: 12px 20px 70px;
+  padding-bottom: calc(70px + env(safe-area-inset-bottom));
   z-index: 100;
   box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.06);
 }
@@ -778,13 +778,13 @@ body.is-pwa .cart-footer {
 .cart-person-section {
   background: #FFFFFF;
   border: 1px solid #F0EDE6;
-  border-radius: 16px;
-  padding: 16px;
-  margin-bottom: 20px;
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  gap: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
 }
 
 .cart-person-section h4 {
@@ -1082,8 +1082,8 @@ body.is-pwa .cart-footer {
 /* --- SERVICE BUTTONS (garcom, conta) --- */
 .cart-service-buttons {
   display: flex;
-  gap: 10px;
-  padding: 8px 16px 16px;
+  gap: 8px;
+  padding: 8px 16px 10px;
   background: #FFFFFF;
 }
 
@@ -1093,12 +1093,12 @@ body.is-pwa .cart-footer {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 11px;
-  border-radius: 12px;
+  padding: 8px;
+  border-radius: 8px;
   border: 1px solid #F0EDE6;
   background: #FFFFFF;
   color: #6B7280;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.25s ease;

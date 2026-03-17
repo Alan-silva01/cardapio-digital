@@ -1536,11 +1536,11 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                         <div className="cart-items-container">
                             {/* PEOPLE GROUPING IDENTIFIER */}
                             {pessoaAtiva && (
-                                <div className="cart-person-section" style={{marginBottom: '16px'}}>
-                                    <h5 style={{fontSize: '13px', color: '#666', margin: 0, fontWeight: 600}}>Comanda Identificada</h5>
-                                    <div className="cart-person-active" style={{marginTop: '8px', padding: '8px 12px', background: '#F3F4F6', border: '1px solid #E5E7EB', borderRadius: '8px'}}>
-                                        <span className="cart-person-active-name" style={{color: '#111827', fontWeight: 600}}>
-                                            <div style={{width: '24px', height: '24px', borderRadius: '50%', background: 'var(--accent-gold)', color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 900}}>
+                                <div className="cart-person-section" style={{marginBottom: '10px'}}>
+                                    <h5 style={{fontSize: '11px', color: '#666', margin: 0, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px'}}>Comanda Identificada</h5>
+                                    <div className="cart-person-active" style={{marginTop: '0px', padding: '6px 10px', background: '#F3F4F6', border: '1px solid #E5E7EB', borderRadius: '8px'}}>
+                                        <span className="cart-person-active-name" style={{color: '#111827', fontWeight: 600, fontSize: '13px'}}>
+                                            <div style={{width: '20px', height: '20px', borderRadius: '50%', background: 'var(--accent-gold)', color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 900}}>
                                                 {pessoaAtiva.charAt(0).toUpperCase()}
                                             </div>
                                             {pessoaAtiva}
@@ -1787,8 +1787,8 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                             </div>
 
                             {cartTab === 'carrinho' && (
-                                <div className="cart-footer" style={{position: 'relative', borderTop: 'none', padding: '12px 20px 40px'}}>
-                                    <div className="cart-subtotal-row" style={{marginBottom: '16px'}}>
+                                <div className="cart-footer" style={{position: 'relative', borderTop: 'none', padding: '12px 20px 70px'}}>
+                                    <div className="cart-subtotal-row" style={{marginBottom: '10px'}}>
                                         <span className="cart-subtotal-label">Subtotal</span>
                                         <span className="cart-subtotal-value">
                                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
