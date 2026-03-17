@@ -195,6 +195,7 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
   const [isSearching, setIsSearching] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [cartCount, setCartCount] = useState(0);
 
   // Read cart from localStorage
@@ -320,12 +321,14 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
       {/* ── Hero Video Section ── */}
       <div className="home-hero-video">
         <video
-          src="https://res.cloudinary.com/ddhlqymvf/video/upload/v1773769995/Vi%CC%81deo_1280x720_a2xeqf.mp4"
+          ref={videoRef}
+          src="https://res.cloudinary.com/ddhlqymvf/video/upload/v1773770640/Vi%CC%81deo_1280x720_1_c0grzn.mp4"
           autoPlay
           loop
           muted
           playsInline
           className="home-hero-bg"
+          onCanPlay={() => videoRef.current?.play().catch(() => {})}
         />
         <div className="home-hero-overlay" />
         <div className="home-hero-content">
