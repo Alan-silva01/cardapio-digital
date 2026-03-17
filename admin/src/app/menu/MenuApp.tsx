@@ -2134,6 +2134,7 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                             )}
                         </motion.div>
                     </motion.div>
+                )}
             </AnimatePresence>
         </div>
     );
