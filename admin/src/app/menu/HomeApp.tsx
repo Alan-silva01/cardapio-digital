@@ -236,43 +236,81 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
     import("./MenuApp");
   }, []);
 
+  // Ref callback to force muted on the DOM element (React bug: muted prop doesn't always stick)
+  const videoRefCallback = useCallback((node: HTMLVideoElement | null) => {
+    if (!node) return;
+    // @ts-ignore
+    videoRef.current = node;
+    // Critical: React doesn't reliably set 'muted' on the DOM element
+    node.defaultMuted = true;
+    node.muted = true;
+    node.setAttribute('muted', '');
+    node.setAttribute('playsinline', '');
+    node.setAttribute('webkit-playsinline', '');
+  }, []);
+
   // Force video autoplay on Safari/iOS
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    // Ensure muted (Safari requires this programmatically too)
-    video.muted = true;
-    video.setAttribute('playsinline', '');
-    video.setAttribute('webkit-playsinline', '');
-
     const tryPlay = () => {
-      video.play().catch(() => {});
+      if (video.paused) {
+        video.muted = true; // Re-ensure muted before each attempt
+        const p = video.play();
+        if (p !== undefined) {
+          p.catch(() => {});
+        }
+      }
     };
 
-    // Try immediately
+    // Try on various loading events
+    video.addEventListener('loadedmetadata', tryPlay);
+    video.addEventListener('loadeddata', tryPlay);
+    video.addEventListener('canplay', tryPlay);
+
+    // Try immediately + retries
     tryPlay();
+    const t1 = setTimeout(tryPlay, 100);
+    const t2 = setTimeout(tryPlay, 500);
+    const t3 = setTimeout(tryPlay, 1500);
 
-    // Retry after short delays in case video isn't ready yet
-    const t1 = setTimeout(tryPlay, 300);
-    const t2 = setTimeout(tryPlay, 1000);
-    const t3 = setTimeout(tryPlay, 2500);
+    // IntersectionObserver: play when video becomes visible
+    let observer: IntersectionObserver | null = null;
+    if ('IntersectionObserver' in window) {
+      observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) tryPlay();
+          });
+        },
+        { threshold: 0.1 }
+      );
+      observer.observe(video);
+    }
 
-    // Fallback: play on first user touch (iOS Safari often needs this)
-    const onTouch = () => {
+    // Fallback: play on first user interaction
+    const onInteraction = () => {
       tryPlay();
-      document.removeEventListener('touchstart', onTouch);
-      document.removeEventListener('click', onTouch);
+      document.removeEventListener('touchstart', onInteraction);
+      document.removeEventListener('click', onInteraction);
+      document.removeEventListener('scroll', onInteraction);
     };
-    document.addEventListener('touchstart', onTouch, { passive: true });
-    document.addEventListener('click', onTouch);
+    document.addEventListener('touchstart', onInteraction, { passive: true });
+    document.addEventListener('click', onInteraction);
+    document.addEventListener('scroll', onInteraction, { passive: true });
 
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
       clearTimeout(t3);
-      document.removeEventListener('touchstart', onTouch);
-      document.removeEventListener('click', onTouch);
+      video.removeEventListener('loadedmetadata', tryPlay);
+      video.removeEventListener('loadeddata', tryPlay);
+      video.removeEventListener('canplay', tryPlay);
+      observer?.disconnect();
+      document.removeEventListener('touchstart', onInteraction);
+      document.removeEventListener('click', onInteraction);
+      document.removeEventListener('scroll', onInteraction);
     };
   }, []);
 
@@ -362,21 +400,20 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
       <div className="home-scroll">
         {/* ── Hero Video Section ── */}
         <div className="home-hero-video">
-          {/* eslint-disable-next-line */}
           <video
-            ref={videoRef}
-            src="https://res.cloudinary.com/ddhlqymvf/video/upload/v1773770640/Vi%CC%81deo_1280x720_1_c0grzn.mp4"
+            ref={videoRefCallback}
             autoPlay
             loop
             muted
             playsInline
-            // @ts-ignore — webkit-playsinline needed for older iOS Safari
-            webkit-playsinline="true"
             preload="auto"
             className="home-hero-bg"
-            onLoadedData={() => videoRef.current?.play().catch(() => {})}
-            onCanPlay={() => videoRef.current?.play().catch(() => {})}
-          />
+          >
+            <source
+              src="https://res.cloudinary.com/ddhlqymvf/video/upload/v1773770640/Vi%CC%81deo_1280x720_1_c0grzn.mp4"
+              type="video/mp4"
+            />
+          </video>
           <div className="home-hero-overlay" />
           <div className="home-hero-content">
             <img
