@@ -1900,7 +1900,7 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                             </div>
 
                             {cartTab === 'carrinho' && (
-                                <div className="cart-footer" style={{position: 'relative', borderTop: 'none'}}>
+                                <div className="cart-footer" style={{position: 'relative', bottom: 'auto', borderTop: 'none'}}>
                                     <div className="cart-subtotal-row" style={{marginBottom: '10px'}}>
                                         <span className="cart-subtotal-label">Total do Pedido</span>
                                         <span className="cart-subtotal-value">
@@ -1942,7 +1942,7 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                             )}
 
                             {cartTab === 'pedidos' && (
-                                <div className="cart-footer" style={{position: 'relative', borderTop: 'none', padding: '0 20px 24px'}}>
+                                <div className="cart-footer" style={{position: 'relative', bottom: 'auto', borderTop: 'none', padding: '0 20px 24px'}}>
                                     <div className="cart-subtotal-row" style={{marginBottom: 0}}>
                                         <span className="cart-subtotal-label">Total da Conta (Seu Consumo)</span>
                                         <span className="cart-subtotal-value">
