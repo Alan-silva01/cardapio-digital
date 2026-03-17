@@ -1509,7 +1509,7 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                     >
                         <div className="cart-header" style={{ justifyContent: 'flex-start', alignItems: 'center' }}>
                             <ArrowLeft 
-                                size={28} 
+                                size={22} 
                                 color="#111827" 
                                 style={{ cursor: 'pointer', marginRight: '16px' }} 
                                 onClick={() => setIsCartOpen(false)} 
@@ -1536,11 +1536,11 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                         <div className="cart-items-container">
                             {/* PEOPLE GROUPING IDENTIFIER */}
                             {pessoaAtiva && (
-                                <div className="cart-person-section" style={{marginBottom: '24px'}}>
-                                    <h4>Comanda Identificada</h4>
-                                    <div className="cart-person-active" style={{marginTop: '8px', padding: '12px', background: '#F3F4F6', border: '1px solid #E5E7EB', borderRadius: '12px'}}>
+                                <div className="cart-person-section" style={{marginBottom: '16px'}}>
+                                    <h5 style={{fontSize: '13px', color: '#666', margin: 0, fontWeight: 600}}>Comanda Identificada</h5>
+                                    <div className="cart-person-active" style={{marginTop: '8px', padding: '8px 12px', background: '#F3F4F6', border: '1px solid #E5E7EB', borderRadius: '8px'}}>
                                         <span className="cart-person-active-name" style={{color: '#111827', fontWeight: 600}}>
-                                            <div style={{width: '28px', height: '28px', borderRadius: '50%', background: 'var(--accent-gold)', color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 900}}>
+                                            <div style={{width: '24px', height: '24px', borderRadius: '50%', background: 'var(--accent-gold)', color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 900}}>
                                                 {pessoaAtiva.charAt(0).toUpperCase()}
                                             </div>
                                             {pessoaAtiva}
@@ -1787,8 +1787,8 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                             </div>
 
                             {cartTab === 'carrinho' && (
-                                <div className="cart-footer" style={{position: 'relative', borderTop: 'none', padding: '0 20px 24px'}}>
-                                    <div className="cart-subtotal-row">
+                                <div className="cart-footer" style={{position: 'relative', borderTop: 'none', padding: '12px 20px 40px'}}>
+                                    <div className="cart-subtotal-row" style={{marginBottom: '16px'}}>
                                         <span className="cart-subtotal-label">Subtotal</span>
                                         <span className="cart-subtotal-value">
                                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
@@ -1822,7 +1822,7 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                                         {isCheckingOut ? (
                                             <><Loader2 size={18} className="animate-spin" style={{ marginRight: '8px' }} /> ENVIANDO...</>
                                         ) : (
-                                            <>FINALIZAR PEDIDO <ChevronRight size={18} /></>
+                                            <span style={{ fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>FINALIZAR PEDIDO</span>
                                         )}
                                     </button>
                                 </div>
