@@ -1787,7 +1787,7 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                             </div>
 
                             {cartTab === 'carrinho' && (
-                                <div className="cart-footer" style={{position: 'relative', borderTop: 'none', padding: '12px 20px 70px'}}>
+                                <div className="cart-footer" style={{position: 'relative', borderTop: 'none'}}>
                                     <div className="cart-subtotal-row" style={{marginBottom: '10px'}}>
                                         <span className="cart-subtotal-label">Subtotal</span>
                                         <span className="cart-subtotal-value">

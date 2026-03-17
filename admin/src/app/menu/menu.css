@@ -586,8 +586,8 @@ body.is-pwa .cart-header {
   right: 0;
   background: #FFFFFF;
   border-top: 1px solid #F0EDE6;
-  padding: 12px 20px 70px;
-  padding-bottom: calc(70px + env(safe-area-inset-bottom));
+  padding: 12px 20px 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
   z-index: 100;
   box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.06);
 }
