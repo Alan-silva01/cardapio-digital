@@ -960,23 +960,29 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
 
     if (loading || isFiltering) {
         return (
-            <div className="app-container" style={{
-                position: "fixed",
-                top: 0, left: 0, right: 0, bottom: 0,
-                width: "100vw", height: "100vh",
-                zIndex: 99999, margin: 0, padding: 0, maxWidth: "none",
-                display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#000000'
-            }}>
+            <motion.div 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }} 
+                transition={{ duration: 0.3, delay: 0.3 }} // Delay the loader so it doesn't flash on fast networks
+                className="app-container" style={{
+                    position: "fixed",
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    width: "100vw", height: "100vh",
+                    zIndex: 99999, margin: 0, padding: 0, maxWidth: "none",
+                    display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#000000'
+                }}>
                 <Loader2 className="animate-spin" style={{ color: '#555' }} size={36} />
-            </div>
+            </motion.div>
         );
     }
 
     if (!currentProduct) {
         return (
-            <div className="app-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#000000', color: '#666', width: '100%' }}>
+            <motion.div 
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                className="app-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#000000', color: '#666', width: '100%' }}>
                 <p>Nenhum produto encontrado.</p>
-            </div>
+            </motion.div>
         );
     }
 
@@ -998,7 +1004,11 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
 
 
     return (
-        <div className="app-container" style={{
+        <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4 }}
+            className="app-container" style={{
             backgroundColor: '#000',
             backgroundImage: `url('https://res.cloudinary.com/ddhlqymvf/image/upload/f_auto,q_auto,w_450/v1771525899/App_Bar_1080x1920_2_afm0f1.png')`,
             backgroundSize: 'cover',
@@ -2121,7 +2131,7 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                     </motion.div>
                 )}
             </AnimatePresence>
-        </div>
+        </motion.div>
     );
 };
 
