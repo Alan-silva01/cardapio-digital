@@ -86,7 +86,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon?: any }
   recebido: { label: "Recebido", color: "bg-orange-500/10 text-orange-600" },
   preparando: { label: "Preparando", color: "bg-brand text-white border-transparent" },
   pronto: { label: "Pronto", color: "bg-emerald-500/10 text-emerald-600" },
-  entregue: { label: "Entregue", color: "bg-blue-500/10 text-blue-600" },
+  entregue: { label: "Finalizada", color: "bg-emerald-500/10 text-emerald-600" },
   cancelado: { label: "Cancelado", color: "bg-red-500/10 text-red-600" },
 };
 
