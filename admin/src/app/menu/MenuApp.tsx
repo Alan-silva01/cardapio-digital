@@ -742,7 +742,25 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
 
             // Store all products in ref for reactive filtering
             allProductsRef.current = enrichedProducts;
-            setProducts(enrichedProducts);
+            
+            // Wait! fetchMenu has an empty dependency array, so we MUST read from prevFilterRef
+            // to avoid React stale closure bugs when resolving async.
+            const currentFilters = prevFilterRef.current.filterCategories;
+            const currentSearch = prevFilterRef.current.searchProductName;
+            
+            // Apply current filters if they exist (crucial for initial mount via AnimatePresence)
+            if (currentFilters && currentFilters.length > 0) {
+                const sanitizedFilters = currentFilters.map(f => f.toLowerCase().trim());
+                const filtered = enrichedProducts.filter(p => sanitizedFilters.includes(p.category.toLowerCase().trim()));
+                setProducts(filtered);
+            } else if (currentSearch) {
+                const term = currentSearch.toLowerCase().trim();
+                const filtered = enrichedProducts.filter(p => p.name.toLowerCase().includes(term));
+                setProducts(filtered);
+            } else {
+                setProducts(enrichedProducts);
+            }
+            
         } catch (error) {
             console.error('Error fetching menu from Supabase:', error);
         } finally {
