@@ -236,6 +236,46 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
     import("./MenuApp");
   }, []);
 
+  // Force video autoplay on Safari/iOS
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    // Ensure muted (Safari requires this programmatically too)
+    video.muted = true;
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
+
+    const tryPlay = () => {
+      video.play().catch(() => {});
+    };
+
+    // Try immediately
+    tryPlay();
+
+    // Retry after short delays in case video isn't ready yet
+    const t1 = setTimeout(tryPlay, 300);
+    const t2 = setTimeout(tryPlay, 1000);
+    const t3 = setTimeout(tryPlay, 2500);
+
+    // Fallback: play on first user touch (iOS Safari often needs this)
+    const onTouch = () => {
+      tryPlay();
+      document.removeEventListener('touchstart', onTouch);
+      document.removeEventListener('click', onTouch);
+    };
+    document.addEventListener('touchstart', onTouch, { passive: true });
+    document.addEventListener('click', onTouch);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      document.removeEventListener('touchstart', onTouch);
+      document.removeEventListener('click', onTouch);
+    };
+  }, []);
+
   // Debounced product search
   const searchProducts = useCallback(async (query: string) => {
     if (query.trim().length < 2) {
@@ -322,6 +362,7 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
       <div className="home-scroll">
         {/* ── Hero Video Section ── */}
         <div className="home-hero-video">
+          {/* eslint-disable-next-line */}
           <video
             ref={videoRef}
             src="https://res.cloudinary.com/ddhlqymvf/video/upload/v1773770640/Vi%CC%81deo_1280x720_1_c0grzn.mp4"
@@ -329,7 +370,11 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
             loop
             muted
             playsInline
+            // @ts-ignore — webkit-playsinline needed for older iOS Safari
+            webkit-playsinline="true"
+            preload="auto"
             className="home-hero-bg"
+            onLoadedData={() => videoRef.current?.play().catch(() => {})}
             onCanPlay={() => videoRef.current?.play().catch(() => {})}
           />
           <div className="home-hero-overlay" />

@@ -70,7 +70,7 @@ body:has(.home-shell) {
   align-items: flex-start;
   justify-content: center;
   z-index: 3;
-  padding-top: calc(16px + env(safe-area-inset-top));
+  padding-top: calc(8px + env(safe-area-inset-top));
 }
 
 body.is-pwa .home-hero-content {
