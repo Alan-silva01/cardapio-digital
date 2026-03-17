@@ -317,18 +317,25 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
 
   return (
     <div className="home-shell">
-      {/* ── Top Bar ── */}
-      <header className="home-topbar" style={{
-        justifyContent: 'center',
-        background: 'linear-gradient(180deg, rgba(0,0,0,1) 0%, rgba(0,0,0,0.9) 40%, rgba(0,0,0,0.5) 75%, transparent 100%)',
-        padding: '16px 0 24px',
-      }}>
-        <img
-          src="/images/logo_bar.png"
-          alt="Logo"
-          style={{ height: '40px', objectFit: 'contain' }}
+      {/* ── Hero Video Section ── */}
+      <div className="home-hero-video">
+        <video
+          src="https://res.cloudinary.com/ddhlqymvf/video/upload/v1773769995/Vi%CC%81deo_1280x720_a2xeqf.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="home-hero-bg"
         />
-      </header>
+        <div className="home-hero-overlay" />
+        <div className="home-hero-content">
+          <img
+            src="/images/logo_bar.png"
+            alt="Logo"
+            className="home-hero-logo"
+          />
+        </div>
+      </div>
 
       {/* ── Search ── */}
       <div className="home-search-wrap">
@@ -394,35 +401,6 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
         {/* Main content only when not searching */}
         {!showSearchResults && (
           <>
-            {/* Video Banner */}
-            <motion.div
-              className="home-video-card"
-              variants={heroVariants}
-              initial="hidden"
-              animate="show"
-            >
-              <video
-                src="/images/hero_video.mp4"
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="home-video"
-                style={{ objectFit: 'cover', width: '100%', height: '100%' }}
-                poster="https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=600&q=80"
-              />
-              <div className="home-video-overlay">
-                <span className="home-video-badge"><Flame size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 4 }} /> Novidades</span>
-                <p className="home-video-text">Conheça nossos drinks especiais</p>
-              </div>
-              {/* Dots on video banner */}
-              <div className="hc-dots">
-                <span className="hc-dot hc-dot-active" />
-                <span className="hc-dot" />
-                <span className="hc-dot" />
-                <span className="hc-dot" />
-              </div>
-            </motion.div>
 
             {/* Section Title */}
             <div className="home-section-header">
