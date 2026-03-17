@@ -60,6 +60,7 @@ export default function MenuPage() {
     const cats = dbCategories || CATEGORY_MAP[categoryId] || null;
     setFilterCategories(cats);
     setSearchProductName(null);
+    setActiveTab("menu");
     setView("menu");
   };
 
