@@ -664,6 +664,11 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
             if (prodError) throw prodError;
             if (varError) throw varError;
 
+            const catMap = catData.reduce((acc, cat) => {
+                acc[cat.id] = cat.nome;
+                return acc;
+            }, {});
+
             let glassMapToPreload = null;
             if (!wineError && wineData) {
                 const glassMap = {};
