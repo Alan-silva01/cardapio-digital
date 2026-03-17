@@ -408,7 +408,7 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
           className="home-hero-bg"
         >
           <source
-            src="https://res.cloudinary.com/ddhlqymvf/video/upload/q_auto:best,ac_none,f_mp4,w_720/v1773770640/Vi%CC%81deo_1280x720_1_c0grzn.mp4"
+            src="https://res.cloudinary.com/ddhlqymvf/video/upload/q_auto:best,ac_none,f_mp4,w_720/v1773773210/Vi%CC%81deo_1280x720_2_mvdnj0.mp4"
             type="video/mp4"
           />
         </video>
