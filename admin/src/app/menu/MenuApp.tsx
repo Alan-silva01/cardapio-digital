@@ -111,7 +111,15 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
     const [direction, setDirection] = useState(0); // 1 = right, -1 = left
     const [isInternalSpin, setIsInternalSpin] = useState(false); // true when clicking a flavor button
     const [selectedVariation, setSelectedVariation] = useState(null);
-    const [cart, setCart] = useState({}); // { productId: quantity }
+    const [cart, setCart] = useState(() => {
+        if (typeof window !== 'undefined') {
+            try {
+                const saved = localStorage.getItem('@Menu-Cart');
+                if (saved) return JSON.parse(saved);
+            } catch (e) { console.error('Error parsing cart localStorage', e) }
+        }
+        return {};
+    }); // { productId: quantity }
     const [pendingQty, setPendingQty] = useState(1); // local qty before adding to cart
     const [flyingItems, setFlyingItems] = useState([]); // for fly-to-cart animation
     const [heartParticles, setHeartParticles] = useState([]); // for heart burst effect
@@ -196,6 +204,15 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
             localStorage.removeItem('@Menu-PessoaAtiva');
         }
     }, [pessoaAtiva]);
+
+    // PERSIST CART ON DEVICE
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('@Menu-Cart', JSON.stringify(cart));
+            // Dispatch event for other components (like HomeApp) in the same window
+            window.dispatchEvent(new Event('cartUpdated'));
+        }
+    }, [cart]);
 
     // FETCH EXISTING COMANDAS ON THIS TABLE
     const fetchPessoasNaMesa = useCallback(async (options = {}) => {
@@ -2117,15 +2134,7 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                             )}
                         </motion.div>
                     </motion.div>
-                )}
             </AnimatePresence>
-
-            {/* ── Bottom Nav ── */}
-            <nav className="home-bottom-nav" style={{ zIndex: 110 }}>
-                <NavItem icon={Home} label="Menu" active={activeTab === "menu"} onTap={() => onTabChange?.("menu")} />
-                <NavItem icon={ShoppingBag} label="Sacola" badge={totalCartItems} active={activeTab === "sacola"} onTap={() => onTabChange?.("sacola")} />
-                <NavItem icon={ClipboardList} label="Pedidos" active={activeTab === "pedidos"} onTap={() => onTabChange?.("pedidos")} />
-            </nav>
         </div>
     );
 };

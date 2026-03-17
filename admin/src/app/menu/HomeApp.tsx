@@ -195,6 +195,40 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
   const [isSearching, setIsSearching] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
+  const [cartCount, setCartCount] = useState(0);
+
+  // Read cart from localStorage
+  useEffect(() => {
+    const updateCartCount = () => {
+      try {
+        const saved = localStorage.getItem("@Menu-Cart");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          const total = Object.values(parsed).reduce((sum: number, qty: any) => sum + qty, 0);
+          setCartCount(total);
+        } else {
+          setCartCount(0);
+        }
+      } catch (e) {
+        setCartCount(0);
+      }
+    };
+    
+    updateCartCount();
+    
+    // Listen for storage changes from other tabs AND custom events from same tab
+    window.addEventListener("storage", updateCartCount);
+    window.addEventListener("cartUpdated", updateCartCount);
+    
+    // Also poll every 2s as a fallback when component is mounted
+    const interval = setInterval(updateCartCount, 2000);
+    
+    return () => {
+      window.removeEventListener("storage", updateCartCount);
+      window.removeEventListener("cartUpdated", updateCartCount);
+      clearInterval(interval);
+    };
+  }, []);
 
   // Prefetch MenuApp bundle silently so transition is near-instant
   useEffect(() => {
@@ -431,7 +465,7 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
       {/* ── Bottom Nav ── */}
       <nav className="home-bottom-nav">
         <NavItem icon={Home} label="Menu" active={activeTab === "menu"} onTap={() => onTabChange?.("menu")} />
-        <NavItem icon={ShoppingBag} label="Sacola" active={activeTab === "sacola"} onTap={() => onTabChange?.("sacola")} />
+        <NavItem icon={ShoppingBag} label="Sacola" badge={cartCount} active={activeTab === "sacola"} onTap={() => onTabChange?.("sacola")} />
         <NavItem icon={ClipboardList} label="Pedidos" active={activeTab === "pedidos"} onTap={() => onTabChange?.("pedidos")} />
       </nav>
 
@@ -508,19 +542,44 @@ function NavItem({
   label,
   active,
   onTap,
+  badge,
 }: {
   icon: React.ElementType;
   label: string;
   active: boolean;
   onTap: () => void;
+  badge?: number;
 }) {
   return (
     <motion.button
       className={`home-nav-item ${active ? "home-nav-active" : ""}`}
       whileTap={{ scale: 0.85 }}
       onClick={onTap}
+      style={{ position: 'relative' }}
     >
-      <Icon size={22} strokeWidth={active ? 2.5 : 1.8} />
+      <div style={{ position: 'relative' }}>
+        <Icon size={22} strokeWidth={active ? 2.5 : 1.8} />
+        {badge && badge > 0 ? (
+          <div style={{
+            position: 'absolute',
+            top: '-5px',
+            right: '-8px',
+            background: '#E53935',
+            color: '#fff',
+            fontSize: '9px',
+            fontWeight: '800',
+            width: '16px',
+            height: '16px',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            lineHeight: 1
+          }}>
+            {badge}
+          </div>
+        ) : null}
+      </div>
       <span>{label}</span>
     </motion.button>
   );
