@@ -17,6 +17,8 @@ import {
   Citrus,
   X,
   ChevronRight,
+  ShoppingBag,
+  ClipboardList,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -187,11 +189,12 @@ const heroVariants = {
 interface HomeAppProps {
   onCategorySelect?: (categoryId: string, dbCategories?: string[]) => void;
   onProductSearch?: (searchTerm: string) => void;
+  activeTab?: "menu" | "sacola" | "pedidos";
+  onTabChange?: (tab: "menu" | "sacola" | "pedidos") => void;
 }
 
-export default function HomeApp({ onCategorySelect, onProductSearch }: HomeAppProps) {
+export default function HomeApp({ onCategorySelect, onProductSearch, activeTab = "menu", onTabChange }: HomeAppProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeNav, setActiveNav] = useState("home");
   const [openSheet, setOpenSheet] = useState<CategoryDef | null>(null);
   const [searchResults, setSearchResults] = useState<ProductResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -291,9 +294,6 @@ export default function HomeApp({ onCategorySelect, onProductSearch }: HomeAppPr
           <p className="home-greeting">Bem-vindo ao</p>
           <h1 className="home-brand">Seu Manel</h1>
         </div>
-        <motion.div className="home-avatar" whileTap={{ scale: 0.9 }}>
-          <User size={20} strokeWidth={2.5} />
-        </motion.div>
       </header>
 
       {/* ── Search ── */}
@@ -436,10 +436,9 @@ export default function HomeApp({ onCategorySelect, onProductSearch }: HomeAppPr
 
       {/* ── Bottom Nav ── */}
       <nav className="home-bottom-nav">
-        <NavItem icon={Home} label="Início" active={activeNav === "home"} onTap={() => setActiveNav("home")} />
-        <NavItem icon={Search} label="Buscar" active={activeNav === "search"} onTap={() => { setActiveNav("search"); searchRef.current?.focus(); }} />
-        <NavItem icon={ShoppingCart} label="Pedidos" active={activeNav === "orders"} onTap={() => setActiveNav("orders")} />
-        <NavItem icon={User} label="Perfil" active={activeNav === "profile"} onTap={() => setActiveNav("profile")} />
+        <NavItem icon={Home} label="Menu" active={activeTab === "menu"} onTap={() => onTabChange?.("menu")} />
+        <NavItem icon={ShoppingBag} label="Sacola" active={activeTab === "sacola"} onTap={() => onTabChange?.("sacola")} />
+        <NavItem icon={ClipboardList} label="Pedidos" active={activeTab === "pedidos"} onTap={() => onTabChange?.("pedidos")} />
       </nav>
 
       {/* ── Subcategory Bottom Sheet ── */}

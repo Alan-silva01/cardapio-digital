@@ -41,7 +41,7 @@ const HeartParticle = ({ x, y, onComplete }) => {
 };
 
 
-const App = ({ filterCategories = null, searchProductName = null, onBack = null, isActive = true }) => {
+const App = ({ filterCategories = null, searchProductName = null, onBack = null, isActive = true, activeTab = 'menu', onTabChange = null }) => {
     const [products, setProducts] = useState([]);
     const allProductsRef = useRef([]);
     const [loading, setLoading] = useState(true);
@@ -114,6 +114,19 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
     const [contaCalled, setContaCalled] = useState(false);
     const [garcomCooldown, setGarcomCooldown] = useState(false);
     const [contaCooldown, setContaCooldown] = useState(false);
+
+    // REACT TO BOTTOM NAV TAB CHANGES
+    useEffect(() => {
+        if (activeTab === 'sacola') {
+            setIsCartOpen(true);
+            setCartTab('carrinho');
+        } else if (activeTab === 'pedidos') {
+            setIsCartOpen(true);
+            setCartTab('pedidos');
+        } else {
+            setIsCartOpen(false);
+        }
+    }, [activeTab]);
 
     // PERSIST PERSON ON DEVICE
     useEffect(() => {

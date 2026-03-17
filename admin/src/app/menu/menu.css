@@ -22,7 +22,8 @@
 html,
 body,
 #root {
-  background-color: #e8e8e8;
+  background-color: #000000;
+  color: #FFFFFF;
   transition: background-color 0.3s ease;
   overflow: hidden;
   height: 100dvh;
@@ -48,7 +49,7 @@ body.theme-dark,
 
 html.theme-dark .app-container,
 html.theme-dark #root {
-  background-color: #000;
+  background-color: #000000;
 }
 
 /* Main App Container - Responsive for mobile, fixed mockup for desktop */
@@ -57,7 +58,7 @@ html.theme-dark #root {
   max-width: 100%;
   height: 100dvh;
   /* Use dynamic viewport height */
-  background-color: #000;
+  background-color: #000000;
   background-image: url('https://res.cloudinary.com/ddhlqymvf/image/upload/f_auto,q_auto,w_450/v1771525899/App_Bar_1080x1920_2_afm0f1.png');
   background-size: cover;
   background-position: center;
@@ -317,10 +318,10 @@ body.is-pwa .top-nav {
   gap: 6px;
   width: 100%;
   padding: 2px;
-  background: #B0B0B0;
+  background: #333333;
   border-radius: 32px;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .qty-controls-integrated {
@@ -361,7 +362,7 @@ body.is-pwa .top-nav {
   text-align: center;
   font-size: 19px;
   font-weight: 800;
-  color: #000;
+  color: #FFFFFF;
   font-variant-numeric: tabular-nums;
 }
 
@@ -398,7 +399,7 @@ body.is-pwa .top-nav {
   }
 }
 
-/* --- CART OVERLAY STYLES (SHADCN LIGHT THEME) --- */
+/* --- CART OVERLAY STYLES (ABSOLUTE DARK) --- */
 .cart-overlay {
   position: absolute;
   top: 0;
@@ -408,7 +409,7 @@ body.is-pwa .top-nav {
   z-index: 9999;
   display: flex;
   flex-direction: column;
-  background-color: #FFFFFF;
+  background-color: #000000;
 }
 
 .cart-header {
@@ -417,8 +418,8 @@ body.is-pwa .top-nav {
   align-items: center;
   padding: 12px 16px 12px;
   padding-top: calc(12px + env(safe-area-inset-top));
-  border-bottom: 1px solid #E5E7EB;
-  background-color: #FFFFFF;
+  border-bottom: 1px solid #1A1A1A;
+  background-color: #000000;
 }
 
 body.is-browser .cart-header {
@@ -433,7 +434,7 @@ body.is-pwa .cart-header {
   font-size: 16px;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: #000000;
+  color: #FFFFFF;
 }
 
 .cart-items-container {
@@ -443,7 +444,7 @@ body.is-pwa .cart-header {
   /* Extra padding at bottom so last item isn't hidden by footer */
   scrollbar-width: none;
   -ms-overflow-style: none;
-  background-color: #FFFFFF;
+  background-color: #000000;
 }
 
 .cart-items-container::-webkit-scrollbar {
@@ -453,8 +454,8 @@ body.is-pwa .cart-header {
 .cart-item {
   display: flex;
   align-items: center;
-  background: #FFFFFF;
-  border: 1px solid #E5E7EB;
+  background: #000000;
+  border: 1px solid #1A1A1A;
   border-radius: 16px;
   padding: 14px;
   margin-bottom: 14px;
@@ -468,7 +469,7 @@ body.is-pwa .cart-header {
   width: 82px;
   height: 82px;
   border-radius: 14px;
-  background: var(--cream, #F3F4F6);
+  background: #0A0A0A;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -497,7 +498,7 @@ body.is-pwa .cart-header {
 }
 
 .cart-item-title {
-  color: #1A1A1A;
+  color: #FFFFFF;
   font-weight: 700;
   font-size: 14px;
   white-space: nowrap;
@@ -531,7 +532,7 @@ body.is-pwa .cart-header {
 .cart-qty-controls {
   display: flex;
   align-items: center;
-  background: #F3F4F6;
+  background: #1A1A1A;
   border-radius: 10px;
   padding: 3px;
   gap: 0;
@@ -542,8 +543,8 @@ body.is-pwa .cart-header {
   height: 30px;
   border-radius: 8px;
   border: none;
-  background: #FFFFFF;
-  color: #1A1A1A;
+  background: #000000;
+  color: #FFFFFF;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -553,14 +554,14 @@ body.is-pwa .cart-header {
 }
 
 .cart-qty-btn:active {
-  background: #F3F4F6;
+  background: #222222;
   transform: scale(0.92);
 }
 
 .cart-qty-val {
   min-width: 30px;
   text-align: center;
-  color: #1A1A1A;
+  color: #FFFFFF;
   font-weight: 700;
   font-size: 14px;
 }
@@ -584,8 +585,8 @@ body.is-pwa .cart-header {
   bottom: 0;
   left: 0;
   right: 0;
-  background: #FFFFFF;
-  border-top: 1px solid #F0EDE6;
+  background: #000000;
+  border-top: 1px solid #1A1A1A;
   padding: 12px 20px 16px;
   padding-bottom: calc(16px + env(safe-area-inset-bottom));
   z-index: 100;
@@ -608,7 +609,7 @@ body.is-pwa .cart-footer {
 }
 
 .cart-subtotal-label {
-  color: #6B7280;
+  color: #A1A1AA;
   font-size: 13px;
   font-weight: 500;
   text-transform: uppercase;
@@ -616,7 +617,7 @@ body.is-pwa .cart-footer {
 }
 
 .cart-subtotal-value {
-  color: #1A1A1A;
+  color: #FFFFFF;
   font-size: 22px;
   font-weight: 800;
   letter-spacing: -0.03em;
@@ -625,8 +626,8 @@ body.is-pwa .cart-footer {
 .checkout-btn {
   width: 100%;
   height: 44px;
-  background-color: #000000;
-  color: #FFFFFF;
+  background-color: #FFFFFF;
+  color: #000000;
   border: none;
   border-radius: 22px;
   font-size: 13px;
@@ -644,18 +645,18 @@ body.is-pwa .cart-footer {
 
 .checkout-btn:active {
   transform: scale(0.96);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.2);
 }
 
 /* CART UPSELL STYLES */
 .cart-upsell-container {
   padding: 20px 0 20px 16px;
-  border-top: 1px solid #F0EDE6;
+  border-top: 1px solid #1A1A1A;
   background: transparent;
 }
 
 .upsell-title {
-  color: #1A1A1A;
+  color: #FFFFFF;
   font-size: 14px;
   font-weight: 700;
   letter-spacing: -0.01em;
@@ -697,8 +698,8 @@ body.is-pwa .cart-footer {
 .upsell-item {
   min-width: 120px;
   max-width: 120px;
-  background: #FFFFFF;
-  border: 1px solid #F0EDE6;
+  background: #000000;
+  border: 1px solid #1A1A1A;
   border-radius: 16px;
   overflow: visible;
   position: relative;
@@ -715,7 +716,7 @@ body.is-pwa .cart-footer {
   width: 100%;
   aspect-ratio: 1/1;
   overflow: visible;
-  background: var(--cream, #F3F4F6);
+  background: #0A0A0A;
   border-radius: 16px 16px 0 0;
   display: flex;
   align-items: center;
@@ -740,7 +741,7 @@ body.is-pwa .cart-footer {
 }
 
 .upsell-name {
-  color: #1A1A1A;
+  color: #FFFFFF;
   font-size: 11px;
   font-weight: 600;
   display: -webkit-box;
@@ -762,8 +763,8 @@ body.is-pwa .cart-footer {
   right: 8px;
   width: 24px;
   height: 24px;
-  background: var(--accent-gold);
-  color: #1A1A1A;
+  background: #FFFFFF;
+  color: #000000;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -776,8 +777,8 @@ body.is-pwa .cart-footer {
 
 /* COMANDA (PEOPLE) STYLES */
 .cart-person-section {
-  background: #FFFFFF;
-  border: 1px solid #F0EDE6;
+  background: #000000;
+  border: 1px solid #1A1A1A;
   border-radius: 12px;
   padding: 10px 14px;
   margin-bottom: 12px;
@@ -802,9 +803,9 @@ body.is-pwa .cart-footer {
 
 .cart-person-input {
   flex: 1;
-  background: #FFFFFF;
-  border: 1px solid #E5E0D5;
-  color: #1A1A1A;
+  background: #0A0A0A;
+  border: 1px solid #1A1A1A;
+  color: #FFFFFF;
   border-radius: 12px;
   padding: 12px 16px;
   font-size: 14px;
@@ -836,7 +837,7 @@ body.is-pwa .cart-footer {
 }
 
 .cart-person-active-name {
-  color: #1A1A1A;
+  color: #FFFFFF;
   font-weight: 800;
   font-size: 15px;
   display: flex;
@@ -856,12 +857,12 @@ body.is-pwa .cart-footer {
   text-transform: uppercase;
 }
 
-/* --- CART TABS (SHADCN LIGHT) --- */
+/* --- CART TABS (ABSOLUTE DARK) --- */
 .cart-tabs {
   display: flex;
   gap: 0;
-  border-bottom: 1px solid #F0EDE6;
-  background: #FFFFFF;
+  border-bottom: 1px solid #1A1A1A;
+  background: #000000;
   padding: 0 20px;
 }
 
@@ -880,7 +881,7 @@ body.is-pwa .cart-footer {
 }
 
 .cart-tab.active {
-  color: #1A1A1A;
+  color: #FFFFFF;
 }
 
 .cart-tab::after {
@@ -890,7 +891,7 @@ body.is-pwa .cart-footer {
   left: 20%;
   right: 20%;
   height: 2.5px;
-  background: var(--accent-gold);
+  background: #FFFFFF;
   border-radius: 2px;
   transform: scaleX(0);
   transition: transform 0.25s ease;
@@ -900,7 +901,7 @@ body.is-pwa .cart-footer {
   transform: scaleX(1);
 }
 
-/* --- ORDER HISTORY (Meus Pedidos) (SHADCN LIGHT) --- */
+/* --- ORDER HISTORY (Meus Pedidos) (ABSOLUTE DARK) --- */
 .order-history-container {
   padding: 16px;
   display: flex;
@@ -919,13 +920,13 @@ body.is-pwa .cart-footer {
 }
 
 .order-history-empty p {
-  color: #4B5563;
+  color: #A1A1AA;
   font-size: 14px;
 }
 
 .order-card {
-  background: #FFFFFF;
-  border: 1px solid #F0EDE6;
+  background: #000000;
+  border: 1px solid #1A1A1A;
   border-radius: 16px;
   padding: 18px;
   display: flex;
@@ -941,14 +942,14 @@ body.is-pwa .cart-footer {
 }
 
 .order-card-id {
-  color: #6B7280;
+  color: #A1A1AA;
   font-size: 12px;
   font-weight: 500;
   text-transform: uppercase;
 }
 
 .order-card-time {
-  color: #9CA3AF;
+  color: #6B7280;
   font-size: 12px;
 }
 
@@ -962,7 +963,7 @@ body.is-pwa .cart-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: #374151;
+  color: #FFFFFF;
   font-size: 14px;
   font-weight: 500;
 }
@@ -995,8 +996,8 @@ body.is-pwa .cart-footer {
   justify-content: space-between;
   align-items: center;
   padding-top: 14px;
-  border-top: 1px dashed #F0EDE6;
-  color: #1A1A1A;
+  border-top: 1px dashed #1A1A1A;
+  color: #FFFFFF;
   font-weight: 800;
   font-size: 15px;
 }
@@ -1021,8 +1022,8 @@ body.is-pwa .cart-footer {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #D1D5DB;
-  border: 2px solid #E5E7EB;
+  background: #333333;
+  border: 2px solid #1A1A1A;
   position: relative;
   z-index: 2;
   transition: all 0.3s ease;
@@ -1067,7 +1068,7 @@ body.is-pwa .cart-footer {
   left: calc(50% + 7px);
   right: calc(-50% + 7px);
   height: 2px;
-  background: #E5E7EB;
+  background: #1A1A1A;
   z-index: 1;
 }
 
@@ -1084,7 +1085,7 @@ body.is-pwa .cart-footer {
   display: flex;
   gap: 8px;
   padding: 8px 16px 10px;
-  background: #FFFFFF;
+  background: #000000;
 }
 
 .service-btn {
@@ -1095,9 +1096,9 @@ body.is-pwa .cart-footer {
   gap: 6px;
   padding: 8px;
   border-radius: 8px;
-  border: 1px solid #F0EDE6;
-  background: #FFFFFF;
-  color: #6B7280;
+  border: 1px solid #1A1A1A;
+  background: #0A0A0A;
+  color: #FFFFFF;
   font-size: 10px;
   font-weight: 700;
   cursor: pointer;
@@ -1108,7 +1109,7 @@ body.is-pwa .cart-footer {
 
 .service-btn:active {
   transform: scale(0.97);
-  background: #F3F4F6;
+  background: #222222;
 }
 
 .service-btn.active {
@@ -1138,10 +1139,10 @@ body.is-pwa .cart-footer {
 
 .cart-item-obs-input {
   width: 100%;
-  background: #FFFFFF;
-  border: 1px solid #E5E0D5;
+  background: #0A0A0A;
+  border: 1px solid #1A1A1A;
   border-radius: 10px;
-  color: #1A1A1A;
+  color: #FFFFFF;
   font-size: 12px;
   padding: 10px 12px;
   outline: none;
