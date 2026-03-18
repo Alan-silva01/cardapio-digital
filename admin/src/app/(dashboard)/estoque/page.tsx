@@ -45,6 +45,7 @@ import {
     Star,
 } from "lucide-react";
 import { uploadImageAction } from "@/app/actions/upload-image";
+import { saveProductAction } from "@/app/actions/product-actions";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { countryFlags as COUNTRY_FLAGS } from "@/lib/countryFlags";
@@ -169,6 +170,29 @@ interface StockItem {
     subcategoria: string | null;
     rating: number | null;
 }
+
+const NEW_PRODUCT_TEMPLATE: StockItem = {
+    variacao_id: "",
+    variacao_nome: "Única",
+    preco: 0,
+    estoque: 0,
+    estoque_minimo: 5,
+    produto_id: "",
+    produto_nome: "",
+    imagem_url: null,
+    disponivel: true,
+    categoria_id: null,
+    categoria_nome: "",
+    tipo_vinho: null,
+    pais_origem: "Brasil",
+    descricao: "",
+    teor_alcolico: null,
+    volume_ml: null,
+    serve_pessoas: null,
+    ml_taca: null,
+    subcategoria: null,
+    rating: 5,
+};
 
 // --- Interactive Star Rating ---
 function StarRating({ value, onChange }: { value: number; onChange: (val: number) => void }) {
@@ -391,8 +415,9 @@ function EditProductModal({
                 rating: rating,
             });
             onClose();
-        } catch (err) {
+        } catch (err: any) {
             console.error("Erro ao salvar:", err);
+            alert("Erro ao salvar: " + (err.message || "Verifique os dados e tente novamente."));
         } finally {
             setSaving(false);
         }
@@ -404,7 +429,7 @@ function EditProductModal({
         <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
             <DialogContent className="sm:max-w-[480px] bg-card border-border p-0 gap-0 overflow-hidden">
                 <DialogHeader className="px-6 pt-6 pb-4 border-b border-border">
-                    <DialogTitle className="text-base font-semibold text-foreground">Editar Produto</DialogTitle>
+                    <DialogTitle className="text-base font-semibold text-foreground">{item?.produto_id ? "Editar Produto" : "Novo Produto"}</DialogTitle>
                 </DialogHeader>
 
                 <div className="px-6 py-5 space-y-4 max-h-[70vh] overflow-y-auto">
@@ -856,7 +881,7 @@ function EstoqueContent() {
         }
     }
 
-    // Save edit
+    // Save edit or create
     async function handleSaveEdit(data: {
         nome: string;
         descricao: string;
@@ -876,46 +901,12 @@ function EstoqueContent() {
     }) {
         if (!editingItem) return;
 
-        let finalCatId = data.categoria_id;
+        let isCreating = !editingItem.produto_id;
 
-        if (data.categoria_nova) {
-            const { data: newCat, error: catError } = await supabase
-                .from("categorias")
-                .insert({ nome: data.categoria_nova, ativo: true })
-                .select("id")
-                .single();
-            if (newCat) finalCatId = newCat.id;
-            else console.error("Erro ao criar categoria", catError);
-        }
-
-        const { error: prodError } = await supabase
-            .from("produtos")
-            .update({
-                nome: data.nome,
-                descricao: data.descricao,
-                imagem_url: data.imagem_url,
-                categoria_id: finalCatId,
-                pais_origem: data.pais_origem,
-                teor_alcolico: data.teor_alcolico,
-                volume_ml: data.volume_ml,
-                serve_pessoas: data.serve_pessoas,
-                tipo_vinho: data.tipo_vinho,
-                ml_taca: data.ml_taca,
-                subcategoria: data.subcategoria,
-                rating: data.rating,
-            })
-            .eq("id", editingItem.produto_id);
-
-        const { error: varError } = await supabase
-            .from("variacoes_produto")
-            .update({
-                preco: data.preco,
-                estoque: data.estoque,
-            })
-            .eq("id", editingItem.variacao_id);
-
-        if (prodError || varError) {
-            console.error("Erro ao salvar:", prodError || varError);
+        const res = await saveProductAction(data, isCreating, editingItem);
+        
+        if (res.error) {
+            throw new Error(res.error);
         }
 
         await fetchStock();
@@ -950,15 +941,24 @@ function EstoqueContent() {
                     <h1 className="text-xl font-semibold tracking-tight text-foreground">Controle de Estoque</h1>
                     <p className="text-[13px] text-muted-foreground mt-0.5">{counts.total} variações cadastradas</p>
                 </div>
-                <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        type="search"
-                        placeholder="Buscar produto..."
-                        value={search || ""}
-                        onChange={e => setSearch(e.target.value)}
-                        className="w-64 pl-8 bg-card border-border text-[13px] h-9 focus:border-border placeholder:text-muted-foreground/60"
-                    />
+                <div className="flex items-center gap-3">
+                    <div className="relative">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            type="search"
+                            placeholder="Buscar produto..."
+                            value={search || ""}
+                            onChange={e => setSearch(e.target.value)}
+                            className="w-64 pl-8 bg-card border-border text-[13px] h-9 focus:border-border placeholder:text-muted-foreground/60"
+                        />
+                    </div>
+                    <Button 
+                        onClick={() => setEditingItem(NEW_PRODUCT_TEMPLATE)}
+                        className="h-9 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                    >
+                        <Plus className="h-4 w-4" />
+                        Novo Produto
+                    </Button>
                 </div>
             </div>
 
