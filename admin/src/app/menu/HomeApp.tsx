@@ -7,6 +7,7 @@ import {
   Home,
   Beer,
   Wine,
+  BottleWine,
   GlassWater,
   CookingPot,
   Flame,
@@ -25,6 +26,7 @@ import {
   Leaf,
   Cake,
   Ban,
+  Zap,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -34,7 +36,7 @@ interface SubCategory {
   label: string;
   icon: React.ElementType;
   dbCategories: string[];
-  subcategoria?: string;
+  subcategoria?: string | string[];
 }
 
 interface CategoryDef {
@@ -65,7 +67,8 @@ const CATEGORIES: CategoryDef[] = [
     itemCount: 34,
     subs: [
       { id: "cervejas-longneck", label: "Long Neck", icon: Beer, dbCategories: ["Cervejas"], subcategoria: "Long Neck" },
-      { id: "cervejas-600ml", label: "Cervejas 600ml", icon: Beer, dbCategories: ["Cervejas"], subcategoria: "Cerveja 600ml" },
+      { id: "cervejas-600ml", label: "Cervejas 600ml", icon: BottleWine, dbCategories: ["Cervejas"], subcategoria: ["Cervejas 600ml", "Cerveja 600ml", "Stempel"] },
+      { id: "cervejas-zero", label: "Zero Álcool", icon: Ban, dbCategories: ["Cervejas"], subcategoria: ["Zero Álcool", "Cerveja Zero"] },
     ],
   },
   {
@@ -76,9 +79,8 @@ const CATEGORIES: CategoryDef[] = [
     image: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=400&q=80",
     itemCount: 7,
     subs: [
-      { id: "drinks-all", label: "Todos os Drinks", icon: Martini, dbCategories: ["Drinks"] },
-      { id: "drinks-gins", label: "Gins", icon: Martini, dbCategories: ["Gins"] },
-      { id: "drinks-coqueteis", label: "Coquetéis", icon: Wine, dbCategories: ["Drinks"] },
+      { id: "drinks-all", label: "Menu de Drinks", icon: Martini, dbCategories: ["Drinks"], subcategoria: "Menu de Drinks" },
+      { id: "drinks-shots", label: "Shots", icon: GlassWater, dbCategories: ["Drinks"], subcategoria: "Shots" },
     ],
   },
   {
@@ -89,10 +91,9 @@ const CATEGORIES: CategoryDef[] = [
     image: "https://images.unsplash.com/photo-1569529465841-dfecdab7503b?w=400&q=80",
     itemCount: 9,
     subs: [
-      { id: "dest-whiskeys", label: "Whiskeys", icon: GlassWater, dbCategories: ["Whiskeys"] },
-      { id: "dest-vodkas", label: "Vodkas", icon: Snowflake, dbCategories: ["Vodkas"] },
-      { id: "dest-gins", label: "Gins", icon: Martini, dbCategories: ["Gins"] },
-      { id: "dest-outros", label: "Licores & Outros", icon: Wine, dbCategories: ["Destilados"] },
+      { id: "dest-garrafas", label: "Garrafas", icon: GlassWater, dbCategories: ["Destilados", "Whiskeys", "Vodkas"], subcategoria: ["Garrafas", "Garrafa"] },
+      { id: "dest-doses", label: "Doses", icon: GlassWater, dbCategories: ["Destilados", "Whiskeys", "Vodkas"], subcategoria: ["Doses", "Dose"] },
+      { id: "dest-gins", label: "Gins", icon: Martini, dbCategories: ["Destilados", "Gins"], subcategoria: ["Gins", "gins"] },
       { id: "dest-combos", label: "Combos", icon: Sparkles, dbCategories: ["Combos"] },
     ],
   },
@@ -104,21 +105,25 @@ const CATEGORIES: CategoryDef[] = [
     image: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=400&q=80",
     itemCount: 13,
     subs: [
-      { id: "vinhos-all", label: "Todos os Vinhos", icon: Wine, dbCategories: ["Vinhos"] },
-      { id: "vinhos-espumante", label: "Espumantes", icon: Sparkles, dbCategories: ["Vinhos"] },
+      { id: "vinhos-tinto", label: "Vinhos Tintos", icon: Wine, dbCategories: ["Vinhos"], subcategoria: ["Vinhos Tintos", "Tinto"] },
+      { id: "vinhos-branco", label: "Vinhos Brancos", icon: Wine, dbCategories: ["Vinhos"], subcategoria: ["Vinhos Brancos", "Branco"] },
+      { id: "vinhos-rose", label: "Vinhos Rosés", icon: Wine, dbCategories: ["Vinhos"], subcategoria: ["Vinhos Rosés", "Rosé"] },
+      { id: "vinhos-espumante", label: "Espumantes", icon: Sparkles, dbCategories: ["Vinhos"], subcategoria: ["Espumantes", "Espumante"] },
+      { id: "vinhos-stempel", label: "Stempel", icon: Beer, dbCategories: ["Cervejas"], subcategoria: "Stempel" },
     ],
   },
   {
     id: "nao-alcoolicos",
     label: "Sem Álcool",
-    subtitle: "Ice, Beats & Energéticos",
+    subtitle: "Refrigerantes & Sucos",
     icon: Citrus,
     image: "https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=400&q=80",
     itemCount: 11,
     subs: [
-      { id: "bebidas-all", label: "Todas as Bebidas", icon: Citrus, dbCategories: ["Bebidas"] },
-      { id: "bebidas-ice", label: "Ice", icon: Snowflake, dbCategories: ["Bebidas"] },
-      { id: "bebidas-beats", label: "Skol Beats", icon: Music, dbCategories: ["Bebidas"] },
+      { id: "bebidas-agua", label: "Água & Refri", icon: GlassWater, dbCategories: ["Bebidas"], subcategoria: ["Água & Refri", "Refrigerantes & Águas"] },
+      { id: "bebidas-sucos", label: "Sucos", icon: Citrus, dbCategories: ["Bebidas"], subcategoria: "Sucos" },
+      { id: "bebidas-energetico", label: "Energéticos", icon: Zap, dbCategories: ["Bebidas"], subcategoria: "Energéticos" },
+      { id: "bebidas-zero", label: "Zero Álcool", icon: Ban, dbCategories: ["Cervejas"], subcategoria: ["Zero Álcool", "Cerveja Zero"] },
     ],
   },
   {
@@ -129,7 +134,7 @@ const CATEGORIES: CategoryDef[] = [
     image: "/images/petiscos.png",
     itemCount: 5,
     subs: [
-      { id: "petiscos-all", label: "Todos os Petiscos", icon: CookingPot, dbCategories: ["Petiscos"] },
+      { id: "petiscos-porcoes", label: "Porções", icon: CookingPot, dbCategories: ["Petiscos"], subcategoria: ["Porções", "Petisco"] },
       { id: "petiscos-pasteis", label: "Pastéis", icon: UtensilsCrossed, dbCategories: ["Pastéis"] },
     ],
   },
@@ -556,9 +561,17 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
-              transition={{ duration: 0.3, ease: "easeOut" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              drag="y"
+              dragConstraints={{ top: 0 }}
+              dragElastic={{ top: 0, bottom: 0.2 }}
+              onDragEnd={(e, { offset, velocity }) => {
+                if (offset.y > 100 || velocity.y > 500) {
+                  setOpenSheet(null);
+                }
+              }}
             >
-              <div className="sheet-handle" />
+              <div className="sheet-handle" style={{ width: '40px', height: '4px', background: 'rgba(255,255,255,0.2)', borderRadius: '2px', margin: '14px auto', cursor: 'grab' }} />
               <div className="sheet-header">
                 <div className="sheet-header-info">
                   {(() => { const SheetIcon = openSheet.icon; return <SheetIcon size={22} strokeWidth={2} style={{ color: '#FFFFFF' }} />; })()}
@@ -568,26 +581,20 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
                   <X size={20} />
                 </button>
               </div>
-              <div className="sheet-list">
-                {openSheet.subs.map((sub, i) => (
-                  <motion.button
+              <div className="sheet-list" style={{ paddingBottom: '30px' }}>
+                {openSheet.subs.map((sub) => (
+                  <button
                     key={sub.id}
                     className="sheet-item"
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.03, duration: 0.2, ease: "easeOut" }}
                     onClick={() => handleSubSelect(sub)}
                   >
                     {(() => { const SubIcon = sub.icon; return <SubIcon size={18} strokeWidth={1.8} style={{ color: '#9CA3AF', flexShrink: 0 }} />; })()}
                     <span className="sheet-item-label">{sub.label}</span>
                     <ChevronRight size={18} className="sheet-item-arrow" />
-                  </motion.button>
+                  </button>
                 ))}
-                <motion.button
+                <button
                   className="sheet-item sheet-item-all"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: openSheet.subs.length * 0.03, duration: 0.2, ease: "easeOut" }}
                   onClick={() => {
                     setOpenSheet(null);
                     onCategorySelect?.(openSheet.id);
@@ -596,7 +603,7 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
                   <ClipboardList size={18} strokeWidth={1.8} style={{ color: '#9CA3AF', flexShrink: 0 }} />
                   <span className="sheet-item-label">Ver tudo</span>
                   <ChevronRight size={18} className="sheet-item-arrow" />
-                </motion.button>
+                </button>
               </div>
             </motion.div>
           </>

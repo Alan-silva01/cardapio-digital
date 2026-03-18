@@ -54,10 +54,10 @@ export default function MenuPage() {
   const [view, setView] = useState<"home" | "menu">("home");
   const [activeTab, setActiveTab] = useState<"menu" | "sacola" | "pedidos">("menu");
   const [filterCategories, setFilterCategories] = useState<string[] | null>(null);
-  const [filterSubcategoria, setFilterSubcategoria] = useState<string | null>(null);
+  const [filterSubcategoria, setFilterSubcategoria] = useState<string | string[] | null>(null);
   const [searchProductName, setSearchProductName] = useState<string | null>(null);
 
-  const handleCategorySelect = (categoryId: string, dbCategories?: string[], subcategoria?: string) => {
+  const handleCategorySelect = (categoryId: string, dbCategories?: string[], subcategoria?: string | string[]) => {
     const cats = dbCategories || CATEGORY_MAP[categoryId] || null;
     setFilterCategories(cats);
     setFilterSubcategoria(subcategoria || null);

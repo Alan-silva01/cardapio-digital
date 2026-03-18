@@ -761,11 +761,17 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
             
             // Apply current filters if they exist (crucial for initial mount via AnimatePresence)
             if (currentFilters && currentFilters.length > 0) {
-                const sanitizedFilters = currentFilters.map(f => f.toLowerCase().trim());
-                let filtered = enrichedProducts.filter(p => sanitizedFilters.includes(p.category.toLowerCase().trim()));
+                const sanitizedFilters = currentFilters.map(f => f.normalize("NFC").toLowerCase().trim());
+                let filtered = enrichedProducts.filter(p => p.category && sanitizedFilters.includes(p.category.normalize("NFC").toLowerCase().trim()));
+                
                 if (currentSubcat) {
-                    const targetSub = currentSubcat.toLowerCase().trim();
-                    filtered = filtered.filter(p => p.subcategoria && p.subcategoria.toLowerCase().trim() === targetSub);
+                    const targetSubs = Array.isArray(currentSubcat)
+                        ? currentSubcat.map(s => s.normalize("NFC").toLowerCase().trim())
+                        : [currentSubcat.normalize("NFC").toLowerCase().trim()];
+
+                    filtered = filtered.filter(p => 
+                        p.subcategoria && targetSubs.includes(p.subcategoria.normalize("NFC").toLowerCase().trim())
+                    );
                 }
                 setProducts(filtered);
             } else if (currentSearch) {
@@ -809,11 +815,19 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
         }
 
         if (filterCategories && filterCategories.length > 0) {
-            const sanitizedFilters = filterCategories.map(f => f.toLowerCase().trim());
-            let filtered = all.filter(p => sanitizedFilters.includes(p.category.toLowerCase().trim()));
+            // 1. Filter by category
+            const sanitizedFilters = filterCategories.map(f => f.normalize("NFC").toLowerCase().trim());
+            let filtered = all.filter(p => p.category && sanitizedFilters.includes(p.category.normalize("NFC").toLowerCase().trim()));
+
+            // 2. Filter by subcategoria
             if (filterSubcategoria) {
-                const targetSub = filterSubcategoria.toLowerCase().trim();
-                filtered = filtered.filter(p => p.subcategoria && p.subcategoria.toLowerCase().trim() === targetSub);
+                const targetSubs = Array.isArray(filterSubcategoria)
+                    ? filterSubcategoria.map(s => s.normalize("NFC").toLowerCase().trim())
+                    : [filterSubcategoria.normalize("NFC").toLowerCase().trim()];
+
+                filtered = filtered.filter(p => 
+                    p.subcategoria && targetSubs.includes(p.subcategoria.normalize("NFC").toLowerCase().trim())
+                );
             }
             setProducts(filtered);
             setCurrentIndex(0);
