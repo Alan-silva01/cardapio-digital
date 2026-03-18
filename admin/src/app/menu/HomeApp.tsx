@@ -109,7 +109,7 @@ const CATEGORIES: CategoryDef[] = [
       { id: "vinhos-branco", label: "Vinhos Brancos", icon: Wine, dbCategories: ["Vinhos"], subcategoria: ["Vinhos Brancos", "Branco"] },
       { id: "vinhos-rose", label: "Vinhos Rosés", icon: Wine, dbCategories: ["Vinhos"], subcategoria: ["Vinhos Rosés", "Rosé"] },
       { id: "vinhos-espumante", label: "Espumantes", icon: Sparkles, dbCategories: ["Vinhos"], subcategoria: ["Espumantes", "Espumante"] },
-      { id: "vinhos-stempel", label: "Stempel", icon: Beer, dbCategories: ["Cervejas"], subcategoria: "Stempel" },
+      { id: "vinhos-stempel", label: "Stempel", icon: Beer, dbCategories: ["Vinhos"], subcategoria: "Stempel" },
     ],
   },
   {
