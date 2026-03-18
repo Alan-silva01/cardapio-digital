@@ -43,9 +43,10 @@ import {
     Percent,
     Beaker,
     Star,
+    Trash2,
 } from "lucide-react";
 import { uploadImageAction } from "@/app/actions/upload-image";
-import { saveProductAction } from "@/app/actions/product-actions";
+import { saveProductAction, deleteProductAction } from "@/app/actions/product-actions";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { countryFlags as COUNTRY_FLAGS } from "@/lib/countryFlags";
@@ -711,6 +712,8 @@ function EstoqueContent() {
     const [filter, setFilter] = useQueryState("categoria", parseAsString.withDefault("todos").withOptions({ shallow: false }));
     const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
     const [editingItem, setEditingItem] = useState<StockItem | null>(null);
+    const [itemToDelete, setItemToDelete] = useState<StockItem | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
     const [allCategories, setAllCategories] = useState<{ label: string, value: string }[]>([]);
     const supabase = createClient();
 
@@ -910,6 +913,25 @@ function EstoqueContent() {
         }
 
         await fetchStock();
+    }
+
+    async function handleDelete() {
+        if (!itemToDelete) return;
+        setIsDeleting(true);
+        try {
+            const res = await deleteProductAction(itemToDelete.produto_id);
+            if (res.error) {
+                alert(res.error);
+            } else {
+                setItemToDelete(null);
+                await fetchStock();
+            }
+        } catch (err: any) {
+            console.error("Erro ao excluir produto:", err);
+            alert("Erro ao excluir: " + (err.message || "Tente novamente."));
+        } finally {
+            setIsDeleting(false);
+        }
     }
 
     const filterButtons = useMemo(() => {
@@ -1221,6 +1243,14 @@ function EstoqueContent() {
                                                 >
                                                     <Pencil className="h-3 w-3" />
                                                 </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-7 w-7 rounded-full text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
+                                                    onClick={() => setItemToDelete(item)}
+                                                >
+                                                    <Trash2 className="h-3 w-3" />
+                                                </Button>
                                             </div>
                                         </TableCell>
                                     </TableRow>
@@ -1240,6 +1270,37 @@ function EstoqueContent() {
                 categoriesList={allCategories}
                 originsList={allOrigins}
             />
+
+            {/* Delete Confirmation Modal */}
+            <Dialog open={!!itemToDelete} onOpenChange={(open) => !open && !isDeleting && setItemToDelete(null)}>
+                <DialogContent className="sm:max-w-[400px] bg-card border-border p-6">
+                    <DialogHeader>
+                        <DialogTitle className="text-lg font-semibold text-foreground">Excluir Produto</DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4 text-sm text-muted-foreground">
+                        Tem certeza que deseja excluir permanentemente o produto <strong className="text-foreground">{itemToDelete?.produto_nome}</strong>?
+                        Essa ação não poderá ser desfeita.
+                    </div>
+                    <div className="flex justify-end gap-2 pt-4">
+                        <Button
+                            variant="ghost"
+                            onClick={() => setItemToDelete(null)}
+                            disabled={isDeleting}
+                            className="text-sm h-9"
+                        >
+                            Cancelar
+                        </Button>
+                        <Button
+                            onClick={handleDelete}
+                            disabled={isDeleting}
+                            className="bg-red-500 hover:bg-red-600 text-white text-sm h-9 px-4"
+                        >
+                            {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
+                            {isDeleting ? "Excluindo..." : "Excluir"}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

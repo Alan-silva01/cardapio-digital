@@ -111,3 +111,43 @@ export async function saveProductAction(data: any, isCreating: boolean, editingI
 
     return { success: true };
 }
+
+export async function deleteProductAction(produtoId: string) {
+    const supabase = await createClient();
+
+    // Check auth
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        return { error: "Sua sessão expirou ou não foi enviada para o servidor. Faça login novamente." };
+    }
+
+    // Attempt to delete variacoes first (since ON DELETE is NO ACTION)
+    const { error: varError } = await supabase
+        .from("variacoes_produto")
+        .delete()
+        .eq("produto_id", produtoId);
+
+    if (varError) {
+        console.error("Erro ao deletar variações:", varError);
+        if (varError.code === '23503') { // Foreign key violation
+            return { error: "Este produto já possui pedidos vinculados e não pode ser excluído permanentemente. Para retirar do cardápio, marque-o como Indisponível." };
+        }
+        return { error: "Erro ao excluir variações do produto: " + varError.message };
+    }
+
+    // Now attempt to delete the parent product
+    const { error: prodError } = await supabase
+        .from("produtos")
+        .delete()
+        .eq("id", produtoId);
+
+    if (prodError) {
+        console.error("Erro ao deletar produto:", prodError);
+        if (prodError.code === '23503') { // Foreign key violation
+            return { error: "Este produto já possui histórico vinculado e não pode ser excluído permanentemente. Para retirar do cardápio, marque-o como Indisponível." };
+        }
+        return { error: "Erro ao excluir produto: " + prodError.message };
+    }
+
+    return { success: true };
+}
