@@ -34,6 +34,7 @@ interface SubCategory {
   label: string;
   icon: React.ElementType;
   dbCategories: string[];
+  subcategoria?: string;
 }
 
 interface CategoryDef {
@@ -61,11 +62,10 @@ const CATEGORIES: CategoryDef[] = [
     subtitle: "Long Necks & Garrafas",
     icon: Beer,
     image: "https://images.unsplash.com/photo-1535958636474-b021ee887b13?w=400&q=80",
-    itemCount: 14,
+    itemCount: 34,
     subs: [
-      { id: "cervejas-all", label: "Todas as Cervejas", icon: Beer, dbCategories: ["Cervejas"] },
-      { id: "cervejas-premium", label: "Premium & Importadas", icon: Star, dbCategories: ["Cervejas"] },
-      { id: "cervejas-zero", label: "Sem Álcool", icon: Ban, dbCategories: ["Cervejas"] },
+      { id: "cervejas-longneck", label: "Long Neck", icon: Beer, dbCategories: ["Cervejas"], subcategoria: "Long Neck" },
+      { id: "cervejas-600ml", label: "Cervejas 600ml", icon: Beer, dbCategories: ["Cervejas"], subcategoria: "Cerveja 600ml" },
     ],
   },
   {
@@ -182,7 +182,7 @@ const heroVariants = {
 
 /* ─── Component ─── */
 interface HomeAppProps {
-  onCategorySelect?: (categoryId: string, dbCategories?: string[]) => void;
+  onCategorySelect?: (categoryId: string, dbCategories?: string[], subcategoria?: string) => void;
   onProductSearch?: (searchTerm: string) => void;
   activeTab?: "menu" | "sacola" | "pedidos";
   onTabChange?: (tab: "menu" | "sacola" | "pedidos") => void;
@@ -389,7 +389,7 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
 
   const handleSubSelect = (sub: SubCategory) => {
     setOpenSheet(null);
-    onCategorySelect?.(sub.id, sub.dbCategories);
+    onCategorySelect?.(sub.id, sub.dbCategories, sub.subcategoria);
   };
 
   const showSearchResults = searchQuery.trim().length >= 2;

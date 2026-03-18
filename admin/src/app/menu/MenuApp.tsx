@@ -101,12 +101,12 @@ const HeartParticle = ({ x, y, onComplete }) => {
 };
 
 
-const App = ({ filterCategories = null, searchProductName = null, onBack = null, isActive = true, activeTab = 'menu', onTabChange = null }) => {
+const App = ({ filterCategories = null, filterSubcategoria = null, searchProductName = null, onBack = null, isActive = true, activeTab = 'menu', onTabChange = null }) => {
     const [products, setProducts] = useState([]);
     const allProductsRef = useRef([]);
     const [loading, setLoading] = useState(true);
     const [isFiltering, setIsFiltering] = useState(false);
-    const prevFilterRef = useRef({ filterCategories, searchProductName });
+    const prevFilterRef = useRef({ filterCategories, filterSubcategoria, searchProductName });
     const [currentIndex, setCurrentIndex] = useState(0);
     const [direction, setDirection] = useState(0); // 1 = right, -1 = left
     const [isInternalSpin, setIsInternalSpin] = useState(false); // true when clicking a flavor button
@@ -713,6 +713,7 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
                     name: p.nome,
                     categoryId: p.categoria_id,
                     category: categoryName,
+                    subcategoria: p.subcategoria || null,
                     description: p.descricao,
                     imageUrl: optimizeCloudinaryUrl(p.imagem_url),
                     price: defaultPrice,
@@ -755,12 +756,17 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
             // Wait! fetchMenu has an empty dependency array, so we MUST read from prevFilterRef
             // to avoid React stale closure bugs when resolving async.
             const currentFilters = prevFilterRef.current.filterCategories;
+            const currentSubcat = prevFilterRef.current.filterSubcategoria;
             const currentSearch = prevFilterRef.current.searchProductName;
             
             // Apply current filters if they exist (crucial for initial mount via AnimatePresence)
             if (currentFilters && currentFilters.length > 0) {
                 const sanitizedFilters = currentFilters.map(f => f.toLowerCase().trim());
-                const filtered = enrichedProducts.filter(p => sanitizedFilters.includes(p.category.toLowerCase().trim()));
+                let filtered = enrichedProducts.filter(p => sanitizedFilters.includes(p.category.toLowerCase().trim()));
+                if (currentSubcat) {
+                    const targetSub = currentSubcat.toLowerCase().trim();
+                    filtered = filtered.filter(p => p.subcategoria && p.subcategoria.toLowerCase().trim() === targetSub);
+                }
                 setProducts(filtered);
             } else if (currentSearch) {
                 const term = currentSearch.toLowerCase().trim();
@@ -785,9 +791,10 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
     // Mark as filtering immediately when props change (prevents old product flash)
     if (
         prevFilterRef.current.filterCategories !== filterCategories ||
+        prevFilterRef.current.filterSubcategoria !== filterSubcategoria ||
         prevFilterRef.current.searchProductName !== searchProductName
     ) {
-        prevFilterRef.current = { filterCategories, searchProductName };
+        prevFilterRef.current = { filterCategories, filterSubcategoria, searchProductName };
         if (!isFiltering && allProductsRef.current.length > 0) {
             setIsFiltering(true);
         }
@@ -803,7 +810,11 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
 
         if (filterCategories && filterCategories.length > 0) {
             const sanitizedFilters = filterCategories.map(f => f.toLowerCase().trim());
-            const filtered = all.filter(p => sanitizedFilters.includes(p.category.toLowerCase().trim()));
+            let filtered = all.filter(p => sanitizedFilters.includes(p.category.toLowerCase().trim()));
+            if (filterSubcategoria) {
+                const targetSub = filterSubcategoria.toLowerCase().trim();
+                filtered = filtered.filter(p => p.subcategoria && p.subcategoria.toLowerCase().trim() === targetSub);
+            }
             setProducts(filtered);
             setCurrentIndex(0);
         } else if (searchProductName) {
@@ -816,7 +827,7 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
             setCurrentIndex(0);
         }
         setIsFiltering(false);
-    }, [filterCategories, searchProductName]);
+    }, [filterCategories, filterSubcategoria, searchProductName]);
 
     // Realtime subscriptions: auto-refresh on any DB change
     useEffect(() => {
@@ -987,8 +998,28 @@ const App = ({ filterCategories = null, searchProductName = null, onBack = null,
         return (
             <motion.div 
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                className="app-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#000000', color: '#666', width: '100%' }}>
+                className="app-container" style={{ display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center', alignItems: 'center', background: '#000000', color: '#666', width: '100%' }}>
                 <p>Nenhum produto encontrado.</p>
+                {onBack && (
+                    <button 
+                        onClick={() => onBack()}
+                        style={{
+                            padding: '10px 24px',
+                            borderRadius: '24px',
+                            background: '#D4AF37',
+                            color: '#000',
+                            fontWeight: '600',
+                            border: 'none',
+                            fontSize: '14px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px'
+                        }}
+                    >
+                        Voltar ao Menu
+                    </button>
+                )}
             </motion.div>
         );
     }
