@@ -1062,7 +1062,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
             transition={{ duration: 0.4 }}
             className="app-container" style={{
             backgroundColor: '#000',
-            backgroundImage: `url('https://res.cloudinary.com/ddhlqymvf/image/upload/f_auto,q_auto,w_450/v1771525899/App_Bar_1080x1920_2_afm0f1.png')`,
+            backgroundImage: `url('https://res.cloudinary.com/dvhkcemd0/image/upload/v1773870488/migrated/ozaxg9ubwzpxrlar6wap.jpg')`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
@@ -1352,7 +1352,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                 {/* 
                                 <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 0 }}>
                                     <img
-                                        src="https://res.cloudinary.com/ddhlqymvf/image/upload/v1772656206/Logotipo_2_odktzy.png"
+                                        src="https://res.cloudinary.com/dvhkcemd0/image/upload/v1773870490/migrated/csxl9gvgqpm5vqj8ww5w.png"
                                         alt="Logo Restaurante"
                                         fetchPriority="high"
                                         loading="eager"

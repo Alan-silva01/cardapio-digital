@@ -647,7 +647,7 @@ export default function PedidosPage() {
       </head>
       <body>
         <div class="logo-top">
-          <img src="https://res.cloudinary.com/ddhlqymvf/image/upload/v1772656206/Logotipo_2_odktzy.png" alt="Logo" />
+          <img src="https://res.cloudinary.com/dvhkcemd0/image/upload/v1773870490/migrated/csxl9gvgqpm5vqj8ww5w.png" alt="Logo" />
         </div>
         <div class="header">
           <h2>${nomePessoa}</h2>
@@ -726,7 +726,7 @@ export default function PedidosPage() {
       </head>
       <body>
         <div class="logo-top">
-          <img src="https://res.cloudinary.com/ddhlqymvf/image/upload/v1772656206/Logotipo_2_odktzy.png" alt="Logo" />
+          <img src="https://res.cloudinary.com/dvhkcemd0/image/upload/v1773870490/migrated/csxl9gvgqpm5vqj8ww5w.png" alt="Logo" />
         </div>
         <div class="header">
           <h2>Mesa ${String(comanda.numero_mesa).padStart(2, "0")}</h2>
