@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, Suspense, useCallback } from "react";
+import { useEffect, useState, useMemo, useRef, Suspense, useCallback } from "react";
 import { useQueryState, parseAsString } from "nuqs";
 import { createClient } from "@/lib/supabase/client";
 import { Badge } from "@/components/ui/badge";
@@ -33,7 +33,18 @@ import {
     Pencil,
     Check,
     ChevronsUpDown,
+    Camera,
+    UploadCloud,
+    Wine,
+    Beer,
+    UtensilsCrossed,
+    Droplets,
+    Users,
+    Percent,
+    Beaker,
+    Star,
 } from "lucide-react";
+import { uploadImageAction } from "@/app/actions/upload-image";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { countryFlags as COUNTRY_FLAGS } from "@/lib/countryFlags";
@@ -151,6 +162,103 @@ interface StockItem {
     tipo_vinho: string | null;
     pais_origem: string | null;
     descricao: string | null;
+    teor_alcolico: number | null;
+    volume_ml: number | null;
+    serve_pessoas: number | null;
+    ml_taca: number | null;
+    subcategoria: string | null;
+    rating: number | null;
+}
+
+// --- Interactive Star Rating ---
+function StarRating({ value, onChange }: { value: number; onChange: (val: number) => void }) {
+    const [hoverValue, setHoverValue] = useState<number | null>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const isDragging = useRef(false);
+
+    function getStarValue(e: React.MouseEvent | MouseEvent) {
+        if (!containerRef.current) return value;
+        const rect = containerRef.current.getBoundingClientRect();
+        const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+        const starWidth = rect.width / 5;
+        const raw = x / starWidth;
+        return Math.round(raw * 2) / 2; // snap to 0.5
+    }
+
+    function handleMouseDown(e: React.MouseEvent) {
+        isDragging.current = true;
+        const val = getStarValue(e);
+        onChange(Math.max(0.5, Math.min(5, val)));
+    }
+
+    useEffect(() => {
+        function handleMouseMove(e: MouseEvent) {
+            if (!isDragging.current) return;
+            const val = getStarValue(e);
+            onChange(Math.max(0.5, Math.min(5, val)));
+        }
+        function handleMouseUp() {
+            isDragging.current = false;
+        }
+        document.addEventListener("mousemove", handleMouseMove);
+        document.addEventListener("mouseup", handleMouseUp);
+        return () => {
+            document.removeEventListener("mousemove", handleMouseMove);
+            document.removeEventListener("mouseup", handleMouseUp);
+        };
+    }, [onChange]);
+
+    const displayValue = hoverValue ?? value;
+
+    return (
+        <div className="space-y-1.5">
+            <Label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                <Star className="h-3 w-3" />Avaliação
+            </Label>
+            <div className="flex items-center gap-2">
+                <div
+                    ref={containerRef}
+                    className="flex items-center cursor-pointer select-none"
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={(e) => {
+                        if (!isDragging.current) {
+                            setHoverValue(Math.max(0.5, Math.min(5, getStarValue(e))));
+                        }
+                    }}
+                    onMouseLeave={() => setHoverValue(null)}
+                >
+                    {[1, 2, 3, 4, 5].map((star) => {
+                        const filled = displayValue >= star;
+                        const half = !filled && displayValue >= star - 0.5;
+                        return (
+                            <div key={star} className="relative h-6 w-6">
+                                {/* Empty star bg */}
+                                <Star
+                                    className="absolute inset-0 h-6 w-6 text-border transition-colors"
+                                    strokeWidth={1.5}
+                                />
+                                {/* Filled overlay */}
+                                {(filled || half) && (
+                                    <div
+                                        className="absolute inset-0 overflow-hidden"
+                                        style={{ width: filled ? "100%" : "50%" }}
+                                    >
+                                        <Star
+                                            className="h-6 w-6 text-amber-400 fill-amber-400 transition-all drop-shadow-[0_0_3px_rgba(251,191,36,0.4)]"
+                                            strokeWidth={1.5}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
+                <span className="text-xs font-mono text-muted-foreground tabular-nums w-7 text-center">
+                    {displayValue.toFixed(1)}
+                </span>
+            </div>
+        </div>
+    );
 }
 
 function getStatus(estoque: number, estoque_minimo: number): { label: string; color: string; type: string } {
@@ -159,6 +267,25 @@ function getStatus(estoque: number, estoque_minimo: number): { label: string; co
     if (estoque <= estoque_minimo) return { label: "Baixo", color: "text-amber-500 border-amber-500/20 bg-amber-500/10", type: "baixo" };
     return { label: "OK", color: "text-emerald-500 border-emerald-500/20 bg-emerald-500/10", type: "ok" };
 }
+
+// --- Subcategory options by category ---
+const SUBCATEGORY_MAP: Record<string, string[]> = {
+    "Cervejas": ["Long Neck", "Cervejas 600ml", "Zero Álcool", "Stempel"],
+    "Vinhos": ["Vinhos Tintos", "Vinhos Brancos", "Vinhos Rosés", "Espumantes", "Stempel"],
+    "Destilados": ["Garrafas", "Doses", "Gins"],
+    "Whiskeys": ["Garrafas", "Doses"],
+    "Vodkas": ["Garrafas", "Doses"],
+    "Drinks": ["Menu de Drinks", "Shots"],
+    "Bebidas": ["Água & Refri", "Sucos", "Energéticos"],
+    "Petiscos": ["Porções"],
+    "Pratos & Executivos": ["Pratos", "Executivos"],
+};
+
+// Categories that show alcohol fields
+const ALCOHOL_CATEGORIES = ["Cervejas", "Vinhos", "Destilados", "Whiskeys", "Vodkas", "Drinks", "Gins"];
+const VOLUME_CATEGORIES = ["Cervejas", "Vinhos", "Destilados", "Whiskeys", "Vodkas", "Gins"];
+const FOOD_CATEGORIES = ["Petiscos", "Pratos & Executivos", "Combos", "Pastéis", "Espetinhos", "Sobremesas", "Guarnições"];
+const WINE_CATEGORIES = ["Vinhos"];
 
 // --- Edit Modal ---
 function EditProductModal({
@@ -181,6 +308,13 @@ function EditProductModal({
         categoria_id: string | null;
         categoria_nova: string | null;
         pais_origem: string | null;
+        teor_alcolico: number | null;
+        volume_ml: number | null;
+        serve_pessoas: number | null;
+        tipo_vinho: string | null;
+        ml_taca: number | null;
+        subcategoria: string | null;
+        rating: number | null;
     }) => Promise<void>;
     categoriesList: { label: string; value: string }[];
     originsList: string[];
@@ -190,10 +324,31 @@ function EditProductModal({
     const [preco, setPreco] = useState("");
     const [estoque, setEstoque] = useState("");
     const [imagemUrl, setImagemUrl] = useState("");
+    const [uploadingImage, setUploadingImage] = useState(false);
     const [categoriaId, setCategoriaId] = useState("");
     const [categoriaNova, setCategoriaNova] = useState("");
     const [paisOrigem, setPaisOrigem] = useState("");
     const [saving, setSaving] = useState(false);
+    const [teorAlcolico, setTeorAlcolico] = useState("");
+    const [volumeMl, setVolumeMl] = useState("");
+    const [servePessoas, setServePessoas] = useState("");
+    const [tipoVinho, setTipoVinho] = useState("");
+    const [mlTaca, setMlTaca] = useState("");
+    const [subcategoria, setSubcategoria] = useState("");
+    const [rating, setRating] = useState(5);
+
+    // Derive selected category name for conditional rendering
+    const selectedCatName = useMemo(() => {
+        if (categoriaNova) return categoriaNova;
+        const found = categoriesList.find(c => c.value === categoriaId);
+        return found?.label || "";
+    }, [categoriaId, categoriaNova, categoriesList]);
+
+    const showAlcohol = ALCOHOL_CATEGORIES.includes(selectedCatName);
+    const showVolume = VOLUME_CATEGORIES.includes(selectedCatName);
+    const showFood = FOOD_CATEGORIES.includes(selectedCatName);
+    const showWine = WINE_CATEGORIES.includes(selectedCatName);
+    const subcatOptions = SUBCATEGORY_MAP[selectedCatName] || [];
 
     useEffect(() => {
         if (item) {
@@ -205,6 +360,13 @@ function EditProductModal({
             setCategoriaId(item.categoria_id || "");
             setCategoriaNova("");
             setPaisOrigem(item.pais_origem || "");
+            setTeorAlcolico(item.teor_alcolico != null ? String(item.teor_alcolico) : "");
+            setVolumeMl(item.volume_ml != null ? String(item.volume_ml) : "");
+            setServePessoas(item.serve_pessoas != null ? String(item.serve_pessoas) : "");
+            setTipoVinho(item.tipo_vinho || "");
+            setMlTaca(item.ml_taca != null ? String(item.ml_taca) : "");
+            setSubcategoria(item.subcategoria || "");
+            setRating(item.rating ?? 5);
         }
     }, [item]);
 
@@ -220,6 +382,13 @@ function EditProductModal({
                 categoria_id: categoriaId && !categoriaNova ? categoriaId : null,
                 categoria_nova: categoriaNova || null,
                 pais_origem: paisOrigem || null,
+                teor_alcolico: teorAlcolico ? parseFloat(teorAlcolico) : null,
+                volume_ml: volumeMl ? parseInt(volumeMl) : null,
+                serve_pessoas: servePessoas ? parseInt(servePessoas) : null,
+                tipo_vinho: tipoVinho || null,
+                ml_taca: mlTaca ? parseInt(mlTaca) : null,
+                subcategoria: subcategoria || null,
+                rating: rating,
             });
             onClose();
         } catch (err) {
@@ -239,24 +408,74 @@ function EditProductModal({
                 </DialogHeader>
 
                 <div className="px-6 py-5 space-y-4 max-h-[70vh] overflow-y-auto">
-                    {/* Product image preview */}
+                    {/* Product image preview and upload */}
                     <div className="flex justify-center">
-                        <div className="h-32 w-24 relative rounded-xl overflow-hidden bg-muted border border-border">
+                        <Label 
+                            htmlFor="image-upload"
+                            className={cn(
+                                "group h-32 w-24 relative rounded-xl overflow-hidden bg-muted border border-border border-dashed cursor-pointer flex items-center justify-center transition-all hover:bg-muted/80 hover:border-foreground/50",
+                                uploadingImage && "opacity-50 pointer-events-none"
+                            )}
+                        >
+                            <Input 
+                                id="image-upload" 
+                                type="file" 
+                                accept="image/*" 
+                                className="hidden" 
+                                onChange={async (e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    
+                                    try {
+                                        setUploadingImage(true);
+                                        const formData = new FormData();
+                                        formData.append("file", file);
+                                        
+                                        const res = await uploadImageAction(formData);
+                                        if (res?.error) {
+                                            alert(res.error);
+                                        } else if (res?.url) {
+                                            setImagemUrl(res.url);
+                                        }
+                                    } catch (error) {
+                                        console.error("Erro no upload:", error);
+                                        alert("Erro ao fazer o upload da imagem.");
+                                    } finally {
+                                        setUploadingImage(false);
+                                        if (e.target) e.target.value = "";
+                                    }
+                                }}
+                            />
                             {imagemUrl ? (
-                                <Image
-                                    src={imagemUrl}
-                                    alt={nome}
-                                    fill
-                                    unoptimized
-                                    className="object-contain p-1"
-                                    sizes="96px"
-                                />
+                                <>
+                                    <Image
+                                        src={imagemUrl}
+                                        alt={nome}
+                                        fill
+                                        unoptimized
+                                        className="object-contain p-1"
+                                        sizes="96px"
+                                    />
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white backdrop-blur-sm z-10 transition-all duration-300">
+                                        <div className="flex flex-col items-center">
+                                            <UploadCloud className="h-6 w-6 mb-1" />
+                                            <span className="text-[10px] font-medium leading-none">Trocar</span>
+                                        </div>
+                                    </div>
+                                </>
                             ) : (
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <Package className="h-8 w-8 text-muted-foreground/40" />
+                                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-2 text-center">
+                                    {uploadingImage ? (
+                                        <Loader2 className="h-6 w-6 text-muted-foreground animate-spin" />
+                                    ) : (
+                                        <>
+                                            <Camera className="h-6 w-6 text-muted-foreground/60 group-hover:text-foreground transition-colors" />
+                                            <span className="text-[10px] font-medium text-muted-foreground group-hover:text-foreground">Upload</span>
+                                        </>
+                                    )}
                                 </div>
                             )}
-                        </div>
+                        </Label>
                     </div>
 
                     <div className="space-y-1.5">
@@ -333,6 +552,108 @@ function EditProductModal({
                             />
                         </div>
                     </div>
+
+                    {/* Subcategoria - mostrar se há opções para a categoria selecionada */}
+                    {subcatOptions.length > 0 && (
+                        <div className="space-y-1.5">
+                            <Label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5"><Tag className="h-3 w-3" />Subcategoria</Label>
+                            <SearchableSelect
+                                options={subcatOptions.map(s => ({ label: s, value: s }))}
+                                value={subcategoria}
+                                onChange={(val) => setSubcategoria(val)}
+                                placeholder="Selecione a subcategoria..."
+                                allowCreate={true}
+                                createPrefix="Criar subcategoria"
+                            />
+                        </div>
+                    )}
+
+                    {/* Campos dinâmicos por categoria */}
+                    {(showWine || showAlcohol || showVolume || showFood) && (
+                        <div className="pt-2 border-t border-border/50">
+                            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-3">Detalhes Específicos</p>
+                            <div className="grid grid-cols-2 gap-3">
+                                {/* Tipo de Vinho - só para Vinhos */}
+                                {showWine && (
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5"><Wine className="h-3 w-3" />Tipo de Vinho</Label>
+                                        <SearchableSelect
+                                            options={[
+                                                { label: "Tinto", value: "tinto" },
+                                                { label: "Branco", value: "branco" },
+                                                { label: "Rosé", value: "rose" },
+                                            ]}
+                                            value={tipoVinho}
+                                            onChange={(val) => setTipoVinho(val)}
+                                            placeholder="Tipo..."
+                                        />
+                                    </div>
+                                )}
+
+                                {/* ml por Taça - só para Vinhos */}
+                                {showWine && (
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5"><Beaker className="h-3 w-3" />ml por Taça</Label>
+                                        <Input
+                                            type="number"
+                                            value={mlTaca}
+                                            onChange={(e) => setMlTaca(e.target.value)}
+                                            className="bg-background border-border h-9 text-sm font-mono"
+                                            placeholder="200"
+                                        />
+                                    </div>
+                                )}
+
+                                {/* Teor Alcoólico */}
+                                {showAlcohol && (
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5"><Percent className="h-3 w-3" />Teor Alcoólico (%)</Label>
+                                        <Input
+                                            type="number"
+                                            step="0.1"
+                                            value={teorAlcolico}
+                                            onChange={(e) => setTeorAlcolico(e.target.value)}
+                                            className="bg-background border-border h-9 text-sm font-mono"
+                                            placeholder="5.0"
+                                        />
+                                    </div>
+                                )}
+
+                                {/* Volume (ml) */}
+                                {showVolume && (
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5"><Droplets className="h-3 w-3" />Volume (ml)</Label>
+                                        <Input
+                                            type="number"
+                                            value={volumeMl}
+                                            onChange={(e) => setVolumeMl(e.target.value)}
+                                            className="bg-background border-border h-9 text-sm font-mono"
+                                            placeholder="750"
+                                        />
+                                    </div>
+                                )}
+
+                                {/* Serve Pessoas - Comidas */}
+                                {showFood && (
+                                    <div className="space-y-1.5">
+                                        <Label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5"><Users className="h-3 w-3" />Serve (pessoas)</Label>
+                                        <Input
+                                            type="number"
+                                            value={servePessoas}
+                                            onChange={(e) => setServePessoas(e.target.value)}
+                                            className="bg-background border-border h-9 text-sm font-mono"
+                                            placeholder="2"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Star Rating - todos os produtos */}
+                    <div className="pt-2 border-t border-border/50">
+                        <StarRating value={rating} onChange={setRating} />
+                    </div>
                 </div>
 
                 <div className="flex justify-end gap-2 px-6 py-4 border-t border-border bg-muted/30">
@@ -395,6 +716,12 @@ function EstoqueContent() {
                     pais_origem,
                     descricao,
                     categoria_id,
+                    teor_alcolico,
+                    volume_ml,
+                    serve_pessoas,
+                    ml_taca,
+                    subcategoria,
+                    rating,
                     categorias (
                         nome
                     )
@@ -430,6 +757,12 @@ function EstoqueContent() {
                 tipo_vinho: v.produtos.tipo_vinho,
                 pais_origem: v.produtos.pais_origem,
                 descricao: v.produtos.descricao,
+                teor_alcolico: v.produtos.teor_alcolico,
+                volume_ml: v.produtos.volume_ml,
+                serve_pessoas: v.produtos.serve_pessoas,
+                ml_taca: v.produtos.ml_taca,
+                subcategoria: v.produtos.subcategoria,
+                rating: v.produtos.rating,
             };
         });
 
@@ -533,6 +866,13 @@ function EstoqueContent() {
         categoria_id: string | null;
         categoria_nova: string | null;
         pais_origem: string | null;
+        teor_alcolico: number | null;
+        volume_ml: number | null;
+        serve_pessoas: number | null;
+        tipo_vinho: string | null;
+        ml_taca: number | null;
+        subcategoria: string | null;
+        rating: number | null;
     }) {
         if (!editingItem) return;
 
@@ -556,6 +896,13 @@ function EstoqueContent() {
                 imagem_url: data.imagem_url,
                 categoria_id: finalCatId,
                 pais_origem: data.pais_origem,
+                teor_alcolico: data.teor_alcolico,
+                volume_ml: data.volume_ml,
+                serve_pessoas: data.serve_pessoas,
+                tipo_vinho: data.tipo_vinho,
+                ml_taca: data.ml_taca,
+                subcategoria: data.subcategoria,
+                rating: data.rating,
             })
             .eq("id", editingItem.produto_id);
 
@@ -687,7 +1034,7 @@ function EstoqueContent() {
                             filtered.map((item, idx) => {
                                 const status = getStatus(item.estoque, item.estoque_minimo);
                                 const isUpdating = updatingIds.has(item.variacao_id);
-                                const flagUrl = item.pais_origem ? COUNTRY_FLAGS[item.pais_origem] : null;
+                                const flagUrl = item.pais_origem ? COUNTRY_FLAGS[item.pais_origem as keyof typeof COUNTRY_FLAGS] : null;
 
                                 return (
                                     <TableRow
