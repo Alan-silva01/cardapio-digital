@@ -199,6 +199,7 @@ const HERO_IMAGES = [
   "6_wl8l8e", "7_czccpk", "8_go2wqz", "9_o8aynt", "10_nkhfn5",
   "11_vc4yli", "12_ksbobb", "13_ekxenc", "14_dv4qkd", "15_pz5grg",
   "16_ojybsi", "17_oksskv", "18_tzhcdc", "19_hwlvsw", "20_qs8e2m",
+  "Hero_Scroll_Loop_1620x1080_hisxc5",
 ];
 
 const heroUrl = (id: string) =>
