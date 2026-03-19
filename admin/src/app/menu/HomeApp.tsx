@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -193,6 +193,26 @@ interface HomeAppProps {
   onTabChange?: (tab: "menu" | "sacola" | "pedidos") => void;
 }
 
+/* ─── Hero Carousel Images (Cloudinary optimized) ─── */
+const HERO_IMAGES = [
+  "1_hyjdgf", "2_vtomud", "3_zv7ipt", "4_ztjc7u", "5_cvq3yf",
+  "6_wl8l8e", "7_czccpk", "8_go2wqz", "9_o8aynt", "10_nkhfn5",
+  "11_vc4yli", "12_ksbobb", "13_ekxenc", "14_dv4qkd", "15_pz5grg",
+  "16_ojybsi", "17_oksskv", "18_tzhcdc", "19_hwlvsw", "20_qs8e2m",
+];
+
+const heroUrl = (id: string) =>
+  `https://res.cloudinary.com/dvhkcemd0/image/upload/f_auto,q_auto:good,w_800/${id}.png`;
+
+function shuffleArray<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 export default function HomeApp({ onCategorySelect, onProductSearch, activeTab = "menu", onTabChange }: HomeAppProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [openSheet, setOpenSheet] = useState<CategoryDef | null>(null);
@@ -200,8 +220,28 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
   const [isSearching, setIsSearching] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const [cartCount, setCartCount] = useState(0);
+
+  // Shuffle once on mount — random order each visit, all 20 before repeating
+  const shuffledImages = useMemo(() => shuffleArray(HERO_IMAGES), []);
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  // Auto-advance slideshow every 4 seconds
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % shuffledImages.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [shuffledImages.length]);
+
+  // Preload next 2 images for seamless transitions
+  useEffect(() => {
+    for (let offset = 1; offset <= 2; offset++) {
+      const nextIdx = (currentSlide + offset) % shuffledImages.length;
+      const img = new Image();
+      img.src = heroUrl(shuffledImages[nextIdx]);
+    }
+  }, [currentSlide, shuffledImages]);
 
   // Read cart from localStorage
   useEffect(() => {
@@ -239,84 +279,6 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
   // Prefetch MenuApp bundle silently so transition is near-instant
   useEffect(() => {
     import("./MenuApp");
-  }, []);
-
-  // Ref callback to force muted on the DOM element (React bug: muted prop doesn't always stick)
-  const videoRefCallback = useCallback((node: HTMLVideoElement | null) => {
-    if (!node) return;
-    // @ts-ignore
-    videoRef.current = node;
-    // Critical: React doesn't reliably set 'muted' on the DOM element
-    node.defaultMuted = true;
-    node.muted = true;
-    node.setAttribute('muted', '');
-    node.setAttribute('playsinline', '');
-    node.setAttribute('webkit-playsinline', '');
-  }, []);
-
-  // Force video autoplay on Safari/iOS
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const tryPlay = () => {
-      if (video.paused) {
-        video.muted = true; // Re-ensure muted before each attempt
-        const p = video.play();
-        if (p !== undefined) {
-          p.catch(() => {});
-        }
-      }
-    };
-
-    // Try on various loading events
-    video.addEventListener('loadedmetadata', tryPlay);
-    video.addEventListener('loadeddata', tryPlay);
-    video.addEventListener('canplay', tryPlay);
-
-    // Try immediately + retries
-    tryPlay();
-    const t1 = setTimeout(tryPlay, 100);
-    const t2 = setTimeout(tryPlay, 500);
-    const t3 = setTimeout(tryPlay, 1500);
-
-    // IntersectionObserver: play when video becomes visible
-    let observer: IntersectionObserver | null = null;
-    if ('IntersectionObserver' in window) {
-      observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) tryPlay();
-          });
-        },
-        { threshold: 0.1 }
-      );
-      observer.observe(video);
-    }
-
-    // Fallback: play on first user interaction
-    const onInteraction = () => {
-      tryPlay();
-      document.removeEventListener('touchstart', onInteraction);
-      document.removeEventListener('click', onInteraction);
-      document.removeEventListener('scroll', onInteraction);
-    };
-    document.addEventListener('touchstart', onInteraction, { passive: true });
-    document.addEventListener('click', onInteraction);
-    document.addEventListener('scroll', onInteraction, { passive: true });
-
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
-      video.removeEventListener('loadedmetadata', tryPlay);
-      video.removeEventListener('loadeddata', tryPlay);
-      video.removeEventListener('canplay', tryPlay);
-      observer?.disconnect();
-      document.removeEventListener('touchstart', onInteraction);
-      document.removeEventListener('click', onInteraction);
-      document.removeEventListener('scroll', onInteraction);
-    };
   }, []);
 
   // Debounced product search
@@ -403,22 +365,19 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
     <div className="home-shell">
       {/* ── Scrollable Content ── */}
       <div className="home-scroll">
-        {/* ── Hero Video Section ── */}
-        <div className="home-hero-video" id="home-hero-video">
-          <video
-            ref={videoRefCallback}
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="auto"
-            className="home-hero-bg"
-          >
-            <source
-              src="https://res.cloudinary.com/dvhkcemd0/video/upload/v1773870489/migrated/eiiadky1hkgipmz98cda.mp4"
-              type="video/mp4"
+        {/* ── Hero Fullscreen Slideshow ── */}
+        <div className="home-hero-carousel" id="home-hero-carousel">
+          {shuffledImages.map((id, i) => (
+            <img
+              key={id}
+              src={heroUrl(id)}
+              alt=""
+              className={`home-hero-slide${i === currentSlide ? " home-hero-slide--active" : ""}`}
+              loading={i < 3 ? "eager" : "lazy"}
+              decoding={i < 3 ? "sync" : "async"}
+              fetchPriority={i === 0 ? "high" : "low"}
             />
-          </video>
+          ))}
           <div className="home-hero-overlay" />
           <div className="home-hero-content">
             <img
