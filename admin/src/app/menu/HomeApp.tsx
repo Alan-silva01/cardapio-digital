@@ -226,11 +226,11 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
   const shuffledImages = useMemo(() => shuffleArray(HERO_IMAGES), []);
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // Auto-advance slideshow every 4 seconds
+  // Auto-advance slideshow every 2.5 seconds
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % shuffledImages.length);
-    }, 4000);
+    }, 2500);
     return () => clearInterval(timer);
   }, [shuffledImages.length]);
 
@@ -356,7 +356,8 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
 
   const handleSubSelect = (sub: SubCategory) => {
     setOpenSheet(null);
-    onCategorySelect?.(sub.id, sub.dbCategories, sub.subcategoria);
+    const subCatStr = Array.isArray(sub.subcategoria) ? sub.subcategoria[0] : sub.subcategoria;
+    onCategorySelect?.(sub.id, sub.dbCategories, subCatStr);
   };
 
   const showSearchResults = searchQuery.trim().length >= 2;
