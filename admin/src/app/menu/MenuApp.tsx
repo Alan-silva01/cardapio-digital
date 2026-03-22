@@ -1054,8 +1054,6 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
     // Swap volume: show ml_taca when Taça is selected
     const displayVolume = (currentProduct.tipo_vinho && isTaca) ? currentProduct.ml_taca : currentProduct.volume_ml;
 
-    const nonDrinkCategories = ['Pratos & Executivos', 'Petiscos', 'Espetinhos', 'Sobremesas', 'Pastéis', 'Guarnições', 'Combos'];
-    const isFoodLarger = currentProduct && nonDrinkCategories.includes(currentProduct.category);
 
     return (
         <motion.div 
@@ -1212,7 +1210,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                             </h1>
                         </div>
 
-                        <div style={{ position: 'relative', width: '100%', height: isFoodLarger ? '37dvh' : '35dvh', maxHeight: isFoodLarger ? '300px' : '280px', minHeight: isFoodLarger ? '160px' : '150px', display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: isFoodLarger ? '0px' : '5px' }}>
+                        <div style={{ position: 'relative', width: '100%', height: '35dvh', maxHeight: '280px', minHeight: '150px', display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '5px' }}>
                             {/* Back Glow */}
                             <div style={{
                                 position: 'absolute', width: '200px', height: '200px',
@@ -1227,7 +1225,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                 decoding="async"
                                 fetchPriority="high"
                                 style={{
-                                    maxHeight: isFoodLarger ? '92%' : '90%',
+                                    maxHeight: '90%',
                                     width: 'auto',
                                     objectFit: 'contain',
                                     zIndex: 2
@@ -1236,7 +1234,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
 
                             {/* Real ground shadow */}
                             <div style={{
-                                position: 'absolute', bottom: isFoodLarger ? '10px' : '15px', width: '150px', height: '20px',
+                                position: 'absolute', bottom: '15px', width: '150px', height: '20px',
                                 background: 'rgba(0,0,0,0.6)', borderRadius: '50%', filter: 'blur(15px)', zIndex: 1
                             }} />
                         </div>
