@@ -1212,7 +1212,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                             </h1>
                         </div>
 
-                        <div style={{ position: 'relative', width: '100%', height: isFoodLarger ? '40dvh' : '35dvh', maxHeight: isFoodLarger ? '330px' : '280px', minHeight: isFoodLarger ? '180px' : '150px', display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: isFoodLarger ? '-5px' : '5px' }}>
+                        <div style={{ position: 'relative', width: '100%', height: isFoodLarger ? '37dvh' : '35dvh', maxHeight: isFoodLarger ? '300px' : '280px', minHeight: isFoodLarger ? '160px' : '150px', display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: isFoodLarger ? '0px' : '5px' }}>
                             {/* Back Glow */}
                             <div style={{
                                 position: 'absolute', width: '200px', height: '200px',
@@ -1227,7 +1227,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                 decoding="async"
                                 fetchPriority="high"
                                 style={{
-                                    maxHeight: isFoodLarger ? '95%' : '90%',
+                                    maxHeight: isFoodLarger ? '92%' : '90%',
                                     width: 'auto',
                                     objectFit: 'contain',
                                     zIndex: 2
@@ -1236,7 +1236,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
 
                             {/* Real ground shadow */}
                             <div style={{
-                                position: 'absolute', bottom: isFoodLarger ? '5px' : '15px', width: '150px', height: '20px',
+                                position: 'absolute', bottom: isFoodLarger ? '10px' : '15px', width: '150px', height: '20px',
                                 background: 'rgba(0,0,0,0.6)', borderRadius: '50%', filter: 'blur(15px)', zIndex: 1
                             }} />
                         </div>
