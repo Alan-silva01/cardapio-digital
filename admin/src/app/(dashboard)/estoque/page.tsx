@@ -439,7 +439,7 @@ function EditProductModal({
                         <Label 
                             htmlFor="image-upload"
                             className={cn(
-                                "group h-32 w-24 relative rounded-xl overflow-hidden bg-muted border border-border border-dashed cursor-pointer flex items-center justify-center transition-all hover:bg-muted/80 hover:border-foreground/50",
+                                "group w-24 aspect-[5/6] relative rounded-xl overflow-hidden bg-muted border border-border border-dashed cursor-pointer flex items-center justify-center transition-all hover:bg-muted/80 hover:border-foreground/50",
                                 uploadingImage && "opacity-50 pointer-events-none"
                             )}
                         >
@@ -1071,7 +1071,7 @@ function EstoqueContent() {
                                         <TableCell className="py-2">
                                             <HoverCard>
                                                 <HoverCardTrigger>
-                                                    <div className="h-9 w-9 relative rounded-md overflow-hidden bg-muted border cursor-pointer group">
+                                                    <div className="w-10 aspect-[5/6] relative rounded-md overflow-hidden bg-muted/50 border cursor-pointer group">
                                                         {item.imagem_url ? (
                                                             <>
                                                                 <Image
@@ -1081,10 +1081,10 @@ function EstoqueContent() {
                                                                     priority={idx < 10}
                                                                     unoptimized={true}
                                                                     className={cn(
-                                                                        "object-cover transition-all",
+                                                                        "object-contain transition-all p-0.5",
                                                                         !item.disponivel && "blur-[2px] opacity-40 grayscale-[0.8]"
                                                                     )}
-                                                                    sizes="36px"
+                                                                    sizes="40px"
                                                                 />
                                                                 {!item.disponivel && (
                                                                     <div className="absolute inset-0 flex items-center justify-center bg-black/40">
