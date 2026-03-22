@@ -158,6 +158,8 @@ interface StockItem {
     produto_id: string;
     produto_nome: string;
     imagem_url: string | null;
+    var_imagem_url: string | null;
+    var_descricao: string | null;
     disponivel: boolean;
     categoria_id: string | null;
     categoria_nome: string;
@@ -181,6 +183,8 @@ const NEW_PRODUCT_TEMPLATE: StockItem = {
     produto_id: "",
     produto_nome: "",
     imagem_url: null,
+    var_imagem_url: null,
+    var_descricao: null,
     disponivel: true,
     categoria_id: null,
     categoria_nome: "",
@@ -330,6 +334,8 @@ function EditProductModal({
         preco: number;
         estoque: number;
         imagem_url: string;
+        var_imagem_url: string;
+        var_descricao: string;
         categoria_id: string | null;
         categoria_nova: string | null;
         pais_origem: string | null;
@@ -349,7 +355,10 @@ function EditProductModal({
     const [preco, setPreco] = useState("");
     const [estoque, setEstoque] = useState("");
     const [imagemUrl, setImagemUrl] = useState("");
+    const [varImagemUrl, setVarImagemUrl] = useState("");
+    const [varDescricao, setVarDescricao] = useState("");
     const [uploadingImage, setUploadingImage] = useState(false);
+    const [uploadingVarImage, setUploadingVarImage] = useState(false);
     const [categoriaId, setCategoriaId] = useState("");
     const [categoriaNova, setCategoriaNova] = useState("");
     const [paisOrigem, setPaisOrigem] = useState("");
@@ -382,6 +391,8 @@ function EditProductModal({
             setPreco(item.preco.toFixed(2));
             setEstoque(item.estoque === -1 ? "-1" : String(item.estoque));
             setImagemUrl(item.imagem_url || "");
+            setVarImagemUrl(item.var_imagem_url || "");
+            setVarDescricao(item.var_descricao || "");
             setCategoriaId(item.categoria_id || "");
             setCategoriaNova("");
             setPaisOrigem(item.pais_origem || "");
@@ -404,6 +415,8 @@ function EditProductModal({
                 preco: parseFloat(preco),
                 estoque: parseInt(estoque),
                 imagem_url: imagemUrl,
+                var_imagem_url: varImagemUrl,
+                var_descricao: varDescricao,
                 categoria_id: categoriaId && !categoriaNova ? categoriaId : null,
                 categoria_nova: categoriaNova || null,
                 pais_origem: paisOrigem || null,
@@ -680,6 +693,74 @@ function EditProductModal({
                     <div className="pt-2 border-t border-border/50">
                         <StarRating value={rating} onChange={setRating} />
                     </div>
+
+                    {/* Variação upload específico */}
+                    <div className="pt-4 border-t border-border/50 pb-2">
+                        <p className="text-[10.5px] font-bold text-foreground uppercase tracking-widest mb-3 flex items-center gap-2"><Tag className="h-3.5 w-3.5"/> Dados Específicos Desta Variação</p>
+                        
+                        <div className="flex gap-4">
+                            <Label 
+                                htmlFor="var-image-upload"
+                                className={cn(
+                                    "group w-24 shrink-0 aspect-[5/6] relative rounded-xl overflow-hidden bg-muted border border-border border-dashed cursor-pointer flex items-center justify-center transition-all hover:bg-muted/80 hover:border-foreground/50",
+                                    uploadingVarImage && "opacity-50 pointer-events-none"
+                                )}
+                            >
+                                <Input 
+                                    id="var-image-upload" 
+                                    type="file" 
+                                    accept="image/*" 
+                                    className="hidden" 
+                                    onChange={async (e) => {
+                                        const file = e.target.files?.[0];
+                                        if (!file) return;
+                                        try {
+                                            setUploadingVarImage(true);
+                                            const formData = new FormData();
+                                            formData.append("file", file);
+                                            const res = await uploadImageAction(formData);
+                                            if (res?.error) alert(res.error);
+                                            else if (res?.url) setVarImagemUrl(res.url);
+                                        } catch (error) {
+                                            console.error("Erro no upload da variação:", error);
+                                            alert("Erro ao fazer o upload da imagem da variação.");
+                                        } finally {
+                                            setUploadingVarImage(false);
+                                            if (e.target) e.target.value = "";
+                                        }
+                                    }}
+                                />
+                                {varImagemUrl ? (
+                                    <>
+                                        <Image src={varImagemUrl} alt="Var Img" fill unoptimized className="object-contain p-1 bg-white dark:bg-black/50" sizes="96px" />
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white backdrop-blur-sm z-10 transition-all duration-300">
+                                            <div className="flex flex-col items-center">
+                                                <UploadCloud className="h-6 w-6 mb-1" />
+                                                <span className="text-[10px] font-medium leading-none">Trocar</span>
+                                            </div>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-2 text-center">
+                                        {uploadingVarImage ? <Loader2 className="h-6 w-6 text-muted-foreground animate-spin" /> : <>
+                                            <Camera className="h-6 w-6 text-emerald-500/60 group-hover:text-emerald-500 transition-colors" />
+                                            <span className="text-[9px] font-medium text-muted-foreground group-hover:text-foreground leading-tight">Foto da<br/>Variação</span>
+                                        </>}
+                                    </div>
+                                )}
+                            </Label>
+
+                            <div className="flex-1 space-y-1.5 pt-1">
+                                <Label className="text-xs font-medium text-muted-foreground">Descrição Exclusiva da Variação (Opcional)</Label>
+                                <Textarea
+                                    value={varDescricao}
+                                    onChange={(e) => setVarDescricao(e.target.value)}
+                                    className="bg-background border-border text-sm min-h-[82px] resize-none"
+                                    placeholder="Ao preencher, o app exibirá esse texto no lugar da descrição geral quando essa variação for selecionada."
+                                />
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div className="flex justify-end gap-2 px-6 py-4 border-t border-border bg-muted/30">
@@ -735,6 +816,8 @@ function EstoqueContent() {
                 estoque,
                 estoque_minimo,
                 produto_id,
+                imagem_url,
+                descricao,
                 produtos!inner (
                     id,
                     nome,
@@ -766,7 +849,9 @@ function EstoqueContent() {
 
         const mapped: StockItem[] = (data || []).map((v: any) => {
             let finalImageUrl = v.produtos.imagem_url;
-            if (v.nome === "Taça" && v.produtos.tipo_vinho && wineGlassMap.has(v.produtos.tipo_vinho)) {
+            if (v.imagem_url && v.imagem_url.trim() !== '') {
+                finalImageUrl = v.imagem_url;
+            } else if (v.nome === "Taça" && v.produtos.tipo_vinho && wineGlassMap.has(v.produtos.tipo_vinho)) {
                 finalImageUrl = wineGlassMap.get(v.produtos.tipo_vinho);
             }
 
@@ -779,6 +864,8 @@ function EstoqueContent() {
                 produto_id: v.produtos.id,
                 produto_nome: v.produtos.nome,
                 imagem_url: finalImageUrl,
+                var_imagem_url: v.imagem_url,
+                var_descricao: v.descricao,
                 disponivel: v.produtos.disponivel,
                 categoria_id: v.produtos.categoria_id,
                 categoria_nome: v.produtos.categorias?.nome || "Sem Categoria",
@@ -891,6 +978,8 @@ function EstoqueContent() {
         preco: number;
         estoque: number;
         imagem_url: string;
+        var_imagem_url: string;
+        var_descricao: string;
         categoria_id: string | null;
         categoria_nova: string | null;
         pais_origem: string | null;

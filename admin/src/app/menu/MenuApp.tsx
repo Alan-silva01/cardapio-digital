@@ -698,7 +698,9 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                         varsDict[v.nome] = {
                             id: v.id,
                             price: v.preco,
-                            stock: v.estoque
+                            stock: v.estoque,
+                            imagem_url: v.imagem_url,
+                            descricao: v.descricao
                         };
                     });
                     defaultPrice = myVariants[0].preco;
@@ -1047,8 +1049,22 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
 
     const isTaca = selectedVariation && (selectedVariation.toLowerCase().includes('taça') || selectedVariation.toLowerCase().includes('taca'));
     let displayImage = currentProduct.imageUrl;
+    let displayDescription = currentProduct.description;
+
+    // Apply specific logic for Wine glass images
     if (currentProduct.tipo_vinho && isTaca && wineGlassImages[currentProduct.tipo_vinho]) {
         displayImage = wineGlassImages[currentProduct.tipo_vinho];
+    }
+
+    // Apply database-driven variation images and descriptions (for combos and new items)
+    if (currentProduct.variations && selectedVariation && currentProduct.variations[selectedVariation]) {
+        const varData = currentProduct.variations[selectedVariation];
+        if (varData.imagem_url && varData.imagem_url.trim() !== '') {
+            displayImage = optimizeCloudinaryUrl(varData.imagem_url);
+        }
+        if (varData.descricao && varData.descricao.trim() !== '') {
+            displayDescription = varData.descricao;
+        }
     }
 
     // Swap volume: show ml_taca when Taça is selected
@@ -1103,10 +1119,10 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
 
             {/* ANIMATED HERO SECTION */}
             <div className="hero">
-                <AnimatePresence initial={false} custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-'), isSkolBeats: currentProduct?.slug?.startsWith('skol-beats-'), isInternalSpin, isWineSpin: isInternalSpin && currentProduct?.category?.toLowerCase().includes('vinho') }}>
+                <AnimatePresence initial={false} custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-'), isSkolBeats: currentProduct?.slug?.startsWith('skol-beats-'), isInternalSpin, isWineSpin: isInternalSpin && currentProduct?.category && /vinho|combo/.test(currentProduct?.category?.toLowerCase()) }}>
                     <motion.div
                         key={`${currentProduct.id}-${selectedVariation || ''}`}
-                        custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-'), isSkolBeats: currentProduct?.slug?.startsWith('skol-beats-'), isInternalSpin, isWineSpin: isInternalSpin && currentProduct?.category?.toLowerCase().includes('vinho') }}
+                        custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-'), isSkolBeats: currentProduct?.slug?.startsWith('skol-beats-'), isInternalSpin, isWineSpin: isInternalSpin && currentProduct?.category && /vinho|combo/.test(currentProduct?.category?.toLowerCase()) }}
                         variants={variants}
                         initial="enter"
                         animate="center"
@@ -1410,7 +1426,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                 textAlign: 'center',
                                 lineHeight: '1.4'
                             }}>
-                                {currentProduct.description}
+                                {displayDescription}
                             </p>
 
                             {/* MULTI-FLAVOR / VARIATION SELECTION (HORIZONTAL SCROLL STYLE) */}
@@ -1501,8 +1517,8 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                                         <button
                                                             key={variant}
                                                             onClick={() => {
-                                                                const isWine = currentProduct.category && currentProduct.category.toLowerCase().includes('vinho');
-                                                                if (isWine && selectedVariation !== variant) {
+                                                                const isWineOrCombo = currentProduct.category && /vinho|combo/.test(currentProduct.category.toLowerCase());
+                                                                if (isWineOrCombo && selectedVariation !== variant) {
                                                                     const currentVariantIdx = Object.keys(currentProduct.variations).indexOf(selectedVariation);
                                                                     setDirection(variantIdx > currentVariantIdx ? 1 : -1);
                                                                     setIsInternalSpin(true);

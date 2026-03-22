@@ -68,6 +68,8 @@ export async function saveProductAction(data: any, isCreating: boolean, editingI
                 nome: "Única",
                 preco: data.preco,
                 estoque: data.estoque,
+                imagem_url: data.var_imagem_url || "",
+                descricao: data.var_descricao || "",
                 ativo: true
             });
             
@@ -100,6 +102,8 @@ export async function saveProductAction(data: any, isCreating: boolean, editingI
             .update({
                 preco: data.preco,
                 estoque: data.estoque,
+                imagem_url: data.var_imagem_url,
+                descricao: data.var_descricao
             })
             .eq("id", editingItem.variacao_id);
 
