@@ -1054,6 +1054,8 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
     // Swap volume: show ml_taca when Taça is selected
     const displayVolume = (currentProduct.tipo_vinho && isTaca) ? currentProduct.ml_taca : currentProduct.volume_ml;
 
+    const nonDrinkCategories = ['Pratos & Executivos', 'Petiscos', 'Espetinhos', 'Sobremesas', 'Pastéis', 'Guarnições', 'Combos'];
+    const isFoodLarger = currentProduct && nonDrinkCategories.includes(currentProduct.category);
 
     return (
         <motion.div 
@@ -1210,7 +1212,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                             </h1>
                         </div>
 
-                        <div style={{ position: 'relative', width: '100%', height: '35dvh', maxHeight: '280px', minHeight: '150px', display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '5px' }}>
+                        <div style={{ position: 'relative', width: '100%', height: isFoodLarger ? '45dvh' : '35dvh', maxHeight: isFoodLarger ? '400px' : '280px', minHeight: isFoodLarger ? '220px' : '150px', display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: isFoodLarger ? '15px' : '5px' }}>
                             {/* Back Glow */}
                             <div style={{
                                 position: 'absolute', width: '200px', height: '200px',
