@@ -6,6 +6,7 @@ import Image from "next/image";
 import logoImage from "@/assets/images/logo.png";
 import { GlobalOrderNotifier } from "@/components/global-order-notifier";
 import { GlobalServiceNotifier } from "@/components/global-service-notifier";
+import { Toaster } from "sonner";
 
 export default function DashboardLayout({
     children,
@@ -14,6 +15,7 @@ export default function DashboardLayout({
 }) {
     return (
         <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
+            <Toaster theme="dark" position="bottom-right" richColors />
             {/* Global sound listener for new orders - works on ALL pages */}
             <GlobalOrderNotifier />
             {/* Global sound and visual listener for table service calls */}

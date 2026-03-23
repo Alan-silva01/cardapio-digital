@@ -56,7 +56,7 @@ import {
     HoverCardContent,
     HoverCardTrigger,
 } from "@/components/ui/hover-card";
-
+import { toast } from "sonner";
 
 // --- Custom Select Component ---
 function SearchableSelect({
@@ -1040,7 +1040,7 @@ function EstoqueContent() {
                 console.error("Erro ao toggle combos:", error);
                 fetchStock();
             } else {
-                alert(`Combos vinculados também foram ${modal.targetStatus ? 'ativados' : 'desativados'}!`);
+                toast.success(`Combos vinculados também foram ${modal.targetStatus ? 'ativados' : 'desativados'}!`);
             }
         }
     }
@@ -1470,42 +1470,43 @@ function EstoqueContent() {
             <Dialog open={linkedCombosModal.isOpen} onOpenChange={(open) => {
                 if (!open) setLinkedCombosModal({ ...linkedCombosModal, isOpen: false });
             }}>
-                <DialogContent className="max-w-[400px] p-0 border-0 bg-background/95 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden">
-                    <div className="p-6 border-b border-border text-center flex flex-col items-center">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${linkedCombosModal.targetStatus ? 'bg-emerald-500/20 text-emerald-500' : 'bg-red-500/20 text-red-500'}`}>
-                            {linkedCombosModal.targetStatus ? <Check className="w-6 h-6" /> : <AlertTriangle className="w-6 h-6" />}
+                <DialogContent className="sm:max-w-md bg-[#0a0a0a] border border-[#222] text-white p-6 rounded-2xl shadow-2xl overflow-hidden [&>button]:text-gray-400 [&>button]:hover:text-white">
+                    <div className="text-center flex flex-col items-center pt-2">
+                        <div className="w-14 h-14 bg-red-500/10 rounded-full flex items-center justify-center mb-4 mx-auto border border-red-500/20">
+                            {linkedCombosModal.targetStatus ? <Check className="w-6 h-6 text-emerald-500" /> : <AlertTriangle className="w-6 h-6 text-red-500" />}
                         </div>
-                        <h2 className="text-lg font-bold">
-                            {linkedCombosModal.targetStatus ? 'Reativar Combos?' : 'Desativar Combos?'}
+                        <h2 className="text-xl font-semibold mb-2">
+                            {linkedCombosModal.targetStatus ? 'Ativar Combos?' : 'Desativar Combos?'}
                         </h2>
-                        <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+                        <p className="text-sm text-gray-400 mt-1 leading-relaxed">
                             O produto <strong>{linkedCombosModal.whiskeyName}</strong> possui <strong>{linkedCombosModal.combos.length}</strong> {linkedCombosModal.combos.length === 1 ? 'combo vinculado' : 'combos vinculados'}.
-                            <br/><br/>
+                        </p>
+                        <p className="text-sm text-gray-400 mt-4">
                             Deseja {linkedCombosModal.targetStatus ? 'ativá-los' : 'desativá-los'} também?
                         </p>
                     </div>
                     
-                    <div className="bg-muted/30 px-6 py-4 max-h-[150px] overflow-y-auto">
-                        <ul className="text-xs text-muted-foreground space-y-2">
+                    <div className="bg-[#141414] border border-[#222] rounded-xl p-4 mt-6 max-h-[160px] overflow-y-auto">
+                        <ul className="text-sm text-gray-300 space-y-2.5">
                             {linkedCombosModal.combos.map(c => (
-                                <li key={c.id} className="flex items-center gap-2">
-                                    <span className={`w-1.5 h-1.5 rounded-full ${linkedCombosModal.targetStatus ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                                    {c.nome}
+                                <li key={c.id} className="flex items-center gap-3">
+                                    <div className={`w-2 h-2 rounded-full mt-0.5 shrink-0 ${linkedCombosModal.targetStatus ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                                    <span>{c.nome}</span>
                                 </li>
                             ))}
                         </ul>
                     </div>
 
-                    <div className="p-6 flex flex-col gap-2">
+                    <div className="mt-6 flex flex-col space-y-3">
                         <Button 
-                            className={`w-full ${linkedCombosModal.targetStatus ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-red-500 hover:bg-red-600'} text-white rounded-xl h-11`}
+                            className={`w-full font-medium rounded-xl h-12 ${linkedCombosModal.targetStatus ? 'bg-emerald-500 hover:bg-emerald-600 ring-1 ring-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'bg-[#ff3333] hover:bg-[#ff1a1a] ring-1 ring-red-500/50 shadow-[0_0_15px_rgba(255,51,51,0.2)]'} text-white`}
                             onClick={() => handleLinkedCombosToggle(true)}
                         >
                             Sim, {linkedCombosModal.targetStatus ? 'ativar' : 'desativar'} todos
                         </Button>
                         <Button 
                             variant="ghost" 
-                            className="w-full h-11 rounded-xl text-muted-foreground hover:bg-muted"
+                            className="w-full h-12 rounded-xl text-gray-400 hover:text-white hover:bg-transparent font-medium"
                             onClick={() => handleLinkedCombosToggle(false)}
                         >
                             Não, apenas o {linkedCombosModal.whiskeyName}
