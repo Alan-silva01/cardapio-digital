@@ -1478,25 +1478,27 @@ function EstoqueContent() {
             <Dialog open={linkedCombosModal.isOpen} onOpenChange={(open) => {
                 if (!open && !linkedCombosModal.isToggling) setLinkedCombosModal({ ...linkedCombosModal, isOpen: false });
             }}>
-                <DialogContent className="sm:max-w-[400px] bg-card border-border p-6">
-                    <DialogHeader>
-                        <DialogTitle className="text-lg font-semibold text-foreground flex items-center gap-2">
-                            {linkedCombosModal.targetStatus ? <Check className="w-5 h-5 text-emerald-500" /> : <AlertTriangle className="w-5 h-5 text-red-500" />}
+                <DialogContent className="sm:max-w-lg bg-card border-border p-6 sm:p-8">
+                    <DialogHeader className="flex flex-row items-center gap-3 space-y-0">
+                        {linkedCombosModal.targetStatus ? <Check className="w-6 h-6 text-emerald-500 stroke-[2.5]" /> : <AlertTriangle className="w-6 h-6 text-red-500 stroke-[2]" />}
+                        <DialogTitle className="text-xl font-bold tracking-tight text-foreground">
                             {linkedCombosModal.targetStatus ? 'Ativar Combos?' : 'Desativar Combos?'}
                         </DialogTitle>
                     </DialogHeader>
                     
-                    <div className="py-4 text-sm text-muted-foreground space-y-4">
-                        <p>
-                            O produto <strong className="text-foreground">{linkedCombosModal.whiskeyName}</strong> possui <strong>{linkedCombosModal.combos.length}</strong> {linkedCombosModal.combos.length === 1 ? 'combo vinculado' : 'combos vinculados'}.
-                            <br/><br/>
+                    <div className="mt-2 space-y-4">
+                        <p className="text-[15px] text-muted-foreground leading-relaxed">
+                            O produto <strong className="text-foreground">{linkedCombosModal.whiskeyName}</strong> possui <strong className="text-foreground">{linkedCombosModal.combos.length}</strong> {linkedCombosModal.combos.length === 1 ? 'combo vinculado' : 'combos vinculados'}.
+                        </p>
+                        
+                        <p className="text-[15px] text-muted-foreground leading-relaxed">
                             Deseja {linkedCombosModal.targetStatus ? 'ativá-los' : 'desativá-los'} também?
                         </p>
 
-                        <div className="bg-muted/30 border border-border rounded-md px-4 py-3 max-h-[140px] overflow-y-auto">
-                            <ul className="text-sm space-y-2">
+                        <div className="bg-muted/40 border border-border/50 rounded-lg p-5 max-h-[160px] overflow-y-auto mt-2">
+                            <ul className="space-y-3">
                                 {linkedCombosModal.combos.map(c => (
-                                    <li key={c.id} className="flex items-center gap-2 text-muted-foreground">
+                                    <li key={c.id} className="flex items-center gap-3 text-[14px] text-muted-foreground font-medium">
                                         <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", linkedCombosModal.targetStatus ? 'bg-emerald-500' : 'bg-red-500')} />
                                         {c.nome}
                                     </li>
@@ -1505,10 +1507,10 @@ function EstoqueContent() {
                         </div>
                     </div>
 
-                    <div className="flex justify-end gap-2 pt-4 mt-2">
+                    <div className="flex flex-wrap items-center justify-start gap-3 mt-8">
                         <Button 
-                            variant="ghost" 
-                            className="h-8 px-3 text-xs"
+                            variant="outline" 
+                            className="border-2 border-muted-foreground/30 hover:border-muted-foreground/50 text-foreground font-medium h-10 px-4"
                             onClick={() => handleLinkedCombosToggle(false)}
                             disabled={linkedCombosModal.isToggling}
                         >
@@ -1516,15 +1518,15 @@ function EstoqueContent() {
                         </Button>
                         <Button 
                             className={cn(
-                                "text-white text-sm h-9 px-4 gap-1.5",
-                                linkedCombosModal.targetStatus ? "bg-emerald-600 hover:bg-emerald-700" : "bg-red-500 hover:bg-red-600"
+                                "text-white font-medium h-10 px-5",
+                                linkedCombosModal.targetStatus ? "bg-emerald-500 hover:bg-emerald-600" : "bg-[#ff3333] hover:bg-[#ff1a1a]"
                             )}
                             onClick={() => handleLinkedCombosToggle(true)}
                             disabled={linkedCombosModal.isToggling}
                         >
                             {linkedCombosModal.isToggling ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (linkedCombosModal.targetStatus ? <Check className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />)}
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            ) : (linkedCombosModal.targetStatus ? <Check className="h-4 w-4 mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />)}
                             {linkedCombosModal.isToggling ? "Processando..." : `Sim, ${linkedCombosModal.targetStatus ? 'ativar' : 'desativar'} todos`}
                         </Button>
                     </div>
