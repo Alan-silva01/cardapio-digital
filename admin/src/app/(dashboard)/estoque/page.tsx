@@ -44,6 +44,7 @@ import {
     Beaker,
     Star,
     Trash2,
+    AlertTriangle,
 } from "lucide-react";
 import { uploadImageAction } from "@/app/actions/upload-image";
 import { saveProductAction, deleteProductAction } from "@/app/actions/product-actions";
@@ -795,6 +796,19 @@ function EstoqueContent() {
     const [editingItem, setEditingItem] = useState<StockItem | null>(null);
     const [itemToDelete, setItemToDelete] = useState<StockItem | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [linkedCombosModal, setLinkedCombosModal] = useState<{
+        isOpen: boolean;
+        whiskeyName: string;
+        whiskeyId: string;
+        combos: { id: string; nome: string; disponivel: boolean }[];
+        targetStatus: boolean;
+    }>({
+        isOpen: false,
+        whiskeyName: "",
+        whiskeyId: "",
+        combos: [],
+        targetStatus: false
+    });
     const [allCategories, setAllCategories] = useState<{ label: string, value: string }[]>([]);
     const supabase = createClient();
 
@@ -956,13 +970,45 @@ function EstoqueContent() {
 
     // Toggle disponivel
     async function toggleDisponivel(produtoId: string, current: boolean) {
+        const item = items.find(i => i.produto_id === produtoId);
+        const targetStatus = !current;
+
+        // SE DESATIVANDO UM WHISKY, VERIFIQUE SE ELE TEM COMBOS:
+        // Se ativando, também veremos se existem combos vinculados para oferecer a reativação
+        const { data: linkedCombos, error: linkedError } = await supabase
+            .from("produtos")
+            .select("id, nome, disponivel")
+            .eq("whiskey_base_id", produtoId);
+
+        if (!linkedError && linkedCombos && linkedCombos.length > 0) {
+            // Se existem combos vinculados que NÃO estão no mesmo estado pretendido (targetStatus)
+            const combosToChange = linkedCombos.filter(c => c.disponivel !== targetStatus);
+            
+            if (combosToChange.length > 0) {
+                // Apareça o modal de combos ao invés de prosseguir direto
+                setLinkedCombosModal({
+                    isOpen: true,
+                    whiskeyName: item?.produto_nome || "Destilado",
+                    whiskeyId: produtoId,
+                    combos: combosToChange,
+                    targetStatus
+                });
+                return;
+            }
+        }
+
+        // Se não tem combos ou eles já estão no estado certo, prossiga normalmente:
+        await performToggle(produtoId, targetStatus);
+    }
+
+    async function performToggle(produtoId: string, targetStatus: boolean) {
         setItems(prev => prev.map(i =>
-            i.produto_id === produtoId ? { ...i, disponivel: !current } : i
+            i.produto_id === produtoId ? { ...i, disponivel: targetStatus } : i
         ));
 
         const { error } = await supabase
             .from("produtos")
-            .update({ disponivel: !current })
+            .update({ disponivel: targetStatus })
             .eq("id", produtoId);
 
         if (error) {
@@ -970,6 +1016,35 @@ function EstoqueContent() {
             fetchStock();
         }
     }
+
+    async function handleLinkedCombosToggle(includeCombos: boolean) {
+        const modal = linkedCombosModal;
+        setLinkedCombosModal({ ...modal, isOpen: false });
+
+        // Muda o whisky principal
+        await performToggle(modal.whiskeyId, modal.targetStatus);
+
+        // Muda os combos também se o usuário quis
+        if (includeCombos && modal.combos.length > 0) {
+            const comboIds = modal.combos.map(c => c.id);
+            setItems(prev => prev.map(i =>
+                comboIds.includes(i.produto_id) ? { ...i, disponivel: modal.targetStatus } : i
+            ));
+
+            const { error } = await supabase
+                .from("produtos")
+                .update({ disponivel: modal.targetStatus })
+                .in("id", comboIds);
+
+            if (error) {
+                console.error("Erro ao toggle combos:", error);
+                fetchStock();
+            } else {
+                alert(`Combos vinculados também foram ${modal.targetStatus ? 'ativados' : 'desativados'}!`);
+            }
+        }
+    }
+
 
     // Save edit or create
     async function handleSaveEdit(data: {
@@ -1386,6 +1461,54 @@ function EstoqueContent() {
                         >
                             {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
                             {isDeleting ? "Excluindo..." : "Excluir"}
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Modal de Combos Vinculados */}
+            <Dialog open={linkedCombosModal.isOpen} onOpenChange={(open) => {
+                if (!open) setLinkedCombosModal({ ...linkedCombosModal, isOpen: false });
+            }}>
+                <DialogContent className="max-w-[400px] p-0 border-0 bg-background/95 backdrop-blur-xl shadow-2xl rounded-2xl overflow-hidden">
+                    <div className="p-6 border-b border-border text-center flex flex-col items-center">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 ${linkedCombosModal.targetStatus ? 'bg-emerald-500/20 text-emerald-500' : 'bg-red-500/20 text-red-500'}`}>
+                            {linkedCombosModal.targetStatus ? <Check className="w-6 h-6" /> : <AlertTriangle className="w-6 h-6" />}
+                        </div>
+                        <h2 className="text-lg font-bold">
+                            {linkedCombosModal.targetStatus ? 'Reativar Combos?' : 'Desativar Combos?'}
+                        </h2>
+                        <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+                            O produto <strong>{linkedCombosModal.whiskeyName}</strong> possui <strong>{linkedCombosModal.combos.length}</strong> {linkedCombosModal.combos.length === 1 ? 'combo vinculado' : 'combos vinculados'}.
+                            <br/><br/>
+                            Deseja {linkedCombosModal.targetStatus ? 'ativá-los' : 'desativá-los'} também?
+                        </p>
+                    </div>
+                    
+                    <div className="bg-muted/30 px-6 py-4 max-h-[150px] overflow-y-auto">
+                        <ul className="text-xs text-muted-foreground space-y-2">
+                            {linkedCombosModal.combos.map(c => (
+                                <li key={c.id} className="flex items-center gap-2">
+                                    <span className={`w-1.5 h-1.5 rounded-full ${linkedCombosModal.targetStatus ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                                    {c.nome}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+
+                    <div className="p-6 flex flex-col gap-2">
+                        <Button 
+                            className={`w-full ${linkedCombosModal.targetStatus ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-red-500 hover:bg-red-600'} text-white rounded-xl h-11`}
+                            onClick={() => handleLinkedCombosToggle(true)}
+                        >
+                            Sim, {linkedCombosModal.targetStatus ? 'ativar' : 'desativar'} todos
+                        </Button>
+                        <Button 
+                            variant="ghost" 
+                            className="w-full h-11 rounded-xl text-muted-foreground hover:bg-muted"
+                            onClick={() => handleLinkedCombosToggle(false)}
+                        >
+                            Não, apenas o {linkedCombosModal.whiskeyName}
                         </Button>
                     </div>
                 </DialogContent>

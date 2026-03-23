@@ -662,7 +662,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                 { data: wineData, error: wineError }
             ] = await Promise.all([
                 supabase.from('categorias').select('id, nome, icone').eq('ativo', true),
-                supabase.from('produtos').select('*').eq('disponivel', true).order('ordem', { ascending: true }),
+                supabase.from('produtos').select('*').order('ordem', { ascending: true }),
                 supabase.from('variacoes_produto').select('*').eq('ativo', true).order('ordem', { ascending: true }),
                 supabase.from('tipos_vinho').select('tipo, imagem_taca_url')
             ]);
@@ -728,7 +728,8 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                     serve_pessoas: p.serve_pessoas,
                     curtidas: p.curtidas || 0,
                     tipo_vinho: p.tipo_vinho || null,
-                    ml_taca: p.ml_taca || 200
+                    ml_taca: p.ml_taca || 200,
+                    disponivel: p.disponivel
                 };
             });
 
@@ -1244,9 +1245,25 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                     maxHeight: '90%',
                                     width: 'auto',
                                     objectFit: 'contain',
-                                    zIndex: 2
+                                    zIndex: 2,
+                                    filter: !currentProduct.disponivel ? 'blur(4px) grayscale(0.8)' : 'none',
+                                    transition: 'filter 0.3s ease'
                                 }}
                             />
+
+                            {!currentProduct.disponivel && (
+                                <div style={{
+                                    position: 'absolute',
+                                    zIndex: 3,
+                                    background: 'rgba(0,0,0,0.6)',
+                                    padding: '8px 16px',
+                                    borderRadius: '8px',
+                                    border: '1px solid rgba(255,255,255,0.2)',
+                                    backdropFilter: 'blur(4px)'
+                                }}>
+                                    <span style={{ color: '#fff', fontWeight: '900', letterSpacing: '2px', fontSize: '18px' }}>ESGOTADO</span>
+                                </div>
+                            )}
 
                             {/* Real ground shadow */}
                             <div style={{
@@ -1562,7 +1579,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                         currentStock = currentProduct.variations[selectedVariation].stock;
                     }
 
-                    const isOutOfStock = currentStock === 0;
+                    const isOutOfStock = currentStock === 0 || !currentProduct.disponivel;
 
                     return (
                         <div className="sheet-footer">
