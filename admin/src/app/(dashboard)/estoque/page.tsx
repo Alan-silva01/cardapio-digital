@@ -1507,7 +1507,7 @@ function EstoqueContent() {
                         </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center justify-start gap-3 mt-8">
+                    <div className="flex flex-wrap items-center justify-center gap-3 mt-8">
                         <Button 
                             variant="outline" 
                             className="border-2 border-muted-foreground/30 hover:border-muted-foreground/50 text-foreground font-medium h-10 px-4"
