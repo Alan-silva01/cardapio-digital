@@ -56,7 +56,6 @@ import {
     HoverCardContent,
     HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { toast } from "sonner";
 
 // --- Custom Select Component ---
 function SearchableSelect({
@@ -802,12 +801,14 @@ function EstoqueContent() {
         whiskeyId: string;
         combos: { id: string; nome: string; disponivel: boolean }[];
         targetStatus: boolean;
+        isToggling: boolean;
     }>({
         isOpen: false,
         whiskeyName: "",
         whiskeyId: "",
         combos: [],
-        targetStatus: false
+        targetStatus: false,
+        isToggling: false
     });
     const [allCategories, setAllCategories] = useState<{ label: string, value: string }[]>([]);
     const supabase = createClient();
@@ -991,7 +992,8 @@ function EstoqueContent() {
                     whiskeyName: item?.produto_nome || "Destilado",
                     whiskeyId: produtoId,
                     combos: combosToChange,
-                    targetStatus
+                    targetStatus,
+                    isToggling: false
                 });
                 return;
             }
@@ -1019,29 +1021,35 @@ function EstoqueContent() {
 
     async function handleLinkedCombosToggle(includeCombos: boolean) {
         const modal = linkedCombosModal;
-        setLinkedCombosModal({ ...modal, isOpen: false });
+        setLinkedCombosModal(prev => ({ ...prev, isToggling: true }));
 
-        // Muda o whisky principal
-        await performToggle(modal.whiskeyId, modal.targetStatus);
+        try {
+            // Muda o whisky principal
+            await performToggle(modal.whiskeyId, modal.targetStatus);
 
-        // Muda os combos também se o usuário quis
-        if (includeCombos && modal.combos.length > 0) {
-            const comboIds = modal.combos.map(c => c.id);
-            setItems(prev => prev.map(i =>
-                comboIds.includes(i.produto_id) ? { ...i, disponivel: modal.targetStatus } : i
-            ));
+            // Muda os combos também se o usuário quis
+            if (includeCombos && modal.combos.length > 0) {
+                const comboIds = modal.combos.map(c => c.id);
+                setItems(prev => prev.map(i =>
+                    comboIds.includes(i.produto_id) ? { ...i, disponivel: modal.targetStatus } : i
+                ));
 
-            const { error } = await supabase
-                .from("produtos")
-                .update({ disponivel: modal.targetStatus })
-                .in("id", comboIds);
+                const { error } = await supabase
+                    .from("produtos")
+                    .update({ disponivel: modal.targetStatus })
+                    .in("id", comboIds);
 
-            if (error) {
-                console.error("Erro ao toggle combos:", error);
-                fetchStock();
-            } else {
-                toast.success(`Combos vinculados também foram ${modal.targetStatus ? 'ativados' : 'desativados'}!`);
+                if (error) {
+                    console.error("Erro ao toggle combos:", error);
+                    fetchStock();
+                }
             }
+            
+            // Fecha o modal apenas após o sucesso
+            setLinkedCombosModal(prev => ({ ...prev, isOpen: false, isToggling: false }));
+        } catch (err) {
+            console.error(err);
+            setLinkedCombosModal(prev => ({ ...prev, isToggling: false }));
         }
     }
 
@@ -1468,49 +1476,54 @@ function EstoqueContent() {
 
             {/* Modal de Combos Vinculados */}
             <Dialog open={linkedCombosModal.isOpen} onOpenChange={(open) => {
-                if (!open) setLinkedCombosModal({ ...linkedCombosModal, isOpen: false });
+                if (!open && !linkedCombosModal.isToggling) setLinkedCombosModal({ ...linkedCombosModal, isOpen: false });
             }}>
-                <DialogContent className="sm:max-w-md bg-[#0a0a0a] border border-[#222] text-white p-6 rounded-2xl shadow-2xl overflow-hidden [&>button]:text-gray-400 [&>button]:hover:text-white">
-                    <div className="text-center flex flex-col items-center pt-2">
-                        <div className="w-14 h-14 bg-red-500/10 rounded-full flex items-center justify-center mb-4 mx-auto border border-red-500/20">
-                            {linkedCombosModal.targetStatus ? <Check className="w-6 h-6 text-emerald-500" /> : <AlertTriangle className="w-6 h-6 text-red-500" />}
+                <DialogContent className="sm:max-w-md bg-card border-border text-card-foreground p-0 rounded-3xl shadow-2xl overflow-hidden border-0">
+                    <div className="p-8 text-center flex flex-col items-center">
+                        <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-6 mx-auto border border-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.1)]">
+                            {linkedCombosModal.targetStatus ? <Check className="w-8 h-8 text-emerald-500" /> : <AlertTriangle className="w-8 h-8 text-red-500" />}
                         </div>
-                        <h2 className="text-xl font-semibold mb-2">
+                        <h2 className="text-2xl font-bold mb-3 tracking-tight">
                             {linkedCombosModal.targetStatus ? 'Ativar Combos?' : 'Desativar Combos?'}
                         </h2>
-                        <p className="text-sm text-gray-400 mt-1 leading-relaxed">
-                            O produto <strong>{linkedCombosModal.whiskeyName}</strong> possui <strong>{linkedCombosModal.combos.length}</strong> {linkedCombosModal.combos.length === 1 ? 'combo vinculado' : 'combos vinculados'}.
+                        <p className="text-sm text-muted-foreground leading-relaxed px-4">
+                            O produto <span className="font-semibold text-foreground">{linkedCombosModal.whiskeyName}</span> possui <span className="font-semibold text-foreground">{linkedCombosModal.combos.length}</span> {linkedCombosModal.combos.length === 1 ? 'combo vinculado' : 'combos vinculados'}.
                         </p>
-                        <p className="text-sm text-gray-400 mt-4">
+                        <p className="text-sm text-muted-foreground mt-4 font-medium mb-6">
                             Deseja {linkedCombosModal.targetStatus ? 'ativá-los' : 'desativá-los'} também?
                         </p>
-                    </div>
-                    
-                    <div className="bg-[#141414] border border-[#222] rounded-xl p-4 mt-6 max-h-[160px] overflow-y-auto">
-                        <ul className="text-sm text-gray-300 space-y-2.5">
-                            {linkedCombosModal.combos.map(c => (
-                                <li key={c.id} className="flex items-center gap-3">
-                                    <div className={`w-2 h-2 rounded-full mt-0.5 shrink-0 ${linkedCombosModal.targetStatus ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                                    <span>{c.nome}</span>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
 
-                    <div className="mt-6 flex flex-col space-y-3">
-                        <Button 
-                            className={`w-full font-medium rounded-xl h-12 ${linkedCombosModal.targetStatus ? 'bg-emerald-500 hover:bg-emerald-600 ring-1 ring-emerald-500/50 shadow-[0_0_15px_rgba(16,185,129,0.2)]' : 'bg-[#ff3333] hover:bg-[#ff1a1a] ring-1 ring-red-500/50 shadow-[0_0_15px_rgba(255,51,51,0.2)]'} text-white`}
-                            onClick={() => handleLinkedCombosToggle(true)}
-                        >
-                            Sim, {linkedCombosModal.targetStatus ? 'ativar' : 'desativar'} todos
-                        </Button>
-                        <Button 
-                            variant="ghost" 
-                            className="w-full h-12 rounded-xl text-gray-400 hover:text-white hover:bg-transparent font-medium"
-                            onClick={() => handleLinkedCombosToggle(false)}
-                        >
-                            Não, apenas o {linkedCombosModal.whiskeyName}
-                        </Button>
+                        <div className="w-full bg-muted/30 border border-border/50 rounded-2xl p-5 mb-8 max-h-[160px] overflow-y-auto text-left shadow-inner">
+                            <ul className="text-sm space-y-3">
+                                {linkedCombosModal.combos.map(c => (
+                                    <li key={c.id} className="flex items-center gap-3">
+                                        <div className={`w-2 h-2 rounded-full shrink-0 shadow-sm ${linkedCombosModal.targetStatus ? 'bg-emerald-500 shadow-emerald-500/50' : 'bg-red-500 shadow-red-500/50'}`} />
+                                        <span className="text-muted-foreground font-medium">{c.nome}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        <div className="w-full flex flex-col space-y-3">
+                            <Button 
+                                className={`w-full font-bold rounded-2xl h-14 text-base transition-all active:scale-[0.98] ${linkedCombosModal.targetStatus ? 'bg-emerald-500 hover:bg-emerald-600 shadow-lg shadow-emerald-500/20' : 'bg-[#ff3333] hover:bg-[#ff1a1a] shadow-lg shadow-red-500/20'} text-white border-0`}
+                                onClick={() => handleLinkedCombosToggle(true)}
+                                disabled={linkedCombosModal.isToggling}
+                            >
+                                {linkedCombosModal.isToggling ? (
+                                    <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                                ) : null}
+                                {linkedCombosModal.isToggling ? "Processando..." : `Sim, ${linkedCombosModal.targetStatus ? 'ativar' : 'desativar'} todos`}
+                            </Button>
+                            <Button 
+                                variant="ghost" 
+                                className="w-full h-12 rounded-2xl text-muted-foreground hover:text-foreground hover:bg-muted/50 font-semibold text-sm transition-colors"
+                                onClick={() => handleLinkedCombosToggle(false)}
+                                disabled={linkedCombosModal.isToggling}
+                            >
+                                Não, apenas o {linkedCombosModal.whiskeyName}
+                            </Button>
+                        </div>
                     </div>
                 </DialogContent>
             </Dialog>
