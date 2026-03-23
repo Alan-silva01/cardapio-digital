@@ -1246,7 +1246,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                     width: 'auto',
                                     objectFit: 'contain',
                                     zIndex: 2,
-                                    filter: !currentProduct.disponivel ? 'blur(4px) grayscale(0.8)' : 'none',
+                                    filter: !currentProduct.disponivel ? 'blur(1.5px) grayscale(0.4)' : 'none',
                                     transition: 'filter 0.3s ease'
                                 }}
                             />
@@ -1255,13 +1255,21 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                 <div style={{
                                     position: 'absolute',
                                     zIndex: 3,
-                                    background: 'rgba(0,0,0,0.6)',
-                                    padding: '8px 16px',
-                                    borderRadius: '8px',
-                                    border: '1px solid rgba(255,255,255,0.2)',
-                                    backdropFilter: 'blur(4px)'
+                                    padding: '6px 14px',
+                                    border: '4px solid #ef4444',
+                                    borderRadius: '6px',
+                                    transform: 'rotate(-10deg)',
+                                    boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+                                    background: 'rgba(0,0,0,0.15)',
+                                    backdropFilter: 'blur(2px)'
                                 }}>
-                                    <span style={{ color: '#fff', fontWeight: '900', letterSpacing: '2px', fontSize: '18px' }}>ESGOTADO</span>
+                                    <span style={{ 
+                                        color: '#ef4444', 
+                                        fontWeight: '900', 
+                                        letterSpacing: '3px', 
+                                        fontSize: '24px',
+                                        textShadow: '2px 2px 4px rgba(0,0,0,0.8)'
+                                    }}>ESGOTADO</span>
                                 </div>
                             )}
 
