@@ -16,7 +16,8 @@ export default function PromocoesPage() {
 
   const [config, setConfig] = useState({
     promocao_ativa: false,
-    promocao_imagem_url: "",
+    promocoes: [] as any[], // New array to hold multiple promos
+    promocao_imagem_url: "", // Keeping for backward compatibility or simple migration
     promocao_titulo: "",
     promocao_preco: "",
     promocao_produto_id: "",
@@ -30,6 +31,8 @@ export default function PromocoesPage() {
     couvert_ativo: false,
     couvert_valor: 10.0,
   });
+
+  const [currentPromoIndex, setCurrentPromoIndex] = useState(0);
 
   const [produtos, setProdutos] = useState<any[]>([]);
   const [productSearch, setProductSearch] = useState("");
@@ -46,8 +49,42 @@ export default function PromocoesPage() {
         .single();
 
       if (data) {
+        // Migrate old single promo into array if array is empty
+        let loadedPromocoes = Array.isArray(data.promocoes) ? data.promocoes : [];
+        if (loadedPromocoes.length === 0 && (data.promocao_imagem_url || data.promocao_titulo)) {
+          loadedPromocoes = [{
+            imagem_url: data.promocao_imagem_url || "",
+            titulo: data.promocao_titulo || "",
+            preco: data.promocao_preco ? String(data.promocao_preco) : "",
+            produto_id: data.promocao_produto_id || "",
+            rodape: data.promocao_rodape || "",
+            inicio: data.promocao_inicio ? formatToLocal(data.promocao_inicio) : "",
+            fim: data.promocao_fim ? formatToLocal(data.promocao_fim) : "",
+          }];
+        } else if (loadedPromocoes.length === 0) {
+          // Initialize with one empty promo setting defaults: today 13:00 to tomorrow 05:00
+          const now = new Date();
+          const start = new Date(now);
+          start.setHours(13, 0, 0, 0);
+          
+          const end = new Date(now);
+          end.setDate(end.getDate() + 1);
+          end.setHours(5, 0, 0, 0);
+          
+          loadedPromocoes = [{
+            imagem_url: "",
+            titulo: "",
+            preco: "",
+            produto_id: "",
+            rodape: "",
+            inicio: formatToLocal(start.toISOString()),
+            fim: formatToLocal(end.toISOString()),
+          }];
+        }
+
         setConfig({
           promocao_ativa: data.promocao_ativa || false,
+          promocoes: loadedPromocoes,
           promocao_imagem_url: data.promocao_imagem_url || "",
           promocao_titulo: data.promocao_titulo || "",
           promocao_preco: data.promocao_preco ? String(data.promocao_preco) : "",
@@ -83,6 +120,12 @@ export default function PromocoesPage() {
       const payload = {
         id: "global",
         promocao_ativa: config.promocao_ativa,
+        promocoes: config.promocoes.map((p: any) => ({
+          ...p,
+          preco: p.preco ? parseFloat(p.preco.toString().replace(',', '.')) : null,
+          inicio: p.inicio ? new Date(p.inicio).toISOString() : null,
+          fim: p.fim ? new Date(p.fim).toISOString() : null,
+        })),
         promocao_imagem_url: config.promocao_imagem_url,
         promocao_titulo: config.promocao_titulo,
         promocao_preco: config.promocao_preco ? parseFloat(config.promocao_preco.replace(',', '.')) : null,
@@ -146,7 +189,7 @@ export default function PromocoesPage() {
     try {
       const res = await uploadImageAction(formData);
       if (res.url) {
-        setConfig(prev => ({ ...prev, promocao_imagem_url: res.url! }));
+        updateCurrentPromo("imagem_url", res.url!);
         toast.success("Imagem da promoção anexada!");
       } else {
         toast.error("Erro ao fazer upload da imagem.");
@@ -158,11 +201,55 @@ export default function PromocoesPage() {
     }
   }
 
+  function updateCurrentPromo(field: string, value: any) {
+    if (!config.promocoes || config.promocoes.length === 0) return;
+    const newPromos = [...config.promocoes];
+    newPromos[currentPromoIndex] = { ...newPromos[currentPromoIndex], [field]: value };
+    setConfig({ ...config, promocoes: newPromos });
+  }
+
+  function addPromo() {
+    const now = new Date();
+    const start = new Date(now);
+    start.setHours(13, 0, 0, 0);
+    const end = new Date(now);
+    end.setDate(end.getDate() + 1);
+    end.setHours(5, 0, 0, 0);
+
+    const newPromo = {
+      imagem_url: "",
+      titulo: "",
+      preco: "",
+      produto_id: "",
+      rodape: "",
+      inicio: formatToLocal(start.toISOString()),
+      fim: formatToLocal(end.toISOString()),
+    };
+    setConfig({ ...config, promocoes: [...config.promocoes, newPromo] });
+    setCurrentPromoIndex(config.promocoes.length);
+  }
+
+  function removePromo() {
+    if (config.promocoes.length <= 1) {
+      toast.error("Você precisa ter pelo menos 1 promoção.");
+      return;
+    }
+    const newPromos = config.promocoes.filter((_, i) => i !== currentPromoIndex);
+    setConfig({ ...config, promocoes: newPromos });
+    setCurrentPromoIndex(Math.max(0, currentPromoIndex - 1));
+  }
+
   async function handleSave() {
     setSaving(true);
     const payload = {
       id: "global",
       promocao_ativa: config.promocao_ativa,
+      promocoes: config.promocoes.map((p: any) => ({
+        ...p,
+        preco: p.preco ? parseFloat(p.preco.toString().replace(',', '.')) : null,
+        inicio: p.inicio ? new Date(p.inicio).toISOString() : null,
+        fim: p.fim ? new Date(p.fim).toISOString() : null,
+      })),
       promocao_imagem_url: config.promocao_imagem_url,
       promocao_titulo: config.promocao_titulo,
       promocao_preco: config.promocao_preco ? parseFloat(config.promocao_preco.replace(',', '.')) : null,
@@ -227,14 +314,48 @@ export default function PromocoesPage() {
               </button>
             </div>
 
-            {config.promocao_ativa && (
-              <div className="grid gap-4 mt-4 pt-4 border-t border-border/50">
+            {config.promocao_ativa && config.promocoes.length > 0 && (
+              <div className="mt-4 pt-4 border-t border-border/50">
+                <div className="flex items-center justify-between mb-4 bg-muted/30 p-2 rounded-lg border">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPromoIndex(Math.max(0, currentPromoIndex - 1))}
+                      disabled={currentPromoIndex === 0}
+                      className="h-8 w-8 p-0"
+                    >
+                      &larr;
+                    </Button>
+                    <span className="text-xs font-semibold w-24 text-center">
+                      Promo {currentPromoIndex + 1} de {config.promocoes.length}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPromoIndex(Math.min(config.promocoes.length - 1, currentPromoIndex + 1))}
+                      disabled={currentPromoIndex === config.promocoes.length - 1}
+                      className="h-8 w-8 p-0"
+                    >
+                      &rarr;
+                    </Button>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={removePromo} className="text-red-500 h-8 text-xs hover:bg-red-50 hover:border-red-200">
+                      <Trash2 className="h-3.5 w-3.5 mr-1" /> Remover
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={addPromo} className="h-8 text-xs font-semibold text-emerald-600 border-emerald-200 hover:bg-emerald-50">
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar Promo
+                    </Button>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Esquerda: Preview da Imagem */}
                   <div className="flex flex-col items-center gap-2">
                     <div className="w-40 h-52 shrink-0 border-2 border-dashed border-muted-foreground/30 rounded-xl bg-white flex items-center justify-center overflow-hidden relative shadow-sm">
-                      {config.promocao_imagem_url ? (
-                         <img src={config.promocao_imagem_url} alt="Promo" className="w-full h-full object-contain p-2" />
+                      {config.promocoes[currentPromoIndex]?.imagem_url ? (
+                         <img src={config.promocoes[currentPromoIndex].imagem_url} alt="Promo" className="w-full h-full object-contain p-2" />
                       ) : (
                         <div className="flex flex-col items-center gap-1 text-muted-foreground">
                           <ImageIcon className="h-8 w-8 opacity-40" />
@@ -294,13 +415,10 @@ export default function PromocoesPage() {
                                 key={p.id}
                                 onClick={() => {
                                   setSelectedProduct(p);
-                                  setConfig(prev => ({
-                                    ...prev,
-                                    promocao_imagem_url: p.imagem_url || "",
-                                    promocao_titulo: `Promoção: ${p.nome}`,
-                                    promocao_preco: "",
-                                    promocao_produto_id: p.id,
-                                  }));
+                                  updateCurrentPromo("imagem_url", p.imagem_url || "");
+                                  updateCurrentPromo("titulo", `Promoção: ${p.nome}`);
+                                  updateCurrentPromo("preco", "");
+                                  updateCurrentPromo("produto_id", p.id);
                                   setProductSearch(p.nome);
                                   setShowDropdown(false);
                                 }}
@@ -337,8 +455,8 @@ export default function PromocoesPage() {
                     <div className="space-y-1.5">
                       <label className="text-[12px] font-semibold text-foreground">Título no Modal</label>
                       <Input 
-                        value={config.promocao_titulo} 
-                        onChange={e => setConfig({...config, promocao_titulo: e.target.value})} 
+                        value={config.promocoes[currentPromoIndex]?.titulo || ""} 
+                        onChange={e => updateCurrentPromo("titulo", e.target.value)} 
                         placeholder="Ex: Combo Especial, Promoção de Quarta..." 
                         className="h-9"
                       />
@@ -347,8 +465,8 @@ export default function PromocoesPage() {
                     <div className="space-y-1.5">
                       <label className="text-[12px] font-semibold text-foreground">Preço Promocional (R$)</label>
                       <Input 
-                        value={config.promocao_preco} 
-                        onChange={e => setConfig({...config, promocao_preco: e.target.value})} 
+                        value={config.promocoes[currentPromoIndex]?.preco || ""} 
+                        onChange={e => updateCurrentPromo("preco", e.target.value)} 
                         placeholder="Ex: 19,90" 
                         className="h-9"
                       />
@@ -357,8 +475,8 @@ export default function PromocoesPage() {
                     <div className="space-y-1.5">
                       <label className="text-[12px] font-semibold text-foreground">Rodapé do Modal (opcional)</label>
                       <Input 
-                        value={config.promocao_rodape} 
-                        onChange={e => setConfig({...config, promocao_rodape: e.target.value})} 
+                        value={config.promocoes[currentPromoIndex]?.rodape || ""} 
+                        onChange={e => updateCurrentPromo("rodape", e.target.value)} 
                         placeholder="Ex: Somente hoje! Válido até às 22h." 
                         className="h-9"
                       />
@@ -370,11 +488,11 @@ export default function PromocoesPage() {
                 <div className="grid grid-cols-2 gap-4 mt-2">
                   <div className="space-y-1.5">
                     <label className="text-[12px] font-semibold text-muted-foreground">Visível A Partir de:</label>
-                    <Input type="datetime-local" value={config.promocao_inicio} onChange={e => setConfig({...config, promocao_inicio: e.target.value})} className="h-9 font-mono" />
+                    <Input type="datetime-local" value={config.promocoes[currentPromoIndex]?.inicio || ""} onChange={e => updateCurrentPromo("inicio", e.target.value)} className="h-9 font-mono" />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-[12px] font-semibold text-muted-foreground">Ocultar Automaticamente Em:</label>
-                    <Input type="datetime-local" value={config.promocao_fim} onChange={e => setConfig({...config, promocao_fim: e.target.value})} className="h-9 font-mono" />
+                    <Input type="datetime-local" value={config.promocoes[currentPromoIndex]?.fim || ""} onChange={e => updateCurrentPromo("fim", e.target.value)} className="h-9 font-mono" />
                   </div>
                 </div>
               </div>

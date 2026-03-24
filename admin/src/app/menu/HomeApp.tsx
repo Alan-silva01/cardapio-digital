@@ -385,6 +385,41 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
 
   const showSearchResults = searchQuery.trim().length >= 2;
 
+  // ── Promo State & Logic ──
+  const [currentPromoIndex, setCurrentPromoIndex] = useState(0);
+
+  // Filter active promotions based on current time
+  const activePromos = useMemo(() => {
+    if (!config?.promocao_ativa || !config?.promocoes || !Array.isArray(config.promocoes)) return [];
+    
+    const now = new Date();
+    return config.promocoes.filter((promo: any) => {
+      if (!promo.imagem_url) return false;
+      const start = promo.inicio ? new Date(promo.inicio) : null;
+      const end = promo.fim ? new Date(promo.fim) : null;
+      return (!start || now >= start) && (!end || now <= end);
+    });
+  }, [config]);
+
+  // Adjust current index if active promos change (e.g., config updates)
+  useEffect(() => {
+    if (activePromos.length > 0 && currentPromoIndex >= activePromos.length) {
+      setCurrentPromoIndex(0);
+    }
+  }, [activePromos, currentPromoIndex]);
+
+
+  const nextPromo = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentPromoIndex((prev) => (prev + 1) % activePromos.length);
+  };
+
+  const prevPromo = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentPromoIndex((prev) => (prev - 1 + activePromos.length) % activePromos.length);
+  };
+
+
   return (
     <div className="home-shell">
       {/* ── Scrollable Content ── */}
@@ -681,7 +716,7 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
 
       {/* ── Promo Modal Overlay ── */}
       <AnimatePresence>
-        {showPromo && config?.promocao_imagem_url && (
+        {showPromo && activePromos.length > 0 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -706,6 +741,13 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ type: 'spring', damping: 20 }}
               onClick={(e) => e.stopPropagation()}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(e, { offset, velocity }) => {
+                if (offset.x > 50 || velocity.x > 200) prevPromo(e as any);
+                else if (offset.x < -50 || velocity.x < -200) nextPromo(e as any);
+              }}
               style={{ 
                 position: 'relative', 
                 maxWidth: '320px', 
@@ -716,11 +758,54 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
               }}
             >
+              {/* Navigation Arrows */}
+              {activePromos.length > 1 && (
+                <>
+                  <button
+                    onClick={prevPromo}
+                    style={{
+                      position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)',
+                      width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.9)',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)', border: 'none', display: 'flex',
+                      alignItems: 'center', justifyContent: 'center', zIndex: 20, cursor: 'pointer'
+                    }}
+                  >
+                    <ChevronRight size={20} style={{ transform: 'rotate(180deg)' }} />
+                  </button>
+                  <button
+                    onClick={nextPromo}
+                    style={{
+                      position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)',
+                      width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.9)',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)', border: 'none', display: 'flex',
+                      alignItems: 'center', justifyContent: 'center', zIndex: 20, cursor: 'pointer'
+                    }}
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                </>
+              )}
+
+              {/* Indicator Dots */}
+              {activePromos.length > 1 && (
+                <div style={{ position: 'absolute', bottom: '16px', left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: '6px', zIndex: 20 }}>
+                  {activePromos.map((_: any, idx: number) => (
+                    <div key={idx} style={{
+                      width: currentPromoIndex === idx ? '18px' : '6px',
+                      height: '6px',
+                      borderRadius: '3px',
+                      background: currentPromoIndex === idx ? '#16a34a' : 'rgba(0,0,0,0.2)',
+                      transition: 'all 0.3s ease'
+                    }} />
+                  ))}
+                </div>
+              )}
+
               {/* ── Title Header ── */}
-              {config.promocao_titulo && (
+              {activePromos[currentPromoIndex]?.titulo && (
                 <div style={{ padding: '18px 24px 0', textAlign: 'center' }}>
                   <h3 style={{ fontSize: '19px', fontWeight: '800', color: '#111827', lineHeight: '1.2', letterSpacing: '-0.3px' }}>
-                    {config.promocao_titulo}
+                    {activePromos[currentPromoIndex].titulo}
                   </h3>
                 </div>
               )}
@@ -728,28 +813,28 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
               {/* ── Image (tapping navigates to product) ── */}
               <div
                 onClick={() => {
-                  if (config.promocao_titulo) {
-                    const term = config.promocao_titulo.replace(/^Promoção:\s*/i, '').trim();
+                  if (activePromos[currentPromoIndex]?.titulo) {
+                    const term = activePromos[currentPromoIndex].titulo.replace(/^Promoção:\s*/i, '').trim();
                     onProductSearch?.(term);
                   }
                   setShowPromo(false);
                 }}
-                style={{ width: '100%', aspectRatio: '1 / 1', background: '#ffffff', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', cursor: config.promocao_titulo ? 'pointer' : 'default' }}
+                style={{ width: '100%', aspectRatio: '1 / 1', background: '#ffffff', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', cursor: activePromos[currentPromoIndex]?.titulo ? 'pointer' : 'default' }}
               >
                 <img
-                  src={config.promocao_imagem_url}
-                  alt={config.promocao_titulo || "Promoção do Dia"}
+                  src={activePromos[currentPromoIndex]?.imagem_url}
+                  alt={activePromos[currentPromoIndex]?.titulo || "Promoção do Dia"}
                   style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                 />
               </div>
 
               {/* ── Price (big typographic, green, no background) ── */}
-              {config.promocao_preco && (() => {
-                const [intPart, centPart] = Number(config.promocao_preco)
+              {activePromos[currentPromoIndex]?.preco && (() => {
+                const [intPart, centPart] = Number(activePromos[currentPromoIndex].preco)
                   .toLocaleString('pt-BR', { minimumFractionDigits: 2 })
                   .split(',');
                 return (
-                  <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', padding: '0 24px 8px', gap: '2px' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', padding: '0 24px 24px', gap: '2px' }}>
                     <span style={{ fontSize: '18px', fontWeight: '900', color: '#16a34a', lineHeight: 1, marginBottom: '6px' }}>R$</span>
                     <span style={{ fontSize: '56px', fontWeight: '900', color: '#16a34a', lineHeight: 1, letterSpacing: '-3px' }}>{intPart}</span>
                     <span style={{ fontSize: '22px', fontWeight: '900', color: '#16a34a', lineHeight: 1, marginBottom: '6px' }}>,{centPart}</span>
@@ -758,10 +843,10 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
               })()}
 
               {/* ── Rodapé ── */}
-              {config.promocao_rodape && (
-                <div style={{ padding: '0 20px 20px', textAlign: 'center' }}>
+              {activePromos[currentPromoIndex]?.rodape && (
+                <div style={{ padding: '0 20px 32px', textAlign: 'center' }}>
                   <p style={{ fontSize: '12px', color: '#6b7280', fontWeight: '600', letterSpacing: '0.2px' }}>
-                    {config.promocao_rodape}
+                    {activePromos[currentPromoIndex].rodape}
                   </p>
                 </div>
               )}
@@ -774,7 +859,7 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
                   width: '32px', height: '32px', borderRadius: '50%',
                   background: 'rgba(0,0,0,0.07)', border: 'none',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', zIndex: 10,
+                  cursor: 'pointer', zIndex: 30,
                 }}
               >
                 <X size={18} color="#111827" />
