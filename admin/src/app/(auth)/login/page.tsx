@@ -58,25 +58,25 @@ export default function LoginPage() {
     return (
         <div className="min-h-screen w-full flex bg-background text-foreground">
             {/* Esquerda: Branding (50%) */}
-            <div className="hidden lg:flex w-1/2 flex-col justify-center items-center relative overflow-hidden">
+            <div className="hidden lg:flex w-1/2 flex-col justify-center items-center relative overflow-hidden bg-[#0A0A0A] text-white">
                 {/* Textura sutil vintage de fundo (opcional/css) */}
                 <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] pointer-events-none" />
 
                 <div className="z-10 text-center flex flex-col items-center">
-                    <div className="bg-black rounded-full w-24 h-24 sm:w-32 sm:h-32 flex items-center justify-center mb-6 overflow-hidden">
+                    <div className="mb-8 overflow-hidden">
                         <Image 
                             src="/images/logo_bar.png" 
                             alt="Logo Seu Manel" 
-                            width={100} 
-                            height={100} 
-                            className="object-contain"
+                            width={280} 
+                            height={280} 
+                            className="object-contain w-48 h-48 sm:w-64 sm:h-64"
                             priority
                         />
                     </div>
-                    <h1 className="text-6xl font-serif font-bold text-foreground tracking-tighter mb-4">
+                    <h1 className="text-6xl font-serif font-bold tracking-tighter mb-4 text-white">
                         SEU MANEL
                     </h1>
-                    <p className="text-sm font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                    <p className="text-sm font-medium uppercase tracking-[0.2em] text-white/70">
                         Painel Administrativo
                     </p>
                 </div>
@@ -85,7 +85,7 @@ export default function LoginPage() {
             {/* Direita: Form (50%) */}
             <div className="w-full lg:w-1/2 flex justify-center items-center bg-card p-8 border-l border-border">
                 <div className="w-full max-w-sm space-y-8">
-                    <div className="text-center lg:text-left space-y-2 flex flex-col items-center lg:items-start">
+                    <div className="text-center space-y-2 flex flex-col items-center">
                         <Image src={logoImg} alt="Logo" className="w-24 h-auto mb-4" priority />
                         <h2 className="text-2xl font-semibold text-foreground tracking-tight">
                             Bem-vindo de volta
