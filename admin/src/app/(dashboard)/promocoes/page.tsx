@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Megaphone, Mic2, Ticket, Upload, Save, Loader2, Image as ImageIcon } from "lucide-react";
+import { Megaphone, Mic2, Ticket, Upload, Save, Loader2, Image as ImageIcon, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { uploadImageAction } from "@/app/actions/upload-image";
 import { toast } from "sonner";
@@ -54,8 +54,36 @@ export default function PromocoesPage() {
     fetchConfig();
   }, []);
 
+  const parsedAtracoes = (() => {
+    if (!config.cantor_nome) return [""];
+    try {
+      const parsed = JSON.parse(config.cantor_nome);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      return [config.cantor_nome];
+    } catch {
+      return [config.cantor_nome];
+    }
+  })();
+
+  const updateAtracao = (index: number, value: string) => {
+    const newAtracoes = [...parsedAtracoes];
+    newAtracoes[index] = value;
+    setConfig({...config, cantor_nome: JSON.stringify(newAtracoes)});
+  };
+
+  const addAtracao = () => {
+    setConfig({...config, cantor_nome: JSON.stringify([...parsedAtracoes, ""])});
+  };
+
+  const removeAtracao = (index: number) => {
+    const newAtracoes = parsedAtracoes.filter((_, i) => i !== index);
+    if (newAtracoes.length === 0) newAtracoes.push(""); // Keep at least one
+    setConfig({...config, cantor_nome: JSON.stringify(newAtracoes)});
+  };
+
   function formatToLocal(isoString: string) {
     if (!isoString) return "";
+
     const date = new Date(isoString);
     date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
     return date.toISOString().slice(0, 16);
@@ -211,14 +239,31 @@ export default function PromocoesPage() {
 
             {config.cantor_ativo && (
               <div className="grid gap-4 mt-4 pt-4 border-t border-border/50">
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold">Texto do Letreiro (O que vai passar escrito na tela?)</label>
-                  <Input
-                    value={config.cantor_nome}
-                    onChange={e => setConfig({...config, cantor_nome: e.target.value})}
-                    placeholder="Ex: 🎤 Atrações de Hoje: Banda X às 19h | DJ Silva às 22h"
-                  />
-                  <p className="text-[11px] text-muted-foreground">Escreva livremente todos os artistas e horários. O texto ficará repetindo em loop contínuo.</p>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold">Atrações (Cantores/Bandas)</label>
+                    <Button variant="outline" size="sm" onClick={addAtracao} className="h-7 text-[11px] px-2 flex items-center gap-1">
+                      <Plus className="h-3 w-3" /> Adicionar
+                    </Button>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    {parsedAtracoes.map((atracao, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <Input
+                          value={atracao}
+                          onChange={e => updateAtracao(index, e.target.value)}
+                          placeholder={`Ex: Atração ${index + 1}`}
+                        />
+                        {parsedAtracoes.length > 1 && (
+                          <Button variant="ghost" size="icon" onClick={() => removeAtracao(index)} className="h-9 w-9 text-muted-foreground hover:text-red-500 shrink-0">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">Adicione quantas atrações quiser. Elas passarão no letreiro uma após a outra, em loop contínuo.</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

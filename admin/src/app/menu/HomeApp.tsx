@@ -428,13 +428,36 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
           const start = config.cantor_inicio ? new Date(config.cantor_inicio) : null;
           const end = config.cantor_fim ? new Date(config.cantor_fim) : null;
           if ((!start || now >= start) && (!end || now <= end)) {
+
+            const baseAtracoes = (() => {
+              try {
+                const parsed = JSON.parse(config.cantor_nome);
+                if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+                return [config.cantor_nome];
+              } catch {
+                return [config.cantor_nome];
+              }
+            })();
+
+            // Create a sequence that is guaranteed to be wider than the screen
+            const repeatCount = Math.max(10, Math.ceil(20 / baseAtracoes.length));
+            const sequence = Array(repeatCount).fill(baseAtracoes).flat();
+
+            const textStyle = {
+              fontSize: '12px',
+              fontWeight: '700',
+              letterSpacing: '1px',
+              color: '#D4AF37',
+              textShadow: '0 0 8px rgba(212,175,55,0.2)',
+              whiteSpace: 'nowrap' as const
+            };
+
             return (
               <div style={{
                 width: '100vw',
                 marginLeft: '-16px', // To stretch across the padding of home-scroll
                 background: 'linear-gradient(90deg, #111 0%, #000 50%, #111 100%)',
                 overflow: 'hidden',
-                whiteSpace: 'nowrap',
                 padding: '10px 0',
                 display: 'flex',
                 alignItems: 'center',
@@ -446,18 +469,28 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
                 marginBottom: '28px', // Compensates for the search bar's negative margin (-24px)
               }}>
                 <style dangerouslySetInnerHTML={{__html: `
-                  @keyframes marqueeHome { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
+                  @keyframes marqueeSeamless { 
+                    0% { transform: translateX(0%); } 
+                    100% { transform: translateX(-50%); } 
+                  }
                 `}} />
                 <div style={{
-                  display: 'inline-block',
-                  fontSize: '12px',
-                  fontWeight: '700',
-                  letterSpacing: '1px',
-                  color: '#D4AF37',
-                  animation: 'marqueeHome 18s linear infinite',
-                  textShadow: '0 0 8px rgba(212,175,55,0.2)',
+                  display: 'flex',
+                  width: 'max-content',
+                  animation: 'marqueeSeamless 40s linear infinite',
                 }}>
-                  🎤 {config.cantor_nome}
+                  {/* First Half */}
+                  <div style={{ display: 'flex', gap: '40px', paddingRight: '40px' }}>
+                    {sequence.map((atracao, i) => (
+                      <span key={`a-${i}`} style={textStyle}>🎤 {atracao}</span>
+                    ))}
+                  </div>
+                  {/* Second Half (Exact duplicate for seamless loop) */}
+                  <div style={{ display: 'flex', gap: '40px', paddingRight: '40px' }} aria-hidden="true">
+                    {sequence.map((atracao, i) => (
+                      <span key={`b-${i}`} style={textStyle}>🎤 {atracao}</span>
+                    ))}
+                  </div>
                 </div>
               </div>
             );
