@@ -716,51 +716,75 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
               }}
             >
-              {/* Image Container with White Background */}
-              <div style={{ width: '100%', aspectRatio: '1 / 1', background: '#ffffff', padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {/* ── Title Header ── */}
+              {config.promocao_titulo && (
+                <div style={{
+                  padding: '18px 24px 0',
+                  textAlign: 'center',
+                }}>
+                  <h3 style={{ 
+                    fontSize: '20px', 
+                    fontWeight: '800', 
+                    color: '#111827',
+                    lineHeight: '1.2',
+                    letterSpacing: '-0.3px'
+                  }}>
+                    {config.promocao_titulo}
+                  </h3>
+                </div>
+              )}
+
+              {/* ── Image Area ── */}
+              <div style={{ width: '100%', aspectRatio: '1 / 1', background: '#ffffff', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                 <img
                   src={config.promocao_imagem_url}
                   alt={config.promocao_titulo || "Promoção do Dia"}
                   style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                 />
-              </div>
-              
-              {/* Details Section */}
-              {(config.promocao_titulo || config.promocao_preco) && (
-                <div style={{ 
-                  padding: '0 24px 28px', 
-                  textAlign: 'center',
-                  background: 'linear-gradient(to bottom, #ffffff, #f9fafb)'
+
+                {/* ── Diagonal Stamp ── */}
+                <div style={{
+                  position: 'absolute',
+                  top: '22px',
+                  left: '-18px',
+                  background: 'linear-gradient(135deg, #16a34a, #15803d)',
+                  color: '#ffffff',
+                  fontSize: '10px',
+                  fontWeight: '900',
+                  letterSpacing: '0.5px',
+                  textTransform: 'uppercase',
+                  padding: '6px 28px',
+                  transform: 'rotate(-35deg)',
+                  boxShadow: '0 2px 8px rgba(22,163,74,0.4)',
+                  whiteSpace: 'nowrap',
                 }}>
-                  {config.promocao_titulo && (
-                    <h3 style={{ 
-                      fontSize: '22px', 
-                      fontWeight: '800', 
-                      color: '#111827',
-                      marginBottom: '8px',
-                      lineHeight: '1.2'
-                    }}>
-                      {config.promocao_titulo}
-                    </h3>
-                  )}
-                  {config.promocao_preco && (
-                    <div style={{
-                      display: 'inline-block',
-                      background: '#fee2e2',
-                      color: '#b91c1c',
-                      padding: '8px 16px',
-                      borderRadius: '100px',
-                      fontSize: '20px',
-                      fontWeight: '900',
-                      letterSpacing: '-0.5px'
-                    }}>
-                      R$ {Number(config.promocao_preco).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </div>
-                  )}
+                  🏷️ Promoção de Hoje
+                </div>
+              </div>
+
+              {/* ── Price Badge (bottom-right) ── */}
+              {config.promocao_preco && (
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  padding: '0 20px 22px',
+                }}>
+                  <div style={{
+                    background: 'linear-gradient(135deg, #16a34a, #15803d)',
+                    color: '#fff',
+                    padding: '10px 20px',
+                    borderRadius: '100px',
+                    fontSize: '22px',
+                    fontWeight: '900',
+                    letterSpacing: '-0.5px',
+                    boxShadow: '0 4px 16px rgba(22,163,74,0.35)',
+                  }}>
+                    R$ {Number(config.promocao_preco).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  </div>
                 </div>
               )}
 
-              {/* Close Button */}
+              {/* ── Close Button ── */}
               <button
                 onClick={() => setShowPromo(false)}
                 style={{
@@ -770,13 +794,14 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
                   width: '32px',
                   height: '32px',
                   borderRadius: '50%',
-                  background: 'rgba(0,0,0,0.05)',
+                  background: 'rgba(0,0,0,0.07)',
                   border: 'none',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
                   transition: 'background 0.2s',
+                  zIndex: 10,
                 }}
               >
                 <X size={18} color="#111827" />
