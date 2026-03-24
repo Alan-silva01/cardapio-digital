@@ -213,19 +213,45 @@ export default function PedidosPage() {
   });
   const [mesasStatus, setMesasStatus] = useState<Record<number, { garcom: boolean, conta: boolean }>>({});
   const [searchQuery, setSearchQuery] = useState("");
+  const [dateFilter, setDateFilter] = useState<'hoje' | 'ontem' | '7dias'>("hoje");
   const [serviceModal, setServiceModal] = useState<{ mesa: number, type: 'garcom' | 'conta' } | null>(null);
   const { playSound, enabled: soundEnabled, toggleSound } = useNotificationSound();
   const [selectedComanda, setSelectedComanda] = useState<ComandaAgrupada | null>(null);
 
   const fetchPedidos = useCallback(async () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const now = new Date();
 
-    const { data, error } = await supabase
+    let startDate: Date;
+    let endDate: Date | null = null;
+
+    if (dateFilter === 'hoje') {
+      startDate = new Date(now);
+      startDate.setHours(0, 0, 0, 0);
+    } else if (dateFilter === 'ontem') {
+      startDate = new Date(now);
+      startDate.setDate(startDate.getDate() - 1);
+      startDate.setHours(0, 0, 0, 0);
+      endDate = new Date(now);
+      endDate.setDate(endDate.getDate() - 1);
+      endDate.setHours(23, 59, 59, 999);
+    } else {
+      // 7 dias
+      startDate = new Date(now);
+      startDate.setDate(startDate.getDate() - 6);
+      startDate.setHours(0, 0, 0, 0);
+    }
+
+    let query = supabase
       .from("pedidos")
       .select("id, comanda_id, order_number, order_id, numero_mesa, nome_pessoa, status, total, criado_em, forma_pagamento, itens_pedido (id, quantidade, nome_produto, nome_variacao, servido, preco_unitario, preco_total, observacao, produtos (imagem_url))")
-      .gte("criado_em", today.toISOString())
+      .gte("criado_em", startDate.toISOString())
       .order("criado_em", { ascending: true });
+
+    if (endDate) {
+      query = query.lte("criado_em", endDate.toISOString());
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error("Erro ao buscar pedidos:", error);
@@ -267,7 +293,7 @@ export default function PedidosPage() {
     }
 
     setLoading(false);
-  }, []);
+  }, [dateFilter]);
 
   // Initial fetch
   useEffect(() => {
@@ -908,9 +934,30 @@ export default function PedidosPage() {
           <span className="text-foreground font-semibold">Kanban Live</span>
           {totalComandas > 0 && (
             <Badge variant="outline" className="ml-2 bg-muted border-none text-muted-foreground px-1.5 h-5 text-[10px]">
-              {totalComandas} {searchQuery.trim() ? "encontrados" : "hoje"}
+              {totalComandas} {searchQuery.trim() ? "encontrados" : dateFilter === 'hoje' ? 'hoje' : dateFilter === 'ontem' ? 'ontem' : '7 dias'}
             </Badge>
           )}
+        </div>
+
+        {/* DATE FILTER PILLS */}
+        <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-1">
+          {([
+            { key: 'hoje', label: 'Hoje' },
+            { key: 'ontem', label: 'Ontem' },
+            { key: '7dias', label: '7 Dias' },
+          ] as const).map((f) => (
+            <button
+              key={f.key}
+              onClick={() => setDateFilter(f.key)}
+              className={`px-3 h-6 rounded-md text-[11px] font-medium transition-all ${
+                dateFilter === f.key
+                  ? 'bg-card text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
         </div>
         <div className="flex items-center gap-4">
           {/* SEARCH BAR */}
