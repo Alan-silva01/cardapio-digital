@@ -666,7 +666,6 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                 supabase.from('categorias').select('id, nome, icone').eq('ativo', true),
                 supabase.from('produtos')
                     .select('id, categoria_id, nome, slug, descricao, imagem_url, disponivel, ordem, pais_origem, volume_ml, teor_alcolico, serve_pessoas, rating, curtidas, tipo_vinho, ml_taca, subcategoria')
-                    .eq('disponivel', true)
                     .order('ordem', { ascending: true }),
                 supabase.from('variacoes_produto').select('*').eq('ativo', true).order('ordem', { ascending: true }),
                 supabase.from('tipos_vinho').select('tipo, imagem_taca_url'),
