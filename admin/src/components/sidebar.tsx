@@ -75,36 +75,36 @@ export function Sidebar() {
                 const isActive = pathname === item.href;
                 const Icon = item.icon;
                 return (
-                    <div key={item.href} className="relative w-full group flex items-center h-10">
+                    <div key={item.href} className="relative w-full group flex items-center h-8">
                         {/* Active Indicator - Stationary on the left edge */}
                         {isActive && (
-                            <div className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-[2px] bg-[#ff5e1e] rounded-r-full z-20" />
+                            <div className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-[1.5px] bg-[#ff5e1e] rounded-r-full z-20" />
                         )}
 
                         <Link
                             href={item.href}
                             onClick={(e) => e.stopPropagation()}
                             className={cn(
-                                "flex items-center rounded-md transition-colors duration-200 overflow-hidden mx-3 h-10 w-full",
+                                "flex items-center rounded-md transition-colors duration-200 overflow-hidden mx-2 h-8 w-full",
                                 isActive
                                     ? "bg-sidebar-accent text-sidebar-accent-foreground"
                                     : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                             )}
                         >
-                            {/* Icon Container - Always 40px and centered to stay stationary */}
-                            <div className="w-10 h-10 shrink-0 flex items-center justify-center transition-transform duration-200">
+                            {/* Icon Container - Always 32px and centered to stay stationary */}
+                            <div className="w-8 h-8 shrink-0 flex items-center justify-center transition-transform duration-200">
                                 <Icon
                                     className={cn(
-                                        "h-[20px] w-[20px]",
+                                        "h-[18px] w-[18px]",
                                         !isExpanded && "group-hover:scale-105"
                                     )}
-                                    strokeWidth={1.5}
+                                    strokeWidth={1.2}
                                 />
                             </div>
 
                             {/* Label - Only transitions in opacity and width, no horizontal movement for the icon */}
                             <span className={cn(
-                                "text-[14px] font-medium whitespace-nowrap transition-all duration-300 ease-out pl-2",
+                                "text-[13px] font-medium whitespace-nowrap transition-all duration-300 ease-out pl-2",
                                 isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2 pointer-events-none w-0"
                             )}>
                                 {item.label}
@@ -118,10 +118,10 @@ export function Sidebar() {
 
     return (
         <>
-            {/* Spacer - Only pushes content when PINNED, stays 64px on hover */}
+            {/* Spacer - Only pushes content when PINNED, stays 48px on hover */}
             <div className={cn(
                 "hidden sm:block flex-shrink-0 transition-all duration-300 ease-out",
-                isPinned ? "w-[260px]" : "w-[64px]"
+                isPinned ? "w-48" : "w-[48px]"
             )} />
 
             <aside
@@ -129,8 +129,9 @@ export function Sidebar() {
                 onMouseLeave={() => setIsHovered(false)}
                 onClick={() => setIsPinned(!isPinned)}
                 className={cn(
-                    "fixed inset-y-0 left-0 z-40 mt-11 flex flex-col border-r bg-sidebar border-sidebar-border transition-all duration-300 ease-out shadow-2xl overflow-hidden cursor-pointer",
-                    isExpanded ? "w-[260px] shadow-[10px_0_30px_-10px_rgba(0,0,0,0.5)]" : "w-[64px]"
+                    "fixed inset-y-0 left-0 z-40 mt-11 flex flex-col border-r bg-sidebar border-sidebar-border transition-all duration-300 ease-out overflow-hidden cursor-pointer",
+                    isExpanded ? "w-48" : "w-[48px]",
+                    !isPinned && isHovered ? "shadow-[10px_0_30px_-10px_rgba(0,0,0,0.5)]" : "shadow-none"
                 )}
             >
                 {/* Nav Links */}
@@ -141,7 +142,7 @@ export function Sidebar() {
                         {navigationGroups.map((group) => (
                             <div key={group.label} className="w-full mb-6 cursor-default">
                                 <h3 className={cn(
-                                    "px-5 text-[11px] font-bold text-sidebar-foreground/70 tracking-widest transition-all duration-300 ease-out uppercase mb-2",
+                                    "px-4 text-[10px] font-bold text-sidebar-foreground/70 tracking-widest transition-all duration-300 ease-out uppercase mb-2",
                                     isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2"
                                 )}>
                                     {group.label}
@@ -153,7 +154,7 @@ export function Sidebar() {
                 </ScrollArea>
 
                 {/* Footer */}
-                <div className="flex flex-col gap-1 border-t border-sidebar-border p-2 bg-sidebar cursor-default">
+                <div className="flex flex-col gap-1 border-t border-sidebar-border p-1 bg-sidebar cursor-default">
                     {/* Pin Menu */}
                     <button
                         onClick={(e) => {
@@ -161,14 +162,14 @@ export function Sidebar() {
                             setIsPinned(!isPinned);
                         }}
                         className={cn(
-                            "flex h-10 items-center rounded-md hover:bg-sidebar-accent transition-colors text-sidebar-foreground hover:text-sidebar-accent-foreground mx-2 cursor-pointer",
+                            "flex h-8 items-center rounded-md hover:bg-sidebar-accent transition-colors text-sidebar-foreground hover:text-sidebar-accent-foreground mx-2 cursor-pointer",
                         )}
                     >
-                        <div className="w-10 h-10 shrink-0 flex items-center justify-center">
-                            {isPinned ? <PinOff className="h-5 w-5" /> : <Pin className="h-5 w-5" />}
+                        <div className="w-8 h-8 shrink-0 flex items-center justify-center">
+                            {isPinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
                         </div>
                         <span className={cn(
-                            "text-[13px] font-medium whitespace-nowrap transition-all duration-300 ease-out pl-2",
+                            "text-[12px] font-medium whitespace-nowrap transition-all duration-300 ease-out pl-2",
                             isExpanded ? "opacity-100" : "opacity-0 w-0"
                         )}>
                             {isPinned ? "Desafixar Menu" : "Fixar Menu"}
@@ -177,15 +178,15 @@ export function Sidebar() {
 
                     {/* Admin Status */}
                     <div className={cn(
-                        "flex h-10 items-center transition-all duration-300 mx-2",
+                        "flex h-8 items-center transition-all duration-300 mx-2",
                     )}>
-                        <div className="w-10 h-10 shrink-0 flex items-center justify-center">
-                            <Avatar className="h-7 w-7 border border-sidebar-border">
-                                <AvatarFallback className="bg-sidebar-accent text-sidebar-foreground text-[10px]">AD</AvatarFallback>
+                        <div className="w-8 h-8 shrink-0 flex items-center justify-center">
+                            <Avatar className="h-5 w-5 border border-sidebar-border">
+                                <AvatarFallback className="bg-sidebar-accent text-sidebar-foreground text-[8px]">AD</AvatarFallback>
                             </Avatar>
                         </div>
                         <span className={cn(
-                            "text-[13px] text-sidebar-foreground font-medium pl-2 transition-all duration-300",
+                            "text-[11px] text-sidebar-foreground font-medium pl-2 transition-all duration-300",
                             isExpanded ? "opacity-100" : "opacity-0 w-0"
                         )}>
                             Admin v0.1
