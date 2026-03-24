@@ -662,7 +662,10 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                 { data: wineData, error: wineError }
             ] = await Promise.all([
                 supabase.from('categorias').select('id, nome, icone').eq('ativo', true),
-                supabase.from('produtos').select('*').order('ordem', { ascending: true }),
+                supabase.from('produtos')
+                    .select('id, categoria_id, nome, slug, descricao, imagem_url, disponivel, ordem, pais_origem, volume_ml, teor_alcolico, serve_pessoas, rating, curtidas, tipo_vinho, ml_taca, subcategoria')
+                    .eq('disponivel', true)
+                    .order('ordem', { ascending: true }),
                 supabase.from('variacoes_produto').select('*').eq('ativo', true).order('ordem', { ascending: true }),
                 supabase.from('tipos_vinho').select('tipo, imagem_taca_url')
             ]);
@@ -846,17 +849,24 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
         setIsFiltering(false);
     }, [filterCategories, filterSubcategoria, searchProductName]);
 
-    // Realtime subscriptions: auto-refresh on any DB change
+    // Realtime subscriptions: auto-refresh on any DB change (debounced to avoid cascading re-fetches)
     useEffect(() => {
+        let debounceTimer: NodeJS.Timeout | null = null;
+        const debouncedFetch = () => {
+            if (debounceTimer) clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => fetchMenu(), 2000);
+        };
+
         const channel = supabase
             .channel('menu-changes')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'produtos' }, () => fetchMenu())
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'variacoes_produto' }, () => fetchMenu())
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'categorias' }, () => fetchMenu())
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'tipos_vinho' }, () => fetchMenu())
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'produtos' }, debouncedFetch)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'variacoes_produto' }, debouncedFetch)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'categorias' }, debouncedFetch)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'tipos_vinho' }, debouncedFetch)
             .subscribe();
 
         return () => {
+            if (debounceTimer) clearTimeout(debounceTimer);
             supabase.removeChannel(channel);
         };
     }, [fetchMenu]);

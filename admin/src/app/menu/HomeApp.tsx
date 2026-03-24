@@ -203,7 +203,7 @@ const HERO_IMAGES = [
 ];
 
 const heroUrl = (id: string) =>
-  `https://res.cloudinary.com/dvhkcemd0/image/upload/f_auto,q_auto:good,w_800/${id}.png`;
+  `https://res.cloudinary.com/dvhkcemd0/image/upload/f_auto,q_auto:good,w_600/${id}.png`;
 
 function shuffleArray<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -235,13 +235,11 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
     return () => clearInterval(timer);
   }, [shuffledImages.length]);
 
-  // Preload next 2 images for seamless transitions
+  // Preload only next image for seamless transition (saves bandwidth)
   useEffect(() => {
-    for (let offset = 1; offset <= 2; offset++) {
-      const nextIdx = (currentSlide + offset) % shuffledImages.length;
-      const img = new Image();
-      img.src = heroUrl(shuffledImages[nextIdx]);
-    }
+    const nextIdx = (currentSlide + 1) % shuffledImages.length;
+    const img = new Image();
+    img.src = heroUrl(shuffledImages[nextIdx]);
   }, [currentSlide, shuffledImages]);
 
   // Read cart from localStorage
@@ -367,19 +365,29 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
     <div className="home-shell">
       {/* ── Scrollable Content ── */}
       <div className="home-scroll">
-        {/* ── Hero Fullscreen Slideshow ── */}
+        {/* ── Hero Fullscreen Slideshow (virtualized: only 3 slides in DOM) ── */}
         <div className="home-hero-carousel" id="home-hero-carousel">
-          {shuffledImages.map((id, i) => (
-            <img
-              key={id}
-              src={heroUrl(id)}
-              alt=""
-              className={`home-hero-slide${i === currentSlide ? " home-hero-slide--active" : ""}`}
-              loading={i < 3 ? "eager" : "lazy"}
-              decoding={i < 3 ? "sync" : "async"}
-              fetchPriority={i === 0 ? "high" : "low"}
-            />
-          ))}
+          {(() => {
+            const len = shuffledImages.length;
+            const prevIdx = (currentSlide - 1 + len) % len;
+            const nextIdx = (currentSlide + 1) % len;
+            const visibleSlides = [
+              { idx: prevIdx, id: shuffledImages[prevIdx] },
+              { idx: currentSlide, id: shuffledImages[currentSlide] },
+              { idx: nextIdx, id: shuffledImages[nextIdx] },
+            ];
+            return visibleSlides.map(({ idx, id }) => (
+              <img
+                key={id}
+                src={heroUrl(id)}
+                alt=""
+                className={`home-hero-slide${idx === currentSlide ? " home-hero-slide--active" : ""}`}
+                loading="eager"
+                decoding="async"
+                fetchPriority={idx === currentSlide ? "high" : "low"}
+              />
+            ));
+          })()}
           <div className="home-hero-overlay" />
           <div className="home-hero-content">
             <img
