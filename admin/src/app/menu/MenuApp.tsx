@@ -1,5 +1,5 @@
+// @ts-nocheck
 "use client";
-// @ts-nocheck — Direct port from JSX; types can be added incrementally
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { countryFlags } from "@/lib/countryFlags";
 import { motion, AnimatePresence } from 'framer-motion';
@@ -1642,11 +1642,11 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                                 endX: cartRect.left + cartRect.width / 2,
                                                 endY: cartRect.top + cartRect.height / 2
                                             }]);
+                                            setCart(prev => ({
+                                                ...prev,
+                                                [selectedVariation ? `${currentProduct.id}-${selectedVariation}` : currentProduct.id]: (prev[selectedVariation ? `${currentProduct.id}-${selectedVariation}` : currentProduct.id] || 0) + addQty
+                                            }));
                                             setTimeout(() => {
-                                                setCart(prev => ({
-                                                    ...prev,
-                                                    [selectedVariation ? `${currentProduct.id}-${selectedVariation}` : currentProduct.id]: (prev[selectedVariation ? `${currentProduct.id}-${selectedVariation}` : currentProduct.id] || 0) + addQty
-                                                }));
                                                 setFlyingItems(prev => prev.filter(f => f.id !== id));
                                             }, 600);
                                         } else {

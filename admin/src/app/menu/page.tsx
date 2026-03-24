@@ -22,7 +22,7 @@ const HomeApp = dynamic(() => import("./HomeApp"), {
   ),
 });
 
-const MenuApp = dynamic(() => import("./MenuApp"), {
+const MenuApp = dynamic<any>(() => import("./MenuApp"), {
   ssr: false,
 });
 
