@@ -458,7 +458,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                 const hasVariation = key.includes('-');
                 const pid = hasVariation ? key.split('-')[0] : key;
                 const varName = hasVariation ? key.split('-').slice(1).join('-') : null;
-                const pModel = products.find(p => p.id === pid);
+                const pModel = allProductsRef.current.find(p => p.id === pid);
 
                 if (pModel) {
                     let currentPrice = pModel.price;
@@ -1819,7 +1819,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                                 pid = parts[0];
                                                 varName = parts.slice(1).join('-');
                                             }
-                                            const pModel = products.find(p => p.id === pid);
+                                            const pModel = allProductsRef.current.find(p => p.id === pid);
                                             if (!pModel) return null;
 
                                             let itemPrice = pModel.price;
@@ -2014,7 +2014,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                                     const hasVariation = key.includes('-');
                                                     const pid = hasVariation ? key.split('-')[0] : key;
                                                     const varName = hasVariation ? key.split('-').slice(1).join('-') : null;
-                                                    const pModel = products.find(p => p.id === pid);
+                                                    const pModel = allProductsRef.current.find(p => p.id === pid);
                                                     if (!pModel) return sum;
                                                     let currentPrice = pModel.price;
                                                     if (hasVariation && pModel.variations && pModel.variations[varName]) {
