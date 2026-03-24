@@ -27,10 +27,11 @@ export async function updateSession(request: NextRequest) {
     // NEVER remove this — it keeps sessions alive.
     const { data: { user } } = await supabase.auth.getUser()
 
-    // Not authenticated → redirect to /login (except /login, /auth, and /menu routes)
+    // Not authenticated → redirect to /login (except /login, /register, /auth, and /menu routes)
     if (
         !user &&
         !request.nextUrl.pathname.startsWith('/login') &&
+        !request.nextUrl.pathname.startsWith('/register') &&
         !request.nextUrl.pathname.startsWith('/auth') &&
         !request.nextUrl.pathname.startsWith('/menu')
     ) {
@@ -39,8 +40,8 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(url)
     }
 
-    // Authenticated but accessing /login → redirect to dashboard
-    if (user && request.nextUrl.pathname.startsWith('/login')) {
+    // Authenticated but accessing /login or /register → redirect to dashboard
+    if (user && (request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/register'))) {
         const url = request.nextUrl.clone()
         url.pathname = '/'
         return NextResponse.redirect(url)

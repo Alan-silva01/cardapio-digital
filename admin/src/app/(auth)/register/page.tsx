@@ -40,6 +40,9 @@ export default function RegisterPage() {
 
             if (authError) throw authError;
 
+            // Destroy auto-created session because the user lacks the 'cargo' approval
+            await supabase.auth.signOut();
+
             // Show success message informing user to wait for admin approval
             setSuccess(true);
         } catch (err: any) {
