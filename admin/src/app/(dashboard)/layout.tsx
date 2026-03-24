@@ -1,5 +1,5 @@
 import { Sidebar } from "@/components/sidebar";
-import { ChevronRight, Search, HelpCircle } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -47,13 +47,7 @@ export default function DashboardLayout({
                     </div>
 
                     <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                            <Search className="h-4 w-4" />
-                        </Button>
                         <NotificationBell />
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                            <HelpCircle className="h-4 w-4" />
-                        </Button>
                         <div className="h-4 w-[1px] bg-border mx-1" />
                         <Avatar className="h-6 w-6 border">
                             <AvatarFallback className="bg-muted text-muted-foreground text-[8px]">AD</AvatarFallback>

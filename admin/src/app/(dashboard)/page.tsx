@@ -274,7 +274,7 @@ export default function DashboardPage() {
             <div className="flex flex-col gap-4 shrink-0">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-xl font-semibold tracking-tight">Dashboard General</h1>
+                        <h1 className="text-xl font-semibold tracking-tight">Dashboard Geral</h1>
                         <p className="text-sm text-muted-foreground">Visão geral da operação hoje</p>
                     </div>
                     <div className="flex items-center gap-2">
