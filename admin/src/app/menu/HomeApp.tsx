@@ -477,18 +477,18 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
                 <div style={{
                   display: 'flex',
                   width: 'max-content',
-                  animation: 'marqueeSeamless 40s linear infinite',
+                  animation: 'marqueeSeamless 80s linear infinite',
                 }}>
                   {/* First Half */}
                   <div style={{ display: 'flex', gap: '40px', paddingRight: '40px' }}>
                     {sequence.map((atracao, i) => (
-                      <span key={`a-${i}`} style={textStyle}>🎤 {atracao}</span>
+                      <span key={`a-${i}`} style={textStyle}>{atracao}</span>
                     ))}
                   </div>
                   {/* Second Half (Exact duplicate for seamless loop) */}
                   <div style={{ display: 'flex', gap: '40px', paddingRight: '40px' }} aria-hidden="true">
                     {sequence.map((atracao, i) => (
-                      <span key={`b-${i}`} style={textStyle}>🎤 {atracao}</span>
+                      <span key={`b-${i}`} style={textStyle}>{atracao}</span>
                     ))}
                   </div>
                 </div>
