@@ -103,7 +103,7 @@ export default function PromocoesPage() {
 
       const { data: prods } = await supabase
         .from("produtos")
-        .select("id, nome, descricao, imagem_url, categorias(nome)")
+        .select("id, nome, subcategoria, imagem_url, categorias(nome)")
         .order("nome");
       if (prods) setProdutos(prods);
 
@@ -406,7 +406,7 @@ export default function PromocoesPage() {
                         const q = productSearch.trim().toLowerCase();
                         const filtered = produtos.filter(p =>
                           (p.nome || '').toLowerCase().includes(q) ||
-                          (p.descricao || '').toLowerCase().includes(q) ||
+                          (p.subcategoria || '').toLowerCase().includes(q) ||
                           (p.categorias?.nome || '').toLowerCase().includes(q)
                         );
                         return filtered.length > 0 ? (
@@ -435,7 +435,7 @@ export default function PromocoesPage() {
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm font-semibold text-foreground truncate">{p.nome}</p>
                                   <p className="text-xs text-muted-foreground truncate">
-                                    {p.categorias?.nome || 'Produto'} {p.descricao ? `• ${p.descricao}` : ''}
+                                    {p.categorias?.nome || 'Produto'} {p.subcategoria ? `• ${p.subcategoria}` : ''}
                                   </p>
                                 </div>
                               </button>
