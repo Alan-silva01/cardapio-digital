@@ -29,11 +29,11 @@ export default function RegisterPage() {
 
         try {
             const { error: authError } = await supabase.auth.signUp({
-                email,
+                email: email.trim(),
                 password,
                 options: {
                     data: {
-                        name: name,
+                        name: name.trim(),
                     }
                 }
             });
