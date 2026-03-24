@@ -1,11 +1,12 @@
 import { Sidebar } from "@/components/sidebar";
-import { ChevronRight, Bell, Search, HelpCircle } from "lucide-react";
+import { ChevronRight, Search, HelpCircle } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import logoImage from "@/assets/images/logo.png";
 import { GlobalOrderNotifier } from "@/components/global-order-notifier";
 import { GlobalServiceNotifier } from "@/components/global-service-notifier";
+import { NotificationBell } from "@/components/notification-bell";
 import { Toaster } from "sonner";
 
 export default function DashboardLayout({
@@ -49,9 +50,7 @@ export default function DashboardLayout({
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                             <Search className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                            <Bell className="h-4 w-4" />
-                        </Button>
+                        <NotificationBell />
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                             <HelpCircle className="h-4 w-4" />
                         </Button>
