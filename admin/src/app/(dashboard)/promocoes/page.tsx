@@ -23,8 +23,8 @@ export default function PromocoesPage() {
     cantor_nome: "",
     cantor_inicio: "",
     cantor_fim: "",
-    cover_ativo: false,
-    cover_valor: 10.0,
+    couvert_ativo: false,
+    couvert_valor: 10.0,
   });
 
   useEffect(() => {
@@ -45,8 +45,8 @@ export default function PromocoesPage() {
           cantor_nome: data.cantor_nome || "",
           cantor_inicio: data.cantor_inicio ? formatToLocal(data.cantor_inicio) : "",
           cantor_fim: data.cantor_fim ? formatToLocal(data.cantor_fim) : "",
-          cover_ativo: data.cover_ativo || false,
-          cover_valor: data.valor_couvert || 10.0,
+          couvert_ativo: data.couvert_ativo || false,
+          couvert_valor: data.valor_couvert || 10.0,
         });
       }
       setLoading(false);
@@ -95,8 +95,8 @@ export default function PromocoesPage() {
       cantor_nome: config.cantor_nome,
       cantor_inicio: config.cantor_inicio ? new Date(config.cantor_inicio).toISOString() : null,
       cantor_fim: config.cantor_fim ? new Date(config.cantor_fim).toISOString() : null,
-      cover_ativo: config.cover_ativo,
-      valor_couvert: config.cover_valor,
+      couvert_ativo: config.couvert_ativo,
+      valor_couvert: config.couvert_valor,
     };
 
     const { error } = await supabase
@@ -250,18 +250,18 @@ export default function PromocoesPage() {
                   Quando ativo, o caixa poderá lançar o couvert diretamente em qualquer comanda, definindo a quantidade de pessoas.
                 </p>
               </div>
-              <Switch checked={config.cover_ativo} onCheckedChange={(v: boolean) => setConfig({ ...config, cover_ativo: v })} />
+              <Switch checked={config.couvert_ativo} onCheckedChange={(v: boolean) => setConfig({ ...config, couvert_ativo: v })} />
             </div>
 
-            {config.cover_ativo && (
+            {config.couvert_ativo && (
               <div className="mt-4 pt-4 border-t border-border/50 max-w-xs space-y-2">
                 <label className="text-xs font-semibold">Valor por Pessoa (R$)</label>
                 <Input
                   type="number"
                   min={0}
                   step={0.5}
-                  value={config.cover_valor}
-                  onChange={e => setConfig({...config, cover_valor: parseFloat(e.target.value) || 0})}
+                  value={config.couvert_valor}
+                  onChange={e => setConfig({...config, couvert_valor: parseFloat(e.target.value) || 0})}
                   className="h-9 font-mono"
                   placeholder="Ex: 15.00"
                 />
