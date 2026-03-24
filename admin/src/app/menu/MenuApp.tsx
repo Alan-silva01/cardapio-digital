@@ -1321,25 +1321,40 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
 
                             setHeartParticles(prev => [...prev, ...newParticles]);
 
-                            // Optmistic UI Update: Fill the heart immediately while DB processes
-                            setProducts(prevProducts => prevProducts.map(p =>
-                                p.id === currentProduct.id
-                                    ? { ...p, curtidas: (p.curtidas || 0) + 1 }
-                                    : p
-                            ));
+                            // Calculate session-based local liked state
+                            const sessionLikedKey = '@Menu-Session-Liked';
+                            const likedItems = JSON.parse(sessionStorage.getItem(sessionLikedKey) || '[]');
+                            const isAlreadyLikedInSession = likedItems.includes(currentProduct.id);
 
-                            try {
-                                await supabase.rpc('increment_likes', { product_id: currentProduct.id });
-                                // Keep fetchMenu running in background to sync true state invisibly
-                                fetchMenu();
-                            } catch (err) {
-                                console.error("Error liking product:", err);
-                                // Revert optimistic update on failure
+                            if (!isAlreadyLikedInSession) {
+                                // Add to session storage so it stays red only for this session/day
+                                likedItems.push(currentProduct.id);
+                                sessionStorage.setItem(sessionLikedKey, JSON.stringify(likedItems));
+
+                                // Optmistic UI Update: Fill the heart immediately while DB processes
                                 setProducts(prevProducts => prevProducts.map(p =>
                                     p.id === currentProduct.id
-                                        ? { ...p, curtidas: Math.max(0, (p.curtidas || 1) - 1) }
+                                        ? { ...p, curtidas: (p.curtidas || 0) + 1 }
                                         : p
                                 ));
+
+                                try {
+                                    await supabase.rpc('increment_likes', { product_id: currentProduct.id });
+                                    // Keep fetchMenu running in background to sync true state invisibly
+                                    fetchMenu();
+                                } catch (err) {
+                                    console.error("Error liking product:", err);
+                                    // Revert optimistic update on failure
+                                    setProducts(prevProducts => prevProducts.map(p =>
+                                        p.id === currentProduct.id
+                                            ? { ...p, curtidas: Math.max(0, (p.curtidas || 1) - 1) }
+                                            : p
+                                    ));
+                                    
+                                    // Remove from session local storage on fail
+                                    const filtered = likedItems.filter(id => id !== currentProduct.id);
+                                    sessionStorage.setItem(sessionLikedKey, JSON.stringify(filtered));
+                                }
                             }
                         }}
                         style={{ background: 'none', border: 'none', padding: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
@@ -1347,7 +1362,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                         <Heart
                             size={22}
                             color="#444"
-                            fill={currentProduct.curtidas > 0 ? "#444" : "transparent"}
+                            fill={typeof window !== 'undefined' && JSON.parse(sessionStorage.getItem('@Menu-Session-Liked') || '[]').includes(currentProduct.id) ? "#444" : "transparent"}
                             style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}
                         />
                     </button>
@@ -1770,10 +1785,44 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                             <h4 className="upsell-title">Que tal adicionar?</h4>
                                             <div className="upsell-scroll">
                                                 <div className="upsell-marquee">
-                                                    {products
-                                                        .filter(p => !cart[p.id] && !Object.keys(cart).some(k => k.startsWith(p.id)) && p.id !== currentProduct?.id)
-                                                        .slice(0, 5)
-                                                        .map(p => (
+                                                    {(() => {
+                                                        const availableForUpsell = allProductsRef.current.filter(p => !cart[p.id] && !Object.keys(cart).some(k => k.startsWith(p.id)) && p.id !== currentProduct?.id);
+                                                        
+                                                        // Sort raw list mostly by likes, but not completely to allow interleaving
+                                                        const sortedByLikes = [...availableForUpsell].sort((a, b) => (b.curtidas || 0) - (a.curtidas || 0));
+                                                        
+                                                        // Interleaving approach: we want an alternating pattern of categories
+                                                        // like: Petisco -> Drink -> Cerveja/Combo -> Pastel -> repeat
+                                                        
+                                                        const interleaved = [];
+                                                        const grouped = {
+                                                            petiscos: sortedByLikes.filter(p => p.category === 'Petiscos'),
+                                                            drinks: sortedByLikes.filter(p => p.category === 'Drinks' || p.category === 'Gins'),
+                                                            cervejas: sortedByLikes.filter(p => p.category === 'Cervejas' || p.category === 'Destilados' || p.category === 'Combos'),
+                                                            pasteis: sortedByLikes.filter(p => p.category === 'Pastéis' || p.category === 'Sobremesas'),
+                                                            outros: sortedByLikes.filter(p => !['Petiscos', 'Drinks', 'Gins', 'Cervejas', 'Destilados', 'Combos', 'Pastéis', 'Sobremesas'].includes(p.category))
+                                                        };
+                                                        
+                                                        const maxLoops = Math.max(grouped.petiscos.length, grouped.drinks.length, grouped.cervejas.length, grouped.pasteis.length, grouped.outros.length);
+                                                        
+                                                        for (let i = 0; i < maxLoops; i++) {
+                                                            if (grouped.petiscos[i]) interleaved.push(grouped.petiscos[i]);
+                                                            if (grouped.drinks[i]) interleaved.push(grouped.drinks[i]);
+                                                            if (grouped.pasteis[i]) interleaved.push(grouped.pasteis[i]);
+                                                            if (grouped.cervejas[i]) interleaved.push(grouped.cervejas[i]);
+                                                            if (grouped.outros[i]) interleaved.push(grouped.outros[i]);
+                                                            
+                                                            // We just need around 10-12 items max to keep UI smooth and performant
+                                                            if (interleaved.length >= 10) break;
+                                                        }
+
+                                                        // Fallback just in case everything was empty (edge case)
+                                                        if (interleaved.length === 0) {
+                                                            return sortedByLikes.slice(0, 8);
+                                                        }
+                                                        
+                                                        return interleaved;
+                                                    })().map(p => (
                                                             <div key={p.id} className="upsell-item" onClick={() => {
                                                                 setCart(prev => ({ ...prev, [p.id]: (prev[p.id] || 0) + 1 }));
                                                             }}>
