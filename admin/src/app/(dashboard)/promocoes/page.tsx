@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Megaphone, Mic2, Ticket, Upload, Save, Loader2, Image as ImageIcon, Plus, Trash2 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Megaphone, Mic2, Ticket, Upload, Save, Loader2, Image as ImageIcon, Plus, Trash2, Search, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { uploadImageAction } from "@/app/actions/upload-image";
 import { toast } from "sonner";
@@ -30,6 +30,10 @@ export default function PromocoesPage() {
   });
 
   const [produtos, setProdutos] = useState<any[]>([]);
+  const [productSearch, setProductSearch] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function fetchConfig() {
@@ -190,7 +194,7 @@ export default function PromocoesPage() {
                 <p className="text-sm font-semibold text-foreground">Habilitar Modal de Promoção</p>
                 <p className="text-[13px] text-muted-foreground font-medium">Exibe uma imagem em destaque (modal pop-up) quando o cliente abre o cardápio.</p>
               </div>
-              <Switch checked={config.promocao_ativa} onCheckedChange={(v: boolean) => setConfig({ ...config, promocao_ativa: v })} />
+              <Switch checked={config.promocao_ativa} onCheckedChange={(v: boolean) => setConfig({ ...config, promocao_ativa: v })} className="[&[data-checked]]:bg-emerald-500" />
             </div>
 
             {config.promocao_ativa && (
@@ -222,29 +226,82 @@ export default function PromocoesPage() {
 
                   {/* Direita: Controles da Promoção */}
                   <div className="space-y-4">
-                    <div className="space-y-1.5">
-                      <label className="text-[12px] font-semibold text-foreground">Produto em Promoção</label>
-                      <select 
-                        className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                        onChange={(e) => {
-                          const prod = produtos.find(p => p.id === e.target.value);
-                          if (prod) {
-                            setConfig({
-                              ...config,
-                              promocao_imagem_url: prod.imagem_url || "",
-                              promocao_titulo: `Promoção: ${prod.titulo}`,
-                              promocao_preco: String(prod.preco)
-                            });
-                          }
-                        }}
-                        defaultValue=""
-                      >
-                        <option value="" disabled>Selecione um produto...</option>
-                        {produtos.map(p => (
-                          <option key={p.id} value={p.id}>{p.titulo}</option>
-                        ))}
-                      </select>
-                      <p className="text-[10px] text-muted-foreground">Selecionar um produto preenche automaticamente a imagem, título e preço.</p>
+                    <div className="space-y-1.5" ref={searchRef}>
+                      <label className="text-[12px] font-semibold text-foreground">Buscar Produto em Promoção</label>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                        <Input
+                          value={productSearch}
+                          onChange={(e) => {
+                            setProductSearch(e.target.value);
+                            setShowDropdown(true);
+                          }}
+                          onFocus={() => setShowDropdown(true)}
+                          placeholder="Digite o nome do produto... ex: Corona, Brahma"
+                          className="h-9 pl-9 pr-8"
+                        />
+                        {productSearch && (
+                          <button
+                            onClick={() => { setProductSearch(""); setShowDropdown(false); }}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Dropdown de Resultados */}
+                      {showDropdown && productSearch.trim().length > 0 && (() => {
+                        const q = productSearch.trim().toLowerCase();
+                        const filtered = produtos.filter(p =>
+                          p.titulo?.toLowerCase().includes(q) ||
+                          p.categoria?.toLowerCase().includes(q) ||
+                          p.descricao?.toLowerCase().includes(q)
+                        );
+                        return filtered.length > 0 ? (
+                          <div className="mt-1 border rounded-xl bg-card shadow-lg overflow-hidden max-h-60 overflow-y-auto z-50 relative">
+                            {filtered.map(p => (
+                              <button
+                                key={p.id}
+                                onClick={() => {
+                                  setSelectedProduct(p);
+                                  setConfig(prev => ({
+                                    ...prev,
+                                    promocao_imagem_url: p.imagem_url || "",
+                                    promocao_titulo: `Promoção: ${p.titulo}`,
+                                    promocao_preco: String(p.preco)
+                                  }));
+                                  setProductSearch(p.titulo);
+                                  setShowDropdown(false);
+                                }}
+                                className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/50 transition-colors border-b border-border/50 last:border-b-0"
+                              >
+                                {p.imagem_url ? (
+                                  <img src={p.imagem_url} alt={p.titulo} className="w-10 h-10 object-contain rounded-lg bg-white border shrink-0 p-0.5" />
+                                ) : (
+                                  <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                                    <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                                  </div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-semibold text-foreground truncate">{p.titulo}</p>
+                                  <p className="text-xs text-muted-foreground">R$ {Number(p.preco).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="mt-1 border rounded-xl bg-card shadow-sm px-4 py-3 text-sm text-muted-foreground">
+                            Nenhum produto encontrado para "{productSearch}"
+                          </div>
+                        );
+                      })()}
+
+                      {selectedProduct && (
+                        <p className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1 mt-1">
+                          ✓ {selectedProduct.titulo} selecionado — imagem, título e preço preenchidos automaticamente.
+                        </p>
+                      )}
                     </div>
 
                     <div className="space-y-1.5">
@@ -296,7 +353,7 @@ export default function PromocoesPage() {
                 <p className="text-sm font-semibold text-foreground">Habilitar Letreiro de Cantores</p>
                 <p className="text-[13px] text-muted-foreground font-medium">Exibe uma faixa correndo no topo do cardápio com os shows ou programação da noite.</p>
               </div>
-              <Switch checked={config.cantor_ativo} onCheckedChange={(v: boolean) => setConfig({ ...config, cantor_ativo: v })} />
+              <Switch checked={config.cantor_ativo} onCheckedChange={(v: boolean) => setConfig({ ...config, cantor_ativo: v })} className="[&[data-checked]]:bg-emerald-500" />
             </div>
 
             {config.cantor_ativo && (
@@ -357,7 +414,7 @@ export default function PromocoesPage() {
                   Quando ativo, o caixa poderá lançar o couvert diretamente em qualquer comanda, definindo a quantidade de pessoas.
                 </p>
               </div>
-              <Switch checked={config.couvert_ativo} onCheckedChange={(v: boolean) => setConfig({ ...config, couvert_ativo: v })} />
+              <Switch checked={config.couvert_ativo} onCheckedChange={(v: boolean) => setConfig({ ...config, couvert_ativo: v })} className="[&[data-checked]]:bg-emerald-500" />
             </div>
 
             {config.couvert_ativo && (
