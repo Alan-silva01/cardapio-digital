@@ -269,6 +269,13 @@ export default function PedidosPage() {
       const comandas = groupPedidosByComanda(data as unknown as PedidoRaw[]);
       setColumns(groupByStatus(comandas));
 
+      // Update selected comanda symmetrically if it's already open
+      setSelectedComanda((prev) => {
+        if (!prev) return prev;
+        const updatedComanda = comandas.find(c => c.comanda_id === prev.comanda_id);
+        return updatedComanda || prev;
+      });
+
       // Auto-open modal if URL has ?mesa=X
       if (typeof window !== "undefined") {
         const params = new URLSearchParams(window.location.search);
