@@ -62,8 +62,8 @@ export default function PromocoesPage() {
 
       const { data: prods } = await supabase
         .from("produtos")
-        .select("id, titulo, preco, imagem_url")
-        .order("titulo");
+        .select("id, nome, imagem_url, categorias(nome)")
+        .order("nome");
       if (prods) setProdutos(prods);
 
       setLoading(false);
@@ -194,7 +194,14 @@ export default function PromocoesPage() {
                 <p className="text-sm font-semibold text-foreground">Habilitar Modal de Promoção</p>
                 <p className="text-[13px] text-muted-foreground font-medium">Exibe uma imagem em destaque (modal pop-up) quando o cliente abre o cardápio.</p>
               </div>
-              <Switch checked={config.promocao_ativa} onCheckedChange={(v: boolean) => setConfig({ ...config, promocao_ativa: v })} className="[&[data-checked]]:bg-emerald-500" />
+              <button
+                onClick={() => setConfig({ ...config, promocao_ativa: !config.promocao_ativa })}
+                className={`relative inline-flex h-4 w-7 cursor-pointer items-center rounded-full transition-colors focus:outline-hidden ${config.promocao_ativa ? 'bg-emerald-500/80' : 'bg-muted-foreground/30'}`}
+                role="switch"
+                aria-checked={config.promocao_ativa}
+              >
+                <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${config.promocao_ativa ? 'translate-x-3.5' : 'translate-x-0.5'}`} />
+              </button>
             </div>
 
             {config.promocao_ativa && (
@@ -254,9 +261,8 @@ export default function PromocoesPage() {
                       {showDropdown && productSearch.trim().length > 0 && (() => {
                         const q = productSearch.trim().toLowerCase();
                         const filtered = produtos.filter(p =>
-                          p.titulo?.toLowerCase().includes(q) ||
-                          p.categoria?.toLowerCase().includes(q) ||
-                          p.descricao?.toLowerCase().includes(q)
+                          (p.nome || '').toLowerCase().includes(q) ||
+                          (p.categorias?.nome || '').toLowerCase().includes(q)
                         );
                         return filtered.length > 0 ? (
                           <div className="mt-1 border rounded-xl bg-card shadow-lg overflow-hidden max-h-60 overflow-y-auto z-50 relative">
@@ -268,10 +274,10 @@ export default function PromocoesPage() {
                                   setConfig(prev => ({
                                     ...prev,
                                     promocao_imagem_url: p.imagem_url || "",
-                                    promocao_titulo: `Promoção: ${p.titulo}`,
-                                    promocao_preco: String(p.preco)
+                                    promocao_titulo: `Promoção: ${p.nome}`,
+                                    promocao_preco: ""
                                   }));
-                                  setProductSearch(p.titulo);
+                                  setProductSearch(p.nome);
                                   setShowDropdown(false);
                                 }}
                                 className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/50 transition-colors border-b border-border/50 last:border-b-0"
@@ -284,8 +290,8 @@ export default function PromocoesPage() {
                                   </div>
                                 )}
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-semibold text-foreground truncate">{p.titulo}</p>
-                                  <p className="text-xs text-muted-foreground">R$ {Number(p.preco).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                                  <p className="text-sm font-semibold text-foreground truncate">{p.nome}</p>
+                                  <p className="text-xs text-muted-foreground">{p.categorias?.nome || 'Produto'}</p>
                                 </div>
                               </button>
                             ))}
@@ -299,7 +305,7 @@ export default function PromocoesPage() {
 
                       {selectedProduct && (
                         <p className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1 mt-1">
-                          ✓ {selectedProduct.titulo} selecionado — imagem, título e preço preenchidos automaticamente.
+                          ✓ {selectedProduct.nome} selecionado
                         </p>
                       )}
                     </div>
@@ -353,7 +359,14 @@ export default function PromocoesPage() {
                 <p className="text-sm font-semibold text-foreground">Habilitar Letreiro de Cantores</p>
                 <p className="text-[13px] text-muted-foreground font-medium">Exibe uma faixa correndo no topo do cardápio com os shows ou programação da noite.</p>
               </div>
-              <Switch checked={config.cantor_ativo} onCheckedChange={(v: boolean) => setConfig({ ...config, cantor_ativo: v })} className="[&[data-checked]]:bg-emerald-500" />
+              <button
+                onClick={() => setConfig({ ...config, cantor_ativo: !config.cantor_ativo })}
+                className={`relative inline-flex h-4 w-7 cursor-pointer items-center rounded-full transition-colors focus:outline-hidden ${config.cantor_ativo ? 'bg-emerald-500/80' : 'bg-muted-foreground/30'}`}
+                role="switch"
+                aria-checked={config.cantor_ativo}
+              >
+                <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${config.cantor_ativo ? 'translate-x-3.5' : 'translate-x-0.5'}`} />
+              </button>
             </div>
 
             {config.cantor_ativo && (
@@ -414,7 +427,14 @@ export default function PromocoesPage() {
                   Quando ativo, o caixa poderá lançar o couvert diretamente em qualquer comanda, definindo a quantidade de pessoas.
                 </p>
               </div>
-              <Switch checked={config.couvert_ativo} onCheckedChange={(v: boolean) => setConfig({ ...config, couvert_ativo: v })} className="[&[data-checked]]:bg-emerald-500" />
+              <button
+                onClick={() => setConfig({ ...config, couvert_ativo: !config.couvert_ativo })}
+                className={`relative inline-flex h-4 w-7 cursor-pointer items-center rounded-full transition-colors focus:outline-hidden ${config.couvert_ativo ? 'bg-emerald-500/80' : 'bg-muted-foreground/30'}`}
+                role="switch"
+                aria-checked={config.couvert_ativo}
+              >
+                <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${config.couvert_ativo ? 'translate-x-3.5' : 'translate-x-0.5'}`} />
+              </button>
             </div>
 
             {config.couvert_ativo && (
