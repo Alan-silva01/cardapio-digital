@@ -1126,74 +1126,71 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
             <div className="tint-layer" />
 
             {/* FIXED TOP NAV */}
-            <div className="top-nav">
-                <ArrowLeft className="icon" style={{ cursor: onBack ? 'pointer' : 'default' }} onClick={() => onBack && onBack()} />
-                <div className="page-title">{currentProduct.category}</div>
-                <div ref={cartIconRef} style={{ position: 'relative', cursor: 'pointer' }} onClick={handleOpenCartClick}>
-                    <ShoppingBag className="icon" />
-                    {totalCartItems > 0 && (
-                        <div style={{
-                            position: 'absolute',
-                            top: '-6px',
-                            right: '-8px',
-                            background: '#E53935',
-                            color: '#fff',
-                            fontSize: '10px',
-                            fontWeight: '800',
-                            width: '18px',
-                            height: '18px',
-                            borderRadius: '50%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            boxShadow: '0 2px 6px rgba(229, 57, 53, 0.5)',
-                            animation: 'cartBadgePop 0.3s ease'
-                        }}>
-                            {totalCartItems}
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* SINGER MARQUEE */}
-            {config?.cantor_ativo && config?.cantor_nome && (() => {
-                const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-                const start = config.cantor_inicio ? new Date(config.cantor_inicio) : null;
-                const end = config.cantor_fim ? new Date(config.cantor_fim) : null;
-                if ((!start || now >= start) && (!end || now <= end)) {
-                    return (
-                        <div style={{
-                            width: '100%',
-                            backgroundColor: '#111',
-                            color: '#fff',
-                            padding: '6px 0',
-                            overflow: 'hidden',
-                            whiteSpace: 'nowrap',
-                            position: 'relative',
-                            zIndex: 8,
-                            display: 'flex',
-                            alignItems: 'center',
-                            borderTop: '1px solid rgba(255,255,255,0.05)',
-                            borderBottom: '1px solid rgba(255,255,255,0.05)'
-                        }}>
-                            <style dangerouslySetInnerHTML={{__html: `
-                                @keyframes marqueeText { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
-                            `}} />
+            <div className="top-nav" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 0, paddingBottom: 0 }}>
+                {/* Nav Icons Row */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <ArrowLeft className="icon" style={{ cursor: onBack ? 'pointer' : 'default' }} onClick={() => onBack && onBack()} />
+                    <div className="page-title" style={{ position: 'relative', zIndex: 1 }}>{currentProduct.category}</div>
+                    <div ref={cartIconRef} style={{ position: 'relative', cursor: 'pointer' }} onClick={handleOpenCartClick}>
+                        <ShoppingBag className="icon" />
+                        {totalCartItems > 0 && (
                             <div style={{
-                                display: 'inline-block',
-                                fontSize: '12px',
-                                fontWeight: '700',
-                                letterSpacing: '0.5px',
-                                color: '#D4AF37', // Brand gold
-                                animation: 'marqueeText 18s linear infinite'
+                                position: 'absolute',
+                                top: '-6px',
+                                right: '-8px',
+                                background: '#E53935',
+                                color: '#fff',
+                                fontSize: '10px',
+                                fontWeight: '800',
+                                width: '18px',
+                                height: '18px',
+                                borderRadius: '50%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                boxShadow: '0 2px 6px rgba(229, 57, 53, 0.5)',
+                                animation: 'cartBadgePop 0.3s ease'
                             }}>
-                                {config.cantor_nome}
+                                {totalCartItems}
                             </div>
-                        </div>
-                    );
-                }
-                return null;
-            })()}
+                        )}
+                    </div>
+                </div>
+
+                {/* SINGER MARQUEE - sits below nav icons, above product content */}
+                {config?.cantor_ativo && config?.cantor_nome && (() => {
+                    const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+                    const start = config.cantor_inicio ? new Date(config.cantor_inicio) : null;
+                    const end = config.cantor_fim ? new Date(config.cantor_fim) : null;
+                    if ((!start || now >= start) && (!end || now <= end)) {
+                        return (
+                            <div style={{
+                                width: '100%',
+                                overflow: 'hidden',
+                                whiteSpace: 'nowrap',
+                                padding: '5px 0 8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                            }}>
+                                <style dangerouslySetInnerHTML={{__html: `
+                                    @keyframes marqueeText { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
+                                `}} />
+                                <div style={{
+                                    display: 'inline-block',
+                                    fontSize: '11px',
+                                    fontWeight: '700',
+                                    letterSpacing: '0.5px',
+                                    color: '#D4AF37',
+                                    animation: 'marqueeText 18s linear infinite'
+                                }}>
+                                    🎤 {config.cantor_nome}
+                                </div>
+                            </div>
+                        );
+                    }
+                    return null;
+                })()}
+            </div>
 
             {/* ANIMATED HERO SECTION */}
             <div className="hero">
