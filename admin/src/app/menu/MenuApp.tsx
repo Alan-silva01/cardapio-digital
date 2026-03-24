@@ -254,9 +254,8 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                         // Only one person on the table — auto-select them
                         setPessoaAtiva(nomes[0]);
                     } else {
-                        // Multiple people, no localStorage match — show drawer to pick
+                        // Multiple people, no localStorage match — defer to cart open
                         setPessoaAtiva('');
-                        setIsPeopleDrawerOpen(true);
                     }
                 }
             }
@@ -1625,11 +1624,6 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                     onClick={(e) => {
                                         if (isOutOfStock) return;
                                         const addQty = pendingQty;
-                                        if (!pessoaAtiva) {
-                                            setPendingProductToAdd({ product: currentProduct, qty: addQty, variation: selectedVariation });
-                                            setIsPeopleDrawerOpen(true);
-                                            return;
-                                        }
                                         const btnRect = e.currentTarget.getBoundingClientRect();
                                         const cartEl = cartIconRef.current;
                                         if (cartEl) {
