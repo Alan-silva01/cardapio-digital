@@ -17,6 +17,7 @@ import {
   BadgeDollarSign,
   Eye,
   CheckCircle2,
+  Ticket,
 } from "lucide-react";
 import {
   Dialog,
@@ -35,6 +36,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { Input } from "@/components/ui/input";
 
 interface ItemPedido {
   id: string;
@@ -81,6 +83,8 @@ interface OrderDetailModalProps {
   onPrintAll?: (comanda: ComandaAgrupada) => void;
   mesasStatus?: Record<number, { garcom: boolean; conta: boolean }>;
   onClearService?: (mesa: number, type: 'garcom' | 'conta') => void;
+  config?: any;
+  onAddCouvert?: (comandaId: string, quantidade: number, valorUnitario: number) => void;
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon?: any }> = {
@@ -275,10 +279,15 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
   onPrintAll,
   mesasStatus = {},
   onClearService,
+  config,
+  onAddCouvert,
 }: OrderDetailModalProps) {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [personPayConfirm, setPersonPayConfirm] = useState<string | null>(null);
+
+  const [showCoverInput, setShowCoverInput] = useState(false);
+  const [coverQtd, setCoverQtd] = useState(1);
 
   const totalItems = useMemo(() => {
     if (!comanda) return 0;
@@ -553,6 +562,53 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
                 </>
               )}
             </div>
+
+            {/* Couvert Artístico Action */}
+            {config?.cover_ativo && comanda.status !== "cancelado" && (
+              <div className="w-full flex">
+                {!showCoverInput ? (
+                  <Button
+                    variant="outline"
+                    className="w-full h-9 text-xs font-semibold text-brand border-brand/20 bg-brand/5 hover:bg-brand/10 hover:text-brand transition-colors"
+                    onClick={() => setShowCoverInput(true)}
+                  >
+                    <Ticket className="h-3.5 w-3.5 mr-1.5" />
+                    Lançar Couvert Artístico (R$ {config.valor_couvert?.toFixed(2)})
+                  </Button>
+                ) : (
+                  <div className="w-full h-10 flex items-center gap-2 p-1.5 rounded-lg border border-brand/20 bg-brand/5 px-2">
+                    <span className="text-xs font-semibold text-brand/80 ml-1">Qtd:</span>
+                    <Input 
+                      type="number" 
+                      value={coverQtd} 
+                      onChange={e => setCoverQtd(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="h-7 w-16 text-xs bg-background text-center px-1"
+                      min={1}
+                    />
+                    <Button 
+                      size="sm" 
+                      className="h-7 text-[11px] font-semibold bg-brand text-white flex-1 hover:bg-brand/90"
+                      onClick={() => {
+                        onAddCouvert?.(comanda.comanda_id, coverQtd, config.valor_couvert || 10);
+                        setShowCoverInput(false);
+                        setCoverQtd(1);
+                      }}
+                    >
+                      <Check className="h-3.5 w-3.5 mr-1" /> Confirmar
+                    </Button>
+                    <Button 
+                      size="icon" 
+                      variant="ghost" 
+                      className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      onClick={() => setShowCoverInput(false)}
+                    >
+                      <Ban className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div className="text-[10px] text-center text-muted-foreground/60 w-full flex items-center justify-center gap-1.5 select-all">
               ID: {comanda.order_id}
             </div>

@@ -217,6 +217,13 @@ export default function PedidosPage() {
   const [serviceModal, setServiceModal] = useState<{ mesa: number, type: 'garcom' | 'conta' } | null>(null);
   const { playSound, enabled: soundEnabled, toggleSound } = useNotificationSound();
   const [selectedComanda, setSelectedComanda] = useState<ComandaAgrupada | null>(null);
+  const [config, setConfig] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.from('configuracoes').select('*').limit(1).single().then(({ data }) => {
+      if (data) setConfig(data);
+    });
+  }, []);
 
   const fetchPedidos = useCallback(async () => {
     const now = new Date();
@@ -449,6 +456,48 @@ export default function PedidosPage() {
         .update({ servido: true })
         .in("id", allItemIds);
     }
+  };
+
+  const handleAddCouvert = async (comandaId: string, quantidade: number, valorUnitario: number) => {
+    const comanda = Object.values(columns).flat().find(c => c.comanda_id === comandaId);
+    if (!comanda) return;
+
+    const total = quantidade * valorUnitario;
+
+    const { data: novoPedido, error: pedidoError } = await supabase
+      .from("pedidos")
+      .insert({
+        comanda_id: comandaId,
+        numero_mesa: comanda.numero_mesa,
+        nome_pessoa: "Couvert",
+        status: "pronto", // automatically served
+        total: total,
+        order_number: comanda.order_number ? `${comanda.order_number}-CV` : "CV",
+      })
+      .select("id")
+      .single();
+
+    if (pedidoError || !novoPedido) {
+      console.error("Erro ao inserir pedido de couvert:", pedidoError);
+      return;
+    }
+
+    const { error: itemError } = await supabase
+      .from("itens_pedido")
+      .insert({
+        pedido_id: novoPedido.id,
+        nome_produto: "Couvert Artístico",
+        quantidade: quantidade,
+        preco_unitario: valorUnitario,
+        preco_total: total,
+        servido: true,
+      });
+
+    if (itemError) {
+      console.error("Erro ao inserir item de couvert:", itemError);
+    }
+
+    fetchPedidos(); // refresh UI
   };
 
   const clearMesaStatus = async (numero: number, type: 'garcom' | 'conta') => {
@@ -1245,6 +1294,8 @@ export default function PedidosPage() {
         comanda={selectedComanda}
         open={!!selectedComanda}
         onOpenChange={(open) => { if (!open) setSelectedComanda(null); }}
+        config={config}
+        onAddCouvert={handleAddCouvert}
         onToggleItemServido={toggleItemServido}
         onConfirmPayment={handlePayAll}
         onCancelOrder={handleCancelOrder}

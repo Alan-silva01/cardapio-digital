@@ -127,6 +127,8 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
     const [isCartOpen, setIsCartOpen] = useState(false); // Controls the cart overlay
     const [isCheckingOut, setIsCheckingOut] = useState(false); // Loading state for checkout
     const [orderSuccess, setOrderSuccess] = useState(false); // Success screen after order
+    const [config, setConfig] = useState(null);
+    const [showPromo, setShowPromo] = useState(false);
     const cartIconRef = useRef(null);
     const heroTitleRef = useRef(null);
 
@@ -658,7 +660,8 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                 { data: catData, error: catError },
                 { data: prodData, error: prodError },
                 { data: varData, error: varError },
-                { data: wineData, error: wineError }
+                { data: wineData, error: wineError },
+                { data: configData, error: configError }
             ] = await Promise.all([
                 supabase.from('categorias').select('id, nome, icone').eq('ativo', true),
                 supabase.from('produtos')
@@ -666,7 +669,8 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                     .eq('disponivel', true)
                     .order('ordem', { ascending: true }),
                 supabase.from('variacoes_produto').select('*').eq('ativo', true).order('ordem', { ascending: true }),
-                supabase.from('tipos_vinho').select('tipo, imagem_taca_url')
+                supabase.from('tipos_vinho').select('tipo, imagem_taca_url'),
+                supabase.from('configuracoes').select('*').limit(1).single()
             ]);
 
             if (catError) throw catError;
@@ -677,6 +681,30 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                 acc[cat.id] = cat.nome;
                 return acc;
             }, {});
+            const varMap = varData.reduce((acc, v) => {
+                if (!acc[v.produto_id]) acc[v.produto_id] = [];
+                acc[v.produto_id].push(v);
+                return acc;
+            }, {});
+
+            if (configData) {
+                setConfig(configData);
+                // Handle Promo Logic natively on initial load
+                if (isInitial && configData.promocao_ativa) {
+                    const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+                    const start = configData.promocao_inicio ? new Date(configData.promocao_inicio) : null;
+                    const end = configData.promocao_fim ? new Date(configData.promocao_fim) : null;
+                    const isInTimeWindow = (!start || now >= start) && (!end || now <= end);
+                    
+                    if (isInTimeWindow) {
+                        const hasSeenPromo = sessionStorage.getItem('promoVisto');
+                        if (!hasSeenPromo && configData.promocao_imagem_url) {
+                            setShowPromo(true);
+                            sessionStorage.setItem('promoVisto', 'true');
+                        }
+                    }
+                }
+            }
 
             let glassMapToPreload = null;
             if (!wineError && wineData) {
@@ -1127,6 +1155,46 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                 </div>
             </div>
 
+            {/* SINGER MARQUEE */}
+            {config?.cantor_ativo && config?.cantor_nome && (() => {
+                const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+                const start = config.cantor_inicio ? new Date(config.cantor_inicio) : null;
+                const end = config.cantor_fim ? new Date(config.cantor_fim) : null;
+                if ((!start || now >= start) && (!end || now <= end)) {
+                    return (
+                        <div style={{
+                            width: '100%',
+                            backgroundColor: '#111',
+                            color: '#fff',
+                            padding: '6px 0',
+                            overflow: 'hidden',
+                            whiteSpace: 'nowrap',
+                            position: 'relative',
+                            zIndex: 8,
+                            display: 'flex',
+                            alignItems: 'center',
+                            borderTop: '1px solid rgba(255,255,255,0.05)',
+                            borderBottom: '1px solid rgba(255,255,255,0.05)'
+                        }}>
+                            <style dangerouslySetInnerHTML={{__html: `
+                                @keyframes marqueeText { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
+                            `}} />
+                            <div style={{
+                                display: 'inline-block',
+                                fontSize: '12px',
+                                fontWeight: '700',
+                                letterSpacing: '0.5px',
+                                color: '#D4AF37', // Brand gold
+                                animation: 'marqueeText 18s linear infinite'
+                            }}>
+                                {config.cantor_nome}
+                            </div>
+                        </div>
+                    );
+                }
+                return null;
+            })()}
+
             {/* ANIMATED HERO SECTION */}
             <div className="hero">
                 <AnimatePresence initial={false} custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-'), isSkolBeats: currentProduct?.slug?.startsWith('skol-beats-'), isInternalSpin, isWineSpin: isInternalSpin && currentProduct?.category && /vinho|combo/.test(currentProduct?.category?.toLowerCase()) }}>
@@ -1321,15 +1389,26 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
 
                             setHeartParticles(prev => [...prev, ...newParticles]);
 
-                            // Calculate session-based local liked state
+                            // Calculate session-based local liked state with daily expiration for PWAs
                             const sessionLikedKey = '@Menu-Session-Liked';
-                            const likedItems = JSON.parse(sessionStorage.getItem(sessionLikedKey) || '[]');
-                            const isAlreadyLikedInSession = likedItems.includes(currentProduct.id);
+                            const todayStr = new Date().toLocaleDateString('pt-BR');
+                            
+                            let likedData = { date: todayStr, items: [] };
+                            try {
+                                const stored = JSON.parse(sessionStorage.getItem(sessionLikedKey));
+                                if (stored && stored.date === todayStr && Array.isArray(stored.items)) {
+                                    likedData = stored;
+                                }
+                            } catch (e) {
+                                // Ignore parsing errors, reset
+                            }
+
+                            const isAlreadyLikedInSession = likedData.items.includes(currentProduct.id);
 
                             if (!isAlreadyLikedInSession) {
-                                // Add to session storage so it stays red only for this session/day
-                                likedItems.push(currentProduct.id);
-                                sessionStorage.setItem(sessionLikedKey, JSON.stringify(likedItems));
+                                // Add to session storage so it stays red only for today
+                                likedData.items.push(currentProduct.id);
+                                sessionStorage.setItem(sessionLikedKey, JSON.stringify(likedData));
 
                                 // Optmistic UI Update: Fill the heart immediately while DB processes
                                 setProducts(prevProducts => prevProducts.map(p =>
@@ -1352,19 +1431,33 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                     ));
                                     
                                     // Remove from session local storage on fail
-                                    const filtered = likedItems.filter(id => id !== currentProduct.id);
-                                    sessionStorage.setItem(sessionLikedKey, JSON.stringify(filtered));
+                                    likedData.items = likedData.items.filter(id => id !== currentProduct.id);
+                                    sessionStorage.setItem(sessionLikedKey, JSON.stringify(likedData));
                                 }
                             }
                         }}
                         style={{ background: 'none', border: 'none', padding: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                     >
-                        <Heart
-                            size={22}
-                            color="#444"
-                            fill={typeof window !== 'undefined' && JSON.parse(sessionStorage.getItem('@Menu-Session-Liked') || '[]').includes(currentProduct.id) ? "#444" : "transparent"}
-                            style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}
-                        />
+                        {(() => {
+                            let isLikedToday = false;
+                            if (typeof window !== 'undefined') {
+                                try {
+                                    const todayStr = new Date().toLocaleDateString('pt-BR');
+                                    const stored = JSON.parse(sessionStorage.getItem('@Menu-Session-Liked'));
+                                    if (stored && stored.date === todayStr && Array.isArray(stored.items)) {
+                                        isLikedToday = stored.items.includes(currentProduct.id);
+                                    }
+                                } catch (e) {}
+                            }
+                            return (
+                                <Heart
+                                    size={22}
+                                    color="#444"
+                                    fill={isLikedToday ? "#444" : "transparent"}
+                                    style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}
+                                />
+                            );
+                        })()}
                     </button>
                 </div>
 
@@ -2112,87 +2205,473 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                 )}
             </AnimatePresence>
 
-            {/* ORDER SUCCESS OVERLAY */}
+            {/* FLYING ITEMS ANIMATION */}
+            {flyingItems.map(item => (
+                <div
+                    key={item.id}
+                    style={{
+                        position: 'fixed',
+                        left: item.startX - 10,
+                        top: item.startY - 10,
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '50%',
+                        background: 'linear-gradient(135deg, var(--cart-animation-start), var(--cart-animation-end))',
+                        boxShadow: '0 0 12px rgba(212, 175, 55, 0.6)',
+                        zIndex: 9999,
+                        pointerEvents: 'none',
+                        animation: 'flyToCart 0.6s ease-in forwards',
+                        '--end-x': `${item.endX - item.startX}px`,
+                        '--end-y': `${item.endY - item.startY}px`
+                    }}
+                />
+            ))}
+
+            {/* HEART BURST PARTICLES */}
+            {heartParticles.map(particle => (
+                <HeartParticle
+                    key={particle.id}
+                    x={particle.x}
+                    y={particle.y}
+                    onComplete={() => setHeartParticles(prev => prev.filter(p => p.id !== particle.id))}
+                />
+            ))}
+
+            {/* CART OVERLAY / MODAL */}
+            <AnimatePresence>
+                {isCartOpen && (
+                    <motion.div
+                        className="cart-overlay"
+                        initial={{ y: '100%' }}
+                        animate={{ y: 0 }}
+                        exit={{ y: '100%' }}
+                        transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+                    >
+                        <div className="cart-header" style={{ justifyContent: 'flex-start', alignItems: 'center' }}>
+                            <ArrowLeft 
+                                size={22} 
+                                color="#FFFFFF" 
+                                style={{ cursor: 'pointer', marginRight: '16px' }} 
+                                onClick={() => {
+                                    setIsCartOpen(false);
+                                    if (onTabChange) onTabChange('menu');
+                                }} 
+                            />
+                            <span className="cart-title">Comanda</span>
+                        </div>
+                        
+                        {/* TABS */}
+                        <div className="cart-tabs">
+                            <button 
+                                className={`cart-tab ${cartTab === 'carrinho' ? 'active' : ''}`}
+                                onClick={() => setCartTab('carrinho')}
+                            >
+                                Sacola
+                            </button>
+                            <button 
+                                className={`cart-tab ${cartTab === 'pedidos' ? 'active' : ''}`}
+                                onClick={() => setCartTab('pedidos')}
+                            >
+                                Meus Pedidos
+                            </button>
+                        </div>
+
+                        <div className="cart-items-container">
+                            {/* PEOPLE GROUPING IDENTIFIER */}
+                            {pessoaAtiva && (
+                                <div className="cart-person-section" style={{marginBottom: '10px'}}>
+                                    <h5 style={{fontSize: '11px', color: '#666', margin: 0, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px'}}>Comanda Identificada</h5>
+                                    <div className="cart-person-active" style={{marginTop: '0px', padding: '6px 10px', background: '#F3F4F6', border: '1px solid #E5E7EB', borderRadius: '8px'}}>
+                                        <span className="cart-person-active-name" style={{color: '#111827', fontWeight: 600, fontSize: '13px'}}>
+                                            <div style={{width: '20px', height: '20px', borderRadius: '50%', background: 'var(--accent-gold)', color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 900}}>
+                                                {pessoaAtiva.charAt(0).toUpperCase()}
+                                            </div>
+                                            {pessoaAtiva}
+                                        </span>
+                                        <button className="cart-person-change-btn" onClick={() => setIsPeopleDrawerOpen(true)}>
+                                            Trocar
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* TAB: CARRINHO */}
+                            {cartTab === 'carrinho' && (
+                                <>
+                                    {/* UPSELL SECTION */}
+                                    {Object.keys(cart).length > 0 && products.length > 0 && (
+                                        <div className="cart-upsell-container">
+                                            <h4 className="upsell-title">Que tal adicionar?</h4>
+                                            <div className="upsell-scroll">
+                                                <div className="upsell-marquee">
+                                                    {(() => {
+                                                        const availableForUpsell = allProductsRef.current.filter(p => !cart[p.id] && !Object.keys(cart).some(k => k.startsWith(p.id)) && p.id !== currentProduct?.id);
+                                                        
+                                                        // Sort raw list mostly by likes, but not completely to allow interleaving
+                                                        const sortedByLikes = [...availableForUpsell].sort((a, b) => (b.curtidas || 0) - (a.curtidas || 0));
+                                                        
+                                                        // Interleaving approach: we want an alternating pattern of categories
+                                                        // like: Petisco -> Drink -> Cerveja/Combo -> Pastel -> repeat
+                                                        
+                                                        const interleaved = [];
+                                                        const grouped = {
+                                                            petiscos: sortedByLikes.filter(p => p.category === 'Petiscos'),
+                                                            drinks: sortedByLikes.filter(p => p.category === 'Drinks' || p.category === 'Gins'),
+                                                            cervejas: sortedByLikes.filter(p => p.category === 'Cervejas' || p.category === 'Destilados' || p.category === 'Combos'),
+                                                            pasteis: sortedByLikes.filter(p => p.category === 'Pastéis' || p.category === 'Sobremesas'),
+                                                            outros: sortedByLikes.filter(p => !['Petiscos', 'Drinks', 'Gins', 'Cervejas', 'Destilados', 'Combos', 'Pastéis', 'Sobremesas'].includes(p.category))
+                                                        };
+                                                        
+                                                        const maxLoops = Math.max(grouped.petiscos.length, grouped.drinks.length, grouped.cervejas.length, grouped.pasteis.length, grouped.outros.length);
+                                                        
+                                                        for (let i = 0; i < maxLoops; i++) {
+                                                            if (grouped.petiscos[i]) interleaved.push(grouped.petiscos[i]);
+                                                            if (grouped.drinks[i]) interleaved.push(grouped.drinks[i]);
+                                                            if (grouped.pasteis[i]) interleaved.push(grouped.pasteis[i]);
+                                                            if (grouped.cervejas[i]) interleaved.push(grouped.cervejas[i]);
+                                                            if (grouped.outros[i]) interleaved.push(grouped.outros[i]);
+                                                            
+                                                            // We just need around 10-12 items max to keep UI smooth and performant
+                                                            if (interleaved.length >= 10) break;
+                                                        }
+
+                                                        // Fallback just in case everything was empty (edge case)
+                                                        if (interleaved.length === 0) {
+                                                            return sortedByLikes.slice(0, 8);
+                                                        }
+                                                        
+                                                        return interleaved;
+                                                    })().map(p => (
+                                                            <div key={p.id} className="upsell-item" onClick={() => {
+                                                                setCart(prev => ({ ...prev, [p.id]: (prev[p.id] || 0) + 1 }));
+                                                            }}>
+                                                                <div className="upsell-img-box">
+                                                                    <img src={p.imageUrl} alt={p.name} />
+                                                                </div>
+                                                                <div className="upsell-info">
+                                                                    <span className="upsell-name">{p.name}</span>
+                                                                    <span className="upsell-price">
+                                                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.price)}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="upsell-add-icon">+</div>
+                                                            </div>
+                                                        ))
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {Object.keys(cart).length === 0 ? (
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.8, marginTop: '40px' }}>
+                                            <ShoppingCart size={48} color="#FFFFFF" style={{ marginBottom: '16px' }} />
+                                            <p style={{ color: '#999999', fontSize: '14px', textAlign: 'center', marginBottom: '24px' }}>Sua sacola está vazia.</p>
+                                            <button 
+                                                onClick={() => {
+                                                    setIsCartOpen(false);
+                                                    if (onTabChange) onTabChange('menu');
+                                                }}
+                                                style={{ background: '#FFFFFF', color: '#000000', padding: '12px 24px', borderRadius: '30px', fontWeight: 700, fontSize: '12px', border: 'none' }}
+                                            >
+                                                FAZER PEDIDO
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        Object.entries(cart).map(([key, qty]) => {
+                                            const hasVariation = key.includes('-');
+                                            let pid = key;
+                                            let varName = null;
+                                            if (hasVariation) {
+                                                const parts = key.split('-');
+                                                pid = parts[0];
+                                                varName = parts.slice(1).join('-');
+                                            }
+                                            const pModel = allProductsRef.current.find(p => p.id === pid);
+                                            if (!pModel) return null;
+
+                                            let itemPrice = pModel.price;
+                                            let itemImage = pModel.imageUrl;
+                                            let displayVarName = null;
+
+                                            if (hasVariation && pModel.variations && pModel.variations[varName]) {
+                                                itemPrice = pModel.variations[varName].price;
+                                                displayVarName = varName;
+                                                const isTaca = varName.toLowerCase().includes('taça') || varName.toLowerCase().includes('taca');
+                                                if (pModel.tipo_vinho && isTaca && wineGlassImages[pModel.tipo_vinho]) {
+                                                    itemImage = wineGlassImages[pModel.tipo_vinho];
+                                                }
+                                            }
+
+                                            const hasObs = !!itemObservations[key];
+                                            const isObsOpen = obsOpenFor === key;
+
+                                            return (
+                                                <div key={key} className="cart-item" style={{flexDirection: 'column', alignItems: 'stretch', gap: 0}}>
+                                                    <div style={{display: 'flex', gap: '12px', alignItems: 'center', width: '100%'}}>
+                                                        <div className="cart-item-image">
+                                                            <img src={itemImage} alt={pModel.name} />
+                                                        </div>
+                                                        <div className="cart-item-info">
+                                                            <div className="cart-item-title">{pModel.name}</div>
+                                                            {displayVarName && <div className="cart-item-meta">{displayVarName}</div>}
+                                                            <div className="cart-item-price">
+                                                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(itemPrice)}
+                                                            </div>
+                                                        </div>
+                                                        <div className="cart-item-actions">
+                                                            <div style={{display: 'flex', gap: '8px', alignItems: 'center'}}>
+                                                                <button 
+                                                                    className={`cart-item-obs-toggle ${hasObs ? 'has-obs' : ''}`}
+                                                                    onClick={() => setObsOpenFor(isObsOpen ? null : key)}
+                                                                >
+                                                                    <MessageSquare size={16} fill={hasObs ? "var(--accent-gold)" : "none"} />
+                                                                </button>
+                                                                <button className="cart-trash-btn" onClick={() => {
+                                                                    setCart(prev => {
+                                                                        const newC = { ...prev };
+                                                                        delete newC[key];
+                                                                        return newC;
+                                                                    });
+                                                                }}>
+                                                                    <Trash2 size={16} />
+                                                                </button>
+                                                            </div>
+                                                            <div className="cart-qty-controls">
+                                                                <button className="cart-qty-btn" onClick={() => {
+                                                                    setCart(prev => ({ ...prev, [key]: Math.max(1, prev[key] - 1) }));
+                                                                }}>
+                                                                    <Minus size={14} />
+                                                                </button>
+                                                                <span className="cart-qty-val">{qty}</span>
+                                                                <button className="cart-qty-btn" onClick={() => {
+                                                                    setCart(prev => ({ ...prev, [key]: prev[key] + 1 }));
+                                                                }}>
+                                                                    <Plus size={14} />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {isObsOpen && (
+                                                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}>
+                                                            <input 
+                                                                type="text" 
+                                                                className="cart-item-obs-input" 
+                                                                placeholder="Ex: Sem cebola, bem passado..."
+                                                                value={itemObservations[key] || ''}
+                                                                onChange={(e) => setItemObservations(prev => ({...prev, [key]: e.target.value}))}
+                                                                autoFocus
+                                                            />
+                                                        </motion.div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })
+                                    )}
+
+
+                                </>
+                            )}
+
+                            {/* TAB: MEUS PEDIDOS */}
+                            {cartTab === 'pedidos' && (
+                                <div className="order-history-container">
+                                    {isFetchingHistory && orderHistory.length === 0 ? (
+                                        <div className="order-history-empty">
+                                            <Loader2 size={32} color="var(--accent-gold)" className="animate-spin" />
+                                            <p>Carregando histórico...</p>
+                                        </div>
+                                    ) : orderHistory.length === 0 ? (
+                                        <div className="order-history-empty">
+                                            <Receipt size={48} color="#444" />
+                                            <p>Nenhum pedido confirmado ainda.</p>
+                                        </div>
+                                    ) : (
+                                        orderHistory.map(pedido => {
+                                            const items = pedido.itens_pedido || [];
+                                            // Timeline status mapping (1=recebido, 2=preparando, 3=pronto, 4=servido)
+                                            let currentStep = 1;
+                                            if (pedido.status === 'preparando') currentStep = 2;
+                                            if (pedido.status === 'pronto') currentStep = 3;
+                                            if (pedido.status === 'servido') currentStep = 4;
+
+                                            return (
+                                                <div key={pedido.id} className="order-card">
+                                                    <div className="order-card-header">
+                                                        <span className="order-card-id">Pedido #{pedido.id.toString().substring(0, 5)}</span>
+                                                        <span className="order-card-time">
+                                                            <Clock size={12} style={{display:'inline', marginRight:'4px'}}/>
+                                                            {new Date(pedido.criado_em).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="order-timeline">
+                                                        {['Recebido', 'Preparando', 'Servido', 'Concluído'].map((label, idx) => {
+                                                            const stepNum = idx + 1;
+                                                            const isDone = stepNum < currentStep;
+                                                            const isCurrent = stepNum === currentStep;
+                                                            return (
+                                                                <div key={label} className={`timeline-step ${isDone ? 'done' : ''} ${isCurrent ? 'current' : ''}`}>
+                                                                    <div className="timeline-line" />
+                                                                    <div className="timeline-dot" />
+                                                                    <span className="timeline-label">{label}</span>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+
+                                                    <div className="order-card-items">
+                                                        {items.map(it => (
+                                                            <div key={it.id} style={{display:'flex', flexDirection:'column', gap: '2px'}}>
+                                                                <div className="order-card-item-row">
+                                                                    <span className="order-card-item-name">
+                                                                        <span className="order-card-item-qty">{it.quantidade}x</span>
+                                                                        {it.nome_produto} {it.nome_variacao ? `(${it.nome_variacao})` : ''}
+                                                                    </span>
+                                                                    <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(it.preco_total)}</span>
+                                                                </div>
+                                                                {it.observacao && (
+                                                                    <span className="order-card-item-obs">"{it.observacao}"</span>
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+
+                                                    <div className="order-card-total">
+                                                        <span>Total do Pedido</span>
+                                                        <span>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(pedido.total)}</span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                    )}
+                                </div>
+                            )}
+
+                        </div>
+
+                        {/* FOOTER SECTION (Service Buttons + Subtotal + Checkout) */}
+                        <div style={{ background: '#000000', borderTop: 'none', position: 'absolute', bottom: 0, left: 0, right: 0, paddingTop: '12px', zIndex: 100 }}>
+                            <div className="cart-service-buttons">
+                                <button 
+                                    className={`service-btn ${(garcomCalled || garcomCooldown) ? 'active' : ''}`}
+                                    onClick={() => handleCallService('garcom')}
+                                    disabled={garcomCooldown || garcomCalled}
+                                >
+                                    <Bell size={16} /> 
+                                    {garcomCalled ? "Garçom Chamado" : "Chamar Garçom"}
+                                </button>
+                                <button 
+                                    className={`service-btn ${(contaCalled || contaCooldown) ? 'active' : ''}`}
+                                    onClick={() => handleCallService('conta')}
+                                    disabled={contaCooldown || contaCalled}
+                                >
+                                    <Receipt size={16} /> 
+                                    {contaCalled ? "Conta Solicitada" : "Fechar Conta"}
+                                </button>
+                            </div>
+
+                            {cartTab === 'carrinho' && (
+                                <div className="cart-footer" style={{position: 'relative', bottom: 'auto', borderTop: 'none'}}>
+                                    <div className="cart-subtotal-row" style={{marginBottom: '10px'}}>
+                                        <span className="cart-subtotal-label">Total do Pedido</span>
+                                        <span className="cart-subtotal-value">
+                                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                                                Object.entries(cart).reduce((sum, [key, qty]) => {
+                                                    const hasVariation = key.includes('-');
+                                                    const pid = hasVariation ? key.split('-')[0] : key;
+                                                    const varName = hasVariation ? key.split('-').slice(1).join('-') : null;
+                                                    const pModel = allProductsRef.current.find(p => p.id === pid);
+                                                    if (!pModel) return sum;
+                                                    let currentPrice = pModel.price;
+                                                    if (hasVariation && pModel.variations && pModel.variations[varName]) {
+                                                        currentPrice = pModel.variations[varName].price;
+                                                    }
+                                                    return sum + (currentPrice * qty);
+                                                }, 0)
+                                            )}
+                                        </span>
+                                    </div>
+                                    <button
+                                        className="checkout-btn"
+                                        onClick={() => {
+                                        if (!pessoaAtiva) {
+                                            setIsPeopleDrawerOpen(true);
+                                            return;
+                                        }
+                                        handleCheckout();
+                                        }}
+                                        disabled={Object.keys(cart).length === 0 || isCheckingOut}
+                                        style={{ opacity: (Object.keys(cart).length === 0 || isCheckingOut) ? 0.5 : 1 }}
+                                    >
+                                        {isCheckingOut ? (
+                                            <><Loader2 size={18} className="animate-spin" style={{ marginRight: '8px' }} /> ENVIANDO...</>
+                                        ) : (
+                                            <span style={{ fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>FINALIZAR PEDIDO</span>
+                                        )}
+                                    </button>
+                                </div>
+                            )}
+
+                            {cartTab === 'pedidos' && (
+                                <div className="cart-footer" style={{position: 'relative', bottom: 'auto', borderTop: 'none', padding: '0 20px 24px'}}>
+                                    <div className="cart-subtotal-row" style={{marginBottom: 0}}>
+                                        <span className="cart-subtotal-label">Total da Conta (Seu Consumo)</span>
+                                        <span className="cart-subtotal-value">
+                                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                                                orderHistory.reduce((sum, ped) => sum + ped.total, 0)
+                                            )}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* SUCCESS SCREEN */}
             <AnimatePresence>
                 {orderSuccess && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        style={{
-                            position: 'fixed',
-                            inset: 0,
-                            zIndex: 99999,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            background: 'rgba(0,0,0,0.92)',
-                            backdropFilter: 'blur(12px)',
-                            textAlign: 'center',
-                            padding: '40px',
-                        }}
+                        className="fixed inset-0 z-[100000] bg-black flex flex-col items-center justify-center p-6 text-center"
                     >
-                        <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ type: 'spring', damping: 12, stiffness: 200, delay: 0.1 }}
-                            style={{
-                                width: '80px',
-                                height: '80px',
-                                borderRadius: '50%',
-                                background: 'linear-gradient(135deg, #22c55e, #16a34a)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                marginBottom: '24px',
-                                boxShadow: '0 0 40px rgba(34,197,94,0.4)',
-                            }}
+                        <motion.div 
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1, transition: { delay: 0.2, type: 'spring' } }}
+                            className="w-24 h-24 rounded-full bg-green-500/20 flex items-center justify-center mb-6"
                         >
-                            <span style={{ fontSize: '36px' }}>✓</span>
+                            <Check className="w-12 h-12 text-green-500" />
                         </motion.div>
-                        <motion.h2
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.3 }}
-                            style={{
-                                color: '#fff',
-                                fontSize: '22px',
-                                fontWeight: '800',
-                                marginBottom: '8px',
-                                fontFamily: 'Playfair Display, serif',
-                            }}
+                        <motion.h2 
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1, transition: { delay: 0.4 } }}
+                            className="text-2xl font-bold text-white mb-2"
                         >
-                            Pedido Enviado!
+                            Pedido Realizado!
                         </motion.h2>
-                        <motion.p
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.5 }}
-                            style={{
-                                color: '#aaa',
-                                fontSize: '14px',
-                                lineHeight: 1.5,
-                            }}
+                        <motion.p 
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1, transition: { delay: 0.5 } }}
+                            className="text-gray-400 mb-8 max-w-[280px]"
                         >
-                            Seu pedido foi recebido pela cozinha.
+                            Seu pedido já está na cozinha e logo chegará até você.
                         </motion.p>
-                        <button
-                            onClick={() => setOrderSuccess(false)}
-                            style={{
-                                marginTop: '30px',
-                                padding: '12px 30px',
-                                background: 'transparent',
-                                border: '1px solid rgba(255,255,255,0.2)',
-                                color: '#FFF',
-                                borderRadius: '20px',
-                                fontSize: '12px',
-                                textTransform: 'uppercase',
-                                letterSpacing: '1px'
+                        <motion.button
+                            initial={{ y: 20, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1, transition: { delay: 0.6 } }}
+                            onClick={() => {
+                                setOrderSuccess(false);
+                                onTabChange?.('pedidos');
                             }}
+                            className="w-full max-w-[280px] h-[50px] bg-white text-black rounded-full font-bold uppercase tracking-wider text-sm outline-none active:scale-[0.98] transition-transform"
                         >
-                            FECHAR
-                        </button>
+                            Acompanhar Pedido
+                        </motion.button>
                     </motion.div>
                 )}
             </AnimatePresence>
