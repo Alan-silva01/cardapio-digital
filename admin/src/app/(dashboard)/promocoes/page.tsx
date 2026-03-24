@@ -19,6 +19,8 @@ export default function PromocoesPage() {
     promocao_imagem_url: "",
     promocao_titulo: "",
     promocao_preco: "",
+    promocao_produto_id: "",
+    promocao_rodape: "",
     promocao_inicio: "",
     promocao_fim: "",
     cantor_ativo: false,
@@ -49,6 +51,8 @@ export default function PromocoesPage() {
           promocao_imagem_url: data.promocao_imagem_url || "",
           promocao_titulo: data.promocao_titulo || "",
           promocao_preco: data.promocao_preco ? String(data.promocao_preco) : "",
+          promocao_produto_id: data.promocao_produto_id || "",
+          promocao_rodape: data.promocao_rodape || "",
           promocao_inicio: data.promocao_inicio ? formatToLocal(data.promocao_inicio) : "",
           promocao_fim: data.promocao_fim ? formatToLocal(data.promocao_fim) : "",
           cantor_ativo: data.cantor_ativo || false,
@@ -70,6 +74,33 @@ export default function PromocoesPage() {
     }
     fetchConfig();
   }, []);
+
+  // Auto-save silently after every config change (debounced 1.5s)
+  const isFirstLoad = useRef(true);
+  useEffect(() => {
+    if (isFirstLoad.current) { isFirstLoad.current = false; return; }
+    const timer = setTimeout(async () => {
+      const payload = {
+        id: "global",
+        promocao_ativa: config.promocao_ativa,
+        promocao_imagem_url: config.promocao_imagem_url,
+        promocao_titulo: config.promocao_titulo,
+        promocao_preco: config.promocao_preco ? parseFloat(config.promocao_preco.replace(',', '.')) : null,
+        promocao_produto_id: config.promocao_produto_id || null,
+        promocao_rodape: config.promocao_rodape || null,
+        promocao_inicio: config.promocao_inicio ? new Date(config.promocao_inicio).toISOString() : null,
+        promocao_fim: config.promocao_fim ? new Date(config.promocao_fim).toISOString() : null,
+        cantor_ativo: config.cantor_ativo,
+        cantor_nome: config.cantor_nome,
+        cantor_inicio: config.cantor_inicio ? new Date(config.cantor_inicio).toISOString() : null,
+        cantor_fim: config.cantor_fim ? new Date(config.cantor_fim).toISOString() : null,
+        couvert_ativo: config.couvert_ativo,
+        valor_couvert: config.couvert_valor,
+      };
+      await supabase.from("configuracoes").upsert(payload, { onConflict: "id" });
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [config]);
 
   const parsedAtracoes = (() => {
     if (!config.cantor_nome) return [""];
@@ -129,13 +160,14 @@ export default function PromocoesPage() {
 
   async function handleSave() {
     setSaving(true);
-
     const payload = {
       id: "global",
       promocao_ativa: config.promocao_ativa,
       promocao_imagem_url: config.promocao_imagem_url,
       promocao_titulo: config.promocao_titulo,
       promocao_preco: config.promocao_preco ? parseFloat(config.promocao_preco.replace(',', '.')) : null,
+      promocao_produto_id: config.promocao_produto_id || null,
+      promocao_rodape: config.promocao_rodape || null,
       promocao_inicio: config.promocao_inicio ? new Date(config.promocao_inicio).toISOString() : null,
       promocao_fim: config.promocao_fim ? new Date(config.promocao_fim).toISOString() : null,
       cantor_ativo: config.cantor_ativo,
@@ -145,17 +177,8 @@ export default function PromocoesPage() {
       couvert_ativo: config.couvert_ativo,
       valor_couvert: config.couvert_valor,
     };
-
-    const { error } = await supabase
-      .from("configuracoes")
-      .upsert(payload, { onConflict: "id" });
-
-    if (error) {
-      console.error(error);
-      toast.error("Erro ao salvar. Verifique as permissões do banco.");
-    } else {
-      toast.success("Configurações de Promoções salvas!");
-    }
+    const { error } = await supabase.from("configuracoes").upsert(payload, { onConflict: "id" });
+    if (error) toast.error("Erro ao salvar.");
     setSaving(false);
   }
 
@@ -275,7 +298,8 @@ export default function PromocoesPage() {
                                     ...prev,
                                     promocao_imagem_url: p.imagem_url || "",
                                     promocao_titulo: `Promoção: ${p.nome}`,
-                                    promocao_preco: ""
+                                    promocao_preco: "",
+                                    promocao_produto_id: p.id,
                                   }));
                                   setProductSearch(p.nome);
                                   setShowDropdown(false);
@@ -328,6 +352,17 @@ export default function PromocoesPage() {
                         placeholder="Ex: 19,90" 
                         className="h-9"
                       />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[12px] font-semibold text-foreground">Rodapé do Modal (opcional)</label>
+                      <Input 
+                        value={config.promocao_rodape} 
+                        onChange={e => setConfig({...config, promocao_rodape: e.target.value})} 
+                        placeholder="Ex: Somente hoje! Válido até às 22h." 
+                        className="h-9"
+                      />
+                      <p className="text-[10px] text-muted-foreground">Texto pequeno exibido embaixo da imagem no app.</p>
                     </div>
                   </div>
                 </div>

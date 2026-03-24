@@ -718,69 +718,51 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
             >
               {/* ── Title Header ── */}
               {config.promocao_titulo && (
-                <div style={{
-                  padding: '18px 24px 0',
-                  textAlign: 'center',
-                }}>
-                  <h3 style={{ 
-                    fontSize: '20px', 
-                    fontWeight: '800', 
-                    color: '#111827',
-                    lineHeight: '1.2',
-                    letterSpacing: '-0.3px'
-                  }}>
+                <div style={{ padding: '18px 24px 0', textAlign: 'center' }}>
+                  <h3 style={{ fontSize: '19px', fontWeight: '800', color: '#111827', lineHeight: '1.2', letterSpacing: '-0.3px' }}>
                     {config.promocao_titulo}
                   </h3>
                 </div>
               )}
 
-              {/* ── Image Area ── */}
-              <div style={{ width: '100%', aspectRatio: '1 / 1', background: '#ffffff', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+              {/* ── Image (tapping navigates to product) ── */}
+              <div
+                onClick={() => {
+                  if (config.promocao_titulo) {
+                    const term = config.promocao_titulo.replace(/^Promoção:\s*/i, '').trim();
+                    onProductSearch?.(term);
+                  }
+                  setShowPromo(false);
+                }}
+                style={{ width: '100%', aspectRatio: '1 / 1', background: '#ffffff', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', cursor: config.promocao_titulo ? 'pointer' : 'default' }}
+              >
                 <img
                   src={config.promocao_imagem_url}
                   alt={config.promocao_titulo || "Promoção do Dia"}
                   style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                 />
-
-                {/* ── Diagonal Stamp ── */}
-                <div style={{
-                  position: 'absolute',
-                  top: '22px',
-                  left: '-18px',
-                  background: 'linear-gradient(135deg, #16a34a, #15803d)',
-                  color: '#ffffff',
-                  fontSize: '10px',
-                  fontWeight: '900',
-                  letterSpacing: '0.5px',
-                  textTransform: 'uppercase',
-                  padding: '6px 28px',
-                  transform: 'rotate(-35deg)',
-                  boxShadow: '0 2px 8px rgba(22,163,74,0.4)',
-                  whiteSpace: 'nowrap',
-                }}>
-                  🏷️ Promoção de Hoje
-                </div>
               </div>
 
-              {/* ── Price Badge (bottom-right) ── */}
-              {config.promocao_preco && (
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                  padding: '0 20px 22px',
-                }}>
-                  <div style={{
-                    background: 'linear-gradient(135deg, #16a34a, #15803d)',
-                    color: '#fff',
-                    padding: '10px 20px',
-                    borderRadius: '100px',
-                    fontSize: '22px',
-                    fontWeight: '900',
-                    letterSpacing: '-0.5px',
-                    boxShadow: '0 4px 16px rgba(22,163,74,0.35)',
-                  }}>
-                    R$ {Number(config.promocao_preco).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              {/* ── Price (big typographic, green, no background) ── */}
+              {config.promocao_preco && (() => {
+                const [intPart, centPart] = Number(config.promocao_preco)
+                  .toLocaleString('pt-BR', { minimumFractionDigits: 2 })
+                  .split(',');
+                return (
+                  <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', padding: '0 24px 8px', gap: '2px' }}>
+                    <span style={{ fontSize: '18px', fontWeight: '900', color: '#16a34a', lineHeight: 1, marginBottom: '6px' }}>R$</span>
+                    <span style={{ fontSize: '56px', fontWeight: '900', color: '#16a34a', lineHeight: 1, letterSpacing: '-3px' }}>{intPart}</span>
+                    <span style={{ fontSize: '22px', fontWeight: '900', color: '#16a34a', lineHeight: 1, marginBottom: '6px' }}>,{centPart}</span>
                   </div>
+                );
+              })()}
+
+              {/* ── Rodapé ── */}
+              {config.promocao_rodape && (
+                <div style={{ padding: '0 20px 20px', textAlign: 'center' }}>
+                  <p style={{ fontSize: '12px', color: '#6b7280', fontWeight: '600', letterSpacing: '0.2px' }}>
+                    {config.promocao_rodape}
+                  </p>
                 </div>
               )}
 
@@ -788,20 +770,11 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
               <button
                 onClick={() => setShowPromo(false)}
                 style={{
-                  position: 'absolute',
-                  top: '12px',
-                  right: '12px',
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  background: 'rgba(0,0,0,0.07)',
-                  border: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  transition: 'background 0.2s',
-                  zIndex: 10,
+                  position: 'absolute', top: '12px', right: '12px',
+                  width: '32px', height: '32px', borderRadius: '50%',
+                  background: 'rgba(0,0,0,0.07)', border: 'none',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', zIndex: 10,
                 }}
               >
                 <X size={18} color="#111827" />
