@@ -50,7 +50,12 @@ export default function PromocoesPage() {
 
       if (data) {
         // Migrate old single promo into array if array is empty
-        let loadedPromocoes = Array.isArray(data.promocoes) ? data.promocoes : [];
+        let loadedPromocoes = Array.isArray(data.promocoes) ? data.promocoes.map((p: any) => ({
+          ...p,
+          inicio: p.inicio ? formatToLocal(p.inicio) : "",
+          fim: p.fim ? formatToLocal(p.fim) : "",
+        })) : [];
+        
         if (loadedPromocoes.length === 0 && (data.promocao_imagem_url || data.promocao_titulo)) {
           loadedPromocoes = [{
             imagem_url: data.promocao_imagem_url || "",
