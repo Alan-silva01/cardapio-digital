@@ -702,7 +702,7 @@ export default function PedidosPage() {
     const totalCouvertQtd = couvertItems.reduce((acc, curr) => acc + curr.quantidade, 0);
     const totalCouvertValor = couvertItems.reduce((acc, curr) => acc + curr.preco_total, 0);
     const couvertHtml = totalCouvertQtd > 0 
-      ? `<div style="text-align: right; font-size: 11px; margin-top: 4px; color: #555;">Couvert Artístico: ${totalCouvertQtd} pessoa(s) (R$ ${totalCouvertValor.toFixed(2)})</div>`
+      ? `<div style="text-align: right; font-size: 11px; margin-top: 4px; color: #555;">Couvert R$ ${(totalCouvertValor / totalCouvertQtd).toFixed(2)} por pessoa</div>`
       : "";
 
     printWindow.document.write(`
@@ -786,7 +786,7 @@ export default function PedidosPage() {
     const totalCouvertQtd = couvertItems.reduce((acc, curr) => acc + curr.quantidade, 0);
     const totalCouvertValor = couvertItems.reduce((acc, curr) => acc + curr.preco_total, 0);
     const couvertHtml = totalCouvertQtd > 0 
-      ? `<div style="text-align: right; font-size: 11px; margin-top: 4px; color: #555;">Couvert Artístico: ${totalCouvertQtd} pessoa(s) (R$ ${totalCouvertValor.toFixed(2)})</div>`
+      ? `<div style="text-align: right; font-size: 11px; margin-top: 4px; color: #555;">Couvert R$ ${(totalCouvertValor / totalCouvertQtd).toFixed(2)} por pessoa</div>`
       : "";
 
     printWindow.document.write(`
