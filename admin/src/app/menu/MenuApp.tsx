@@ -1156,40 +1156,6 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                         )}
                     </div>
                 </div>
-
-                {/* SINGER MARQUEE - sits below nav icons, above product content */}
-                {config?.cantor_ativo && config?.cantor_nome && (() => {
-                    const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-                    const start = config.cantor_inicio ? new Date(config.cantor_inicio) : null;
-                    const end = config.cantor_fim ? new Date(config.cantor_fim) : null;
-                    if ((!start || now >= start) && (!end || now <= end)) {
-                        return (
-                            <div style={{
-                                width: '100%',
-                                overflow: 'hidden',
-                                whiteSpace: 'nowrap',
-                                padding: '5px 0 8px',
-                                display: 'flex',
-                                alignItems: 'center',
-                            }}>
-                                <style dangerouslySetInnerHTML={{__html: `
-                                    @keyframes marqueeText { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
-                                `}} />
-                                <div style={{
-                                    display: 'inline-block',
-                                    fontSize: '11px',
-                                    fontWeight: '700',
-                                    letterSpacing: '0.5px',
-                                    color: '#D4AF37',
-                                    animation: 'marqueeText 18s linear infinite'
-                                }}>
-                                    🎤 {config.cantor_nome}
-                                </div>
-                            </div>
-                        );
-                    }
-                    return null;
-                })()}
             </div>
 
             {/* ANIMATED HERO SECTION */}
