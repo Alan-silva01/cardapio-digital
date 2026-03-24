@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Megaphone, Mic2, Ticket, Upload, Save, Loader2, Image as ImageIcon, Plus, Trash2, Search, X } from "lucide-react";
+import { Megaphone, Mic2, Ticket, Upload, Save, Loader2, Image as ImageIcon, Plus, Trash2, Search, X, Check } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { uploadImageAction } from "@/app/actions/upload-image";
 import { toast } from "sonner";
@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 
 export default function PromocoesPage() {
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [uploading, setUploading] = useState(false);
 
   const [config, setConfig] = useState({
@@ -127,6 +127,9 @@ export default function PromocoesPage() {
   const isFirstLoad = useRef(true);
   useEffect(() => {
     if (isFirstLoad.current) { isFirstLoad.current = false; return; }
+    
+    setSaveStatus('saving');
+    
     const timer = setTimeout(async () => {
       const payload = {
         id: "global",
@@ -151,7 +154,14 @@ export default function PromocoesPage() {
         couvert_ativo: config.couvert_ativo,
         valor_couvert: config.couvert_valor,
       };
-      await supabase.from("configuracoes").upsert(payload, { onConflict: "id" });
+      const { error } = await supabase.from("configuracoes").upsert(payload, { onConflict: "id" });
+      if (!error) {
+        setSaveStatus('saved');
+        setTimeout(() => setSaveStatus('idle'), 2000);
+      } else {
+        toast.error("Erro ao salvar automaticamente.");
+        setSaveStatus('idle');
+      }
     }, 1500);
     return () => clearTimeout(timer);
   }, [config]);
@@ -250,35 +260,7 @@ export default function PromocoesPage() {
     setCurrentPromoIndex(Math.max(0, currentPromoIndex - 1));
   }
 
-  async function handleSave() {
-    setSaving(true);
-    const payload = {
-      id: "global",
-      promocao_ativa: config.promocao_ativa,
-      promocoes: config.promocoes.map((p: any) => ({
-        ...p,
-        preco: p.preco ? parseFloat(p.preco.toString().replace(',', '.')) : null,
-        inicio: p.inicio ? new Date(p.inicio).toISOString() : null,
-        fim: p.fim ? new Date(p.fim).toISOString() : null,
-      })),
-      promocao_imagem_url: config.promocao_imagem_url,
-      promocao_titulo: config.promocao_titulo,
-      promocao_preco: config.promocao_preco ? parseFloat(config.promocao_preco.replace(',', '.')) : null,
-      promocao_produto_id: config.promocao_produto_id || null,
-      promocao_rodape: config.promocao_rodape || null,
-      promocao_inicio: config.promocao_inicio ? new Date(config.promocao_inicio).toISOString() : null,
-      promocao_fim: config.promocao_fim ? new Date(config.promocao_fim).toISOString() : null,
-      cantor_ativo: config.cantor_ativo,
-      cantor_nome: config.cantor_nome,
-      cantor_inicio: config.cantor_inicio ? new Date(config.cantor_inicio).toISOString() : null,
-      cantor_fim: config.cantor_fim ? new Date(config.cantor_fim).toISOString() : null,
-      couvert_ativo: config.couvert_ativo,
-      valor_couvert: config.couvert_valor,
-    };
-    const { error } = await supabase.from("configuracoes").upsert(payload, { onConflict: "id" });
-    if (error) toast.error("Erro ao salvar.");
-    setSaving(false);
-  }
+
 
   if (loading) {
     return (
@@ -295,10 +277,18 @@ export default function PromocoesPage() {
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">Destaques</h1>
           <p className="text-[13px] text-muted-foreground mt-1">Gerencie promoções do dia, line-up de artistas e cobrança de couvert artístico.</p>
         </div>
-        <Button onClick={handleSave} disabled={saving} className="bg-brand text-white hover:bg-brand/90 font-medium h-9">
-          {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-          Salvar Tudo
-        </Button>
+        <div className="h-9 flex items-center px-3 gap-2">
+          {saveStatus === 'saving' && (
+            <span className="flex items-center text-xs text-muted-foreground font-medium animate-pulse">
+              <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Salvando...
+            </span>
+          )}
+          {saveStatus === 'saved' && (
+            <span className="flex items-center text-xs text-emerald-600 font-medium">
+              <Check className="h-4 w-4 mr-1.5" /> Alterações salvas
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-6">
