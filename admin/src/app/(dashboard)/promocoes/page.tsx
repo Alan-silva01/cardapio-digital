@@ -171,7 +171,7 @@ export default function PromocoesPage() {
     <div className="flex-1 w-full space-y-8 p-8 max-w-4xl mx-auto mt-4 pb-24 relative">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Promoções &amp; Couvert</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Destaques</h1>
           <p className="text-[13px] text-muted-foreground mt-1">Gerencie promoções do dia, line-up de artistas e cobrança de couvert artístico.</p>
         </div>
         <Button onClick={handleSave} disabled={saving} className="bg-brand text-white hover:bg-brand/90 font-medium h-9">

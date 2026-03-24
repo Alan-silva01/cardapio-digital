@@ -51,7 +51,7 @@ const navigationGroups: SidebarGroup[] = [
         items: [
             { icon: BookOpen, label: "Cardápio", href: "/cardapio" },
             { icon: Package, label: "Estoque", href: "/estoque" },
-            { icon: Megaphone, label: "Promoções/Couvert", href: "/promocoes" },
+            { icon: Megaphone, label: "Destaques", href: "/promocoes" },
         ]
     },
     {
