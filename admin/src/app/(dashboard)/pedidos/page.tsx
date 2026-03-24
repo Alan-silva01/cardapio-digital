@@ -698,6 +698,13 @@ export default function PedidosPage() {
       )
       .join("");
 
+    const couvertItems = pessoa.itens.filter((i) => i.nome_produto.toLowerCase().includes("couvert"));
+    const totalCouvertQtd = couvertItems.reduce((acc, curr) => acc + curr.quantidade, 0);
+    const totalCouvertValor = couvertItems.reduce((acc, curr) => acc + curr.preco_total, 0);
+    const couvertHtml = totalCouvertQtd > 0 
+      ? `<div style="text-align: right; font-size: 11px; margin-top: 4px; color: #555;">Couvert Artístico: ${totalCouvertQtd} pessoa(s) (R$ ${totalCouvertValor.toFixed(2)})</div>`
+      : "";
+
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
@@ -730,6 +737,7 @@ export default function PedidosPage() {
           <div class="meta">${new Date().toLocaleString("pt-BR")}</div>
         </div>
         <table>${itemsHtml}</table>
+        ${couvertHtml}
         <div class="total">Total: R$ ${pessoa.subtotal.toFixed(2)}</div>
         <div class="footer">
           <div>Comanda Individual</div>
@@ -774,6 +782,13 @@ export default function PedidosPage() {
       )
       .join("");
 
+    const couvertItems = comanda.pessoas.flatMap((p) => p.itens.filter((i) => i.nome_produto.toLowerCase().includes("couvert")));
+    const totalCouvertQtd = couvertItems.reduce((acc, curr) => acc + curr.quantidade, 0);
+    const totalCouvertValor = couvertItems.reduce((acc, curr) => acc + curr.preco_total, 0);
+    const couvertHtml = totalCouvertQtd > 0 
+      ? `<div style="text-align: right; font-size: 11px; margin-top: 4px; color: #555;">Couvert Artístico: ${totalCouvertQtd} pessoa(s) (R$ ${totalCouvertValor.toFixed(2)})</div>`
+      : "";
+
     printWindow.document.write(`
       <!DOCTYPE html>
       <html>
@@ -809,6 +824,7 @@ export default function PedidosPage() {
           <div class="meta">${new Date().toLocaleString("pt-BR")}</div>
         </div>
         ${sectionsHtml}
+        ${couvertHtml}
         <div class="total">Total: R$ ${Number(comanda.total).toFixed(2)}</div>
         <div class="footer">
           <div>Pedido Completo</div>
