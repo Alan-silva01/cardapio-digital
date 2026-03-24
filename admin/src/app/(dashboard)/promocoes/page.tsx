@@ -64,12 +64,11 @@ export default function PromocoesPage() {
         } else if (loadedPromocoes.length === 0) {
           // Initialize with one empty promo setting defaults: today 13:00 to tomorrow 05:00
           const now = new Date();
-          const start = new Date(now);
-          start.setHours(13, 0, 0, 0);
-          
-          const end = new Date(now);
-          end.setDate(end.getDate() + 1);
-          end.setHours(5, 0, 0, 0);
+          const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 13, 0, 0);
+          const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 5, 0, 0);
+
+          const pad = (n: number) => n.toString().padStart(2, '0');
+          const localString = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
           
           loadedPromocoes = [{
             imagem_url: "",
@@ -77,8 +76,8 @@ export default function PromocoesPage() {
             preco: "",
             produto_id: "",
             rodape: "",
-            inicio: formatToLocal(start.toISOString()),
-            fim: formatToLocal(end.toISOString()),
+            inicio: localString(start),
+            fim: localString(end),
           }];
         }
 
@@ -210,11 +209,11 @@ export default function PromocoesPage() {
 
   function addPromo() {
     const now = new Date();
-    const start = new Date(now);
-    start.setHours(13, 0, 0, 0);
-    const end = new Date(now);
-    end.setDate(end.getDate() + 1);
-    end.setHours(5, 0, 0, 0);
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 13, 0, 0);
+    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 5, 0, 0);
+
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const localString = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
     const newPromo = {
       imagem_url: "",
@@ -222,8 +221,8 @@ export default function PromocoesPage() {
       preco: "",
       produto_id: "",
       rodape: "",
-      inicio: formatToLocal(start.toISOString()),
-      fim: formatToLocal(end.toISOString()),
+      inicio: localString(start),
+      fim: localString(end),
     };
     setConfig({ ...config, promocoes: [...config.promocoes, newPromo] });
     setCurrentPromoIndex(config.promocoes.length);
@@ -416,10 +415,15 @@ export default function PromocoesPage() {
                                 key={p.id}
                                 onClick={() => {
                                   setSelectedProduct(p);
-                                  updateCurrentPromo("imagem_url", p.imagem_url || "");
-                                  updateCurrentPromo("titulo", `Promoção: ${p.nome}`);
-                                  updateCurrentPromo("preco", "");
-                                  updateCurrentPromo("produto_id", p.id);
+                                  const newPromos = [...config.promocoes];
+                                  newPromos[currentPromoIndex] = {
+                                    ...newPromos[currentPromoIndex],
+                                    imagem_url: p.imagem_url || "",
+                                    titulo: `Promoção: ${p.nome}`,
+                                    preco: "",
+                                    produto_id: p.id
+                                  };
+                                  setConfig({ ...config, promocoes: newPromos });
                                   setProductSearch(p.nome);
                                   setShowDropdown(false);
                                 }}
