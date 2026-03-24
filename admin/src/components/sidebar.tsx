@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { createClient } from "@/lib/supabase/client";
 import {
     Home,
     UtensilsCrossed,
@@ -19,7 +20,8 @@ import {
     Settings,
     Menu,
     Pin,
-    PinOff
+    PinOff,
+    LogOut,
 } from "lucide-react";
 
 interface SidebarItem {
@@ -64,8 +66,18 @@ const navigationGroups: SidebarGroup[] = [
 
 export function Sidebar() {
     const pathname = usePathname();
+    const router = useRouter();
     const [isPinned, setIsPinned] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+    const handleLogout = useCallback(async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setIsLoggingOut(true);
+        const supabase = createClient();
+        await supabase.auth.signOut();
+        router.push("/login");
+    }, [router]);
 
     const isExpanded = isPinned || isHovered;
 
@@ -176,22 +188,22 @@ export function Sidebar() {
                         </span>
                     </button>
 
-                    {/* Admin Status */}
-                    <div className={cn(
-                        "flex h-8 items-center transition-all duration-300 mx-2",
-                    )}>
+                    {/* Logout */}
+                    <button
+                        onClick={handleLogout}
+                        disabled={isLoggingOut}
+                        className="flex h-8 items-center rounded-md hover:bg-red-500/10 transition-colors text-muted-foreground hover:text-red-500 mx-2 cursor-pointer group"
+                    >
                         <div className="w-8 h-8 shrink-0 flex items-center justify-center">
-                            <Avatar className="h-5 w-5 border border-sidebar-border">
-                                <AvatarFallback className="bg-sidebar-accent text-sidebar-foreground text-[8px]">AD</AvatarFallback>
-                            </Avatar>
+                            <LogOut className="h-4 w-4" />
                         </div>
                         <span className={cn(
-                            "text-[11px] text-sidebar-foreground font-medium pl-2 transition-all duration-300",
+                            "text-[12px] font-medium whitespace-nowrap transition-all duration-300 ease-out pl-2",
                             isExpanded ? "opacity-100" : "opacity-0 w-0"
                         )}>
-                            Admin v0.1
+                            {isLoggingOut ? "Saindo..." : "Sair"}
                         </span>
-                    </div>
+                    </button>
                 </div>
             </aside>
         </>
