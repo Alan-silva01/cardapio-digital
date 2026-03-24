@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,6 @@ import {
     ArrowRight,
     TrendingUp,
     Package,
-    Loader2,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -36,6 +35,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { format, subDays, startOfDay, endOfDay, eachDayOfInterval, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { MetricCardSkeleton, ChartSkeleton, ListSkeleton } from "@/components/dashboard/skeleton";
 
 // --- CHART CONFIGS ---
 const ordersChartConfig = {
@@ -62,23 +62,54 @@ export default function DashboardPage() {
     const [pedidosOntem, setPedidosOntem] = useState<any[]>([]);
     const [itensPedido, setItensPedido] = useState<any[]>([]);
     const [estoqueBaixo, setEstoqueBaixo] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
+    // Phase 1: metrics cards (fast queries)
+    const [metricsReady, setMetricsReady] = useState(false);
+    // Phase 2: charts and lists (heavier queries)
+    const [chartsReady, setChartsReady] = useState(false);
     const [activeServiceCalls, setActiveServiceCalls] = useState<any[]>([]);
-    const audioAlertsRef = useRef<any[]>([]);
 
     const fetchData = useCallback(async () => {
-        setLoading(true);
         const now = new Date();
         const start7Days = startOfDay(subDays(now, 6)).toISOString();
         const endNow = endOfDay(now).toISOString();
+        const todayStart = startOfDay(now).toISOString();
+        const yesterdayStart = startOfDay(subDays(now, 1)).toISOString();
+        const yesterdayEnd = endOfDay(subDays(now, 1)).toISOString();
 
-        const [pedidos7dRes, itensRes, estoqueRes, activeMesasRes, audioRes] = await Promise.all([
+        // PHASE 1: Fast queries for metrics cards (show first)
+        const [pedidos7dRes, activeMesasRes] = await Promise.all([
             supabase
                 .from("pedidos")
                 .select("id, status, total, criado_em")
                 .gte("criado_em", start7Days)
                 .lte("criado_em", endNow)
                 .order("criado_em", { ascending: false }),
+            supabase
+                .from("mesas")
+                .select("id, numero, chamando_garcom, solicitando_conta")
+                .or('chamando_garcom.eq.true,solicitando_conta.eq.true'),
+        ]);
+
+        const allPedidos = pedidos7dRes.data || [];
+        setPedidos(allPedidos);
+        setPedidosHoje(allPedidos.filter(p => p.criado_em >= todayStart));
+        setPedidosOntem(allPedidos.filter(p => p.criado_em >= yesterdayStart && p.criado_em <= yesterdayEnd));
+
+        if (activeMesasRes.data) {
+            const initialCalls = activeMesasRes.data.flatMap(mesa => {
+                const calls: any[] = [];
+                if (mesa.chamando_garcom) calls.push({ mesa: mesa.numero.toString(), type: 'garcom' as const, time: new Date(), id: `g-${mesa.id}` });
+                if (mesa.solicitando_conta) calls.push({ mesa: mesa.numero.toString(), type: 'conta' as const, time: new Date(), id: `c-${mesa.id}` });
+                return calls;
+            });
+            setActiveServiceCalls(initialCalls);
+        }
+
+        // Show metrics immediately
+        setMetricsReady(true);
+
+        // PHASE 2: Heavier queries for charts and lists (show after)
+        const [itensRes, estoqueRes] = await Promise.all([
             supabase
                 .from("itens_pedido")
                 .select(`
@@ -106,21 +137,7 @@ export default function DashboardPage() {
                 `)
                 .eq("ativo", true)
                 .neq("estoque", -1),
-             supabase
-                .from("mesas")
-                .select("id, numero, chamando_garcom, solicitando_conta")
-                .or('chamando_garcom.eq.true,solicitando_conta.eq.true'),
-            supabase
-                .from("audio_alertas")
-                .select("mesa_numero, tipo, audio_url")
         ]);
-
-        if (audioRes.data) {
-            audioAlertsRef.current = audioRes.data;
-        }
-
-        const allPedidos = pedidos7dRes.data || [];
-        setPedidos(allPedidos);
 
         if (itensRes.data) setItensPedido(itensRes.data);
 
@@ -129,25 +146,8 @@ export default function DashboardPage() {
             setEstoqueBaixo(lowStock.sort((a, b) => a.estoque - b.estoque));
         }
 
-        if (activeMesasRes.data) {
-            const initialCalls = activeMesasRes.data.flatMap(mesa => {
-                const calls = [];
-                if (mesa.chamando_garcom) calls.push({ mesa: mesa.numero.toString(), type: 'garcom' as const, time: new Date(), id: `g-${mesa.id}` });
-                if (mesa.solicitando_conta) calls.push({ mesa: mesa.numero.toString(), type: 'conta' as const, time: new Date(), id: `c-${mesa.id}` });
-                return calls;
-            });
-            setActiveServiceCalls(initialCalls);
-        }
-
-        const todayStart = startOfDay(now).toISOString();
-        const yesterdayStart = startOfDay(subDays(now, 1)).toISOString();
-        const yesterdayEnd = endOfDay(subDays(now, 1)).toISOString();
-
-        setPedidosHoje(allPedidos.filter(p => p.criado_em >= todayStart));
-        setPedidosOntem(allPedidos.filter(p => p.criado_em >= yesterdayStart && p.criado_em <= yesterdayEnd));
-
-        setLoading(false);
-    }, [supabase]);
+        setChartsReady(true);
+    }, []);
 
     useEffect(() => {
         fetchData();
@@ -259,10 +259,31 @@ export default function DashboardPage() {
 
     const totalCategories = useMemo(() => categoryData.reduce((acc, curr) => acc + curr.visitors, 0), [categoryData]);
 
-    if (loading) {
+    if (!metricsReady) {
         return (
-            <div className="flex-1 flex items-center justify-center h-[calc(100vh-3.5rem)]">
-                <Loader2 className="h-8 w-8 animate-spin text-brand" />
+            <div className="flex flex-col h-[calc(100vh-3.5rem)] w-full overflow-y-auto">
+                <div className="px-6 py-4 space-y-2.5">
+                    <div className="flex flex-col gap-4 shrink-0">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <div className="h-6 w-40 bg-muted rounded animate-pulse" />
+                                <div className="h-4 w-56 bg-muted rounded animate-pulse mt-2" />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="grid gap-2.5 grid-cols-2 lg:grid-cols-4 shrink-0">
+                        {[...Array(4)].map((_, i) => <MetricCardSkeleton key={i} />)}
+                    </div>
+                    <div className="grid gap-2.5 lg:grid-cols-10">
+                        <div className="lg:col-span-3"><ChartSkeleton /></div>
+                        <div className="lg:col-span-3"><ChartSkeleton /></div>
+                        <div className="lg:col-span-4"><ListSkeleton /></div>
+                    </div>
+                    <div className="grid gap-2.5 lg:grid-cols-10">
+                        <div className="lg:col-span-6"><ChartSkeleton /></div>
+                        <div className="lg:col-span-4"><ListSkeleton /></div>
+                    </div>
+                </div>
             </div>
         );
     }
@@ -362,6 +383,13 @@ export default function DashboardPage() {
             </div>
 
             {/* --- ROW 2: Charts + Top Vendidos --- */}
+            {!chartsReady ? (
+                <div className="grid gap-2.5 lg:grid-cols-10">
+                    <div className="lg:col-span-3"><ChartSkeleton /></div>
+                    <div className="lg:col-span-3"><ChartSkeleton /></div>
+                    <div className="lg:col-span-4"><ListSkeleton /></div>
+                </div>
+            ) : (
             <div className="grid gap-2.5 lg:grid-cols-10">
 
                 {/* BAR CHART: Orders per Day */}
@@ -501,8 +529,15 @@ export default function DashboardPage() {
                     </CardContent>
                 </Card>
             </div>
+            )}
 
             {/* --- ROW 3: Traffic + Low Stock --- */}
+            {!chartsReady ? (
+                <div className="grid gap-2.5 lg:grid-cols-10">
+                    <div className="lg:col-span-6"><ChartSkeleton /></div>
+                    <div className="lg:col-span-4"><ListSkeleton /></div>
+                </div>
+            ) : (
             <div className="grid gap-2.5 lg:grid-cols-10">
 
                 {/* AREA CHART: Hourly Traffic */}
@@ -595,6 +630,7 @@ export default function DashboardPage() {
                     </CardContent>
                 </Card>
             </div>
+            )}
             </div>
         </div>
     );

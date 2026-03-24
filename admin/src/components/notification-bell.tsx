@@ -36,24 +36,9 @@ export function NotificationBell() {
     const [open, setOpen] = useState(false);
     const mesasStateRef = useRef<Record<number, { garcom: boolean; conta: boolean }>>({});
 
-    // Load initial mesa states to prevent stale triggers on first load
-    useEffect(() => {
-        async function loadMesaStates() {
-            const { data } = await supabase
-                .from("mesas")
-                .select("numero, chamando_garcom, solicitando_conta");
-            if (!data) return;
-            const state: Record<number, { garcom: boolean; conta: boolean }> = {};
-            data.forEach((m) => {
-                state[m.numero] = {
-                    garcom: !!m.chamando_garcom,
-                    conta: !!m.solicitando_conta,
-                };
-            });
-            mesasStateRef.current = state;
-        }
-        loadMesaStates();
-    }, []);
+    // Mesa states are tracked only from Realtime events going forward.
+    // Initial state is intentionally skipped to avoid a duplicate query
+    // (GlobalServiceNotifier already fetches it).
 
     const addNotification = useCallback((n: Omit<Notification, "id" | "timestamp" | "read">) => {
         setNotifications((prev) => [
