@@ -430,14 +430,20 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
           if ((!start || now >= start) && (!end || now <= end)) {
             return (
               <div style={{
-                width: '100%',
-                background: 'linear-gradient(90deg, rgba(0,0,0,0.95), rgba(20,20,20,0.95))',
+                width: '100vw',
+                marginLeft: '-16px', // To stretch across the padding of home-scroll
+                background: 'linear-gradient(90deg, #111 0%, #000 50%, #111 100%)',
                 overflow: 'hidden',
                 whiteSpace: 'nowrap',
-                padding: '8px 0',
+                padding: '10px 0',
                 display: 'flex',
                 alignItems: 'center',
-                borderBottom: '1px solid rgba(212,175,55,0.15)',
+                position: 'relative',
+                zIndex: 25,
+                boxShadow: '0 4px 12px rgba(0,0,0,0.8)',
+                borderTop: '1px solid rgba(212,175,55,0.1)',
+                borderBottom: '1px solid rgba(212,175,55,0.1)',
+                marginBottom: '28px', // Compensates for the search bar's negative margin (-24px)
               }}>
                 <style dangerouslySetInnerHTML={{__html: `
                   @keyframes marqueeHome { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
@@ -449,7 +455,7 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
                   letterSpacing: '1px',
                   color: '#D4AF37',
                   animation: 'marqueeHome 18s linear infinite',
-                  textShadow: '0 0 8px rgba(212,175,55,0.3)',
+                  textShadow: '0 0 8px rgba(212,175,55,0.2)',
                 }}>
                   🎤 {config.cantor_nome}
                 </div>
