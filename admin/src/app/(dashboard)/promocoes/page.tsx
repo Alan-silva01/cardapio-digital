@@ -17,6 +17,8 @@ export default function PromocoesPage() {
   const [config, setConfig] = useState({
     promocao_ativa: false,
     promocao_imagem_url: "",
+    promocao_titulo: "",
+    promocao_preco: "",
     promocao_inicio: "",
     promocao_fim: "",
     cantor_ativo: false,
@@ -26,6 +28,8 @@ export default function PromocoesPage() {
     couvert_ativo: false,
     couvert_valor: 10.0,
   });
+
+  const [produtos, setProdutos] = useState<any[]>([]);
 
   useEffect(() => {
     async function fetchConfig() {
@@ -39,6 +43,8 @@ export default function PromocoesPage() {
         setConfig({
           promocao_ativa: data.promocao_ativa || false,
           promocao_imagem_url: data.promocao_imagem_url || "",
+          promocao_titulo: data.promocao_titulo || "",
+          promocao_preco: data.promocao_preco ? String(data.promocao_preco) : "",
           promocao_inicio: data.promocao_inicio ? formatToLocal(data.promocao_inicio) : "",
           promocao_fim: data.promocao_fim ? formatToLocal(data.promocao_fim) : "",
           cantor_ativo: data.cantor_ativo || false,
@@ -49,6 +55,13 @@ export default function PromocoesPage() {
           couvert_valor: data.valor_couvert || 10.0,
         });
       }
+
+      const { data: prods } = await supabase
+        .from("produtos")
+        .select("id, titulo, preco, imagem_url")
+        .order("titulo");
+      if (prods) setProdutos(prods);
+
       setLoading(false);
     }
     fetchConfig();
@@ -117,6 +130,8 @@ export default function PromocoesPage() {
       id: "global",
       promocao_ativa: config.promocao_ativa,
       promocao_imagem_url: config.promocao_imagem_url,
+      promocao_titulo: config.promocao_titulo,
+      promocao_preco: config.promocao_preco ? parseFloat(config.promocao_preco.replace(',', '.')) : null,
       promocao_inicio: config.promocao_inicio ? new Date(config.promocao_inicio).toISOString() : null,
       promocao_fim: config.promocao_fim ? new Date(config.promocao_fim).toISOString() : null,
       cantor_ativo: config.cantor_ativo,
@@ -180,30 +195,77 @@ export default function PromocoesPage() {
 
             {config.promocao_ativa && (
               <div className="grid gap-4 mt-4 pt-4 border-t border-border/50">
-                <div className="flex items-start gap-4">
-                  <div className="w-32 h-40 shrink-0 border-2 border-dashed rounded-xl bg-muted/30 flex items-center justify-center overflow-hidden relative">
-                    {config.promocao_imagem_url ? (
-                       <img src={config.promocao_imagem_url} alt="Promo" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="flex flex-col items-center gap-1 text-muted-foreground">
-                        <ImageIcon className="h-6 w-6 opacity-40" />
-                        <span className="text-[10px] uppercase font-bold tracking-wider opacity-50">Sem Imagem</span>
-                      </div>
-                    )}
-                    {uploading && (
-                      <div className="absolute inset-0 bg-background/60 backdrop-blur-xs flex items-center justify-center">
-                        <Loader2 className="h-6 w-6 animate-spin text-brand" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1 space-y-2">
-                    <label className="text-xs font-semibold">Imagem do Modal</label>
-                    <label className="flex items-center gap-2 px-4 py-2 bg-muted/50 border rounded-md cursor-pointer hover:bg-muted w-max text-sm font-medium transition-colors">
-                      <Upload className="h-4 w-4" />
-                      Anexar Imagem
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Esquerda: Preview da Imagem */}
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-40 h-52 shrink-0 border-2 border-dashed border-muted-foreground/30 rounded-xl bg-white flex items-center justify-center overflow-hidden relative shadow-sm">
+                      {config.promocao_imagem_url ? (
+                         <img src={config.promocao_imagem_url} alt="Promo" className="w-full h-full object-contain p-2" />
+                      ) : (
+                        <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                          <ImageIcon className="h-8 w-8 opacity-40" />
+                          <span className="text-[11px] uppercase font-bold tracking-wider opacity-50">Sem Imagem</span>
+                        </div>
+                      )}
+                      {uploading && (
+                        <div className="absolute inset-0 bg-background/60 backdrop-blur-xs flex items-center justify-center">
+                          <Loader2 className="h-6 w-6 animate-spin text-brand" />
+                        </div>
+                      )}
+                    </div>
+                    {/* Botão de upload opcional */}
+                    <label className="flex items-center gap-2 px-3 py-1.5 bg-muted/50 border rounded-md cursor-pointer hover:bg-muted text-xs font-medium transition-colors mt-2">
+                      <Upload className="h-3.5 w-3.5" /> Enviar Outra Imagem
                       <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} disabled={uploading} />
                     </label>
-                    <p className="text-[11px] text-muted-foreground mt-2 max-w-sm">Use imagens verticais (tamanho de folheto/flyer de celular) para melhor encaixe na tela do cliente.</p>
+                  </div>
+
+                  {/* Direita: Controles da Promoção */}
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[12px] font-semibold text-foreground">Produto em Promoção</label>
+                      <select 
+                        className="w-full h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                        onChange={(e) => {
+                          const prod = produtos.find(p => p.id === e.target.value);
+                          if (prod) {
+                            setConfig({
+                              ...config,
+                              promocao_imagem_url: prod.imagem_url || "",
+                              promocao_titulo: `Promoção: ${prod.titulo}`,
+                              promocao_preco: String(prod.preco)
+                            });
+                          }
+                        }}
+                        defaultValue=""
+                      >
+                        <option value="" disabled>Selecione um produto...</option>
+                        {produtos.map(p => (
+                          <option key={p.id} value={p.id}>{p.titulo}</option>
+                        ))}
+                      </select>
+                      <p className="text-[10px] text-muted-foreground">Selecionar um produto preenche automaticamente a imagem, título e preço.</p>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[12px] font-semibold text-foreground">Título no Modal</label>
+                      <Input 
+                        value={config.promocao_titulo} 
+                        onChange={e => setConfig({...config, promocao_titulo: e.target.value})} 
+                        placeholder="Ex: Combo Especial, Promoção de Quarta..." 
+                        className="h-9"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[12px] font-semibold text-foreground">Preço Promocional (R$)</label>
+                      <Input 
+                        value={config.promocao_preco} 
+                        onChange={e => setConfig({...config, promocao_preco: e.target.value})} 
+                        placeholder="Ex: 19,90" 
+                        className="h-9"
+                      />
+                    </div>
                   </div>
                 </div>
 

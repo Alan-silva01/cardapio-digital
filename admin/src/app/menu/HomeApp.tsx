@@ -706,32 +706,80 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ type: 'spring', damping: 20 }}
               onClick={(e) => e.stopPropagation()}
-              style={{ position: 'relative', maxWidth: '340px', width: '100%' }}
+              style={{ 
+                position: 'relative', 
+                maxWidth: '320px', 
+                width: '100%',
+                background: '#ffffff',
+                borderRadius: '24px',
+                overflow: 'hidden',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+              }}
             >
-              <img
-                src={config.promocao_imagem_url}
-                alt="Promoção do Dia"
-                style={{ width: '100%', borderRadius: '16px', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}
-              />
+              {/* Image Container with White Background */}
+              <div style={{ width: '100%', aspectRatio: '1 / 1', background: '#ffffff', padding: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <img
+                  src={config.promocao_imagem_url}
+                  alt={config.promocao_titulo || "Promoção do Dia"}
+                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                />
+              </div>
+              
+              {/* Details Section */}
+              {(config.promocao_titulo || config.promocao_preco) && (
+                <div style={{ 
+                  padding: '0 24px 28px', 
+                  textAlign: 'center',
+                  background: 'linear-gradient(to bottom, #ffffff, #f9fafb)'
+                }}>
+                  {config.promocao_titulo && (
+                    <h3 style={{ 
+                      fontSize: '22px', 
+                      fontWeight: '800', 
+                      color: '#111827',
+                      marginBottom: '8px',
+                      lineHeight: '1.2'
+                    }}>
+                      {config.promocao_titulo}
+                    </h3>
+                  )}
+                  {config.promocao_preco && (
+                    <div style={{
+                      display: 'inline-block',
+                      background: '#fee2e2',
+                      color: '#b91c1c',
+                      padding: '8px 16px',
+                      borderRadius: '100px',
+                      fontSize: '20px',
+                      fontWeight: '900',
+                      letterSpacing: '-0.5px'
+                    }}>
+                      R$ {Number(config.promocao_preco).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Close Button */}
               <button
                 onClick={() => setShowPromo(false)}
                 style={{
                   position: 'absolute',
-                  top: '-12px',
-                  right: '-12px',
+                  top: '12px',
+                  right: '12px',
                   width: '32px',
                   height: '32px',
                   borderRadius: '50%',
-                  background: '#fff',
+                  background: 'rgba(0,0,0,0.05)',
                   border: 'none',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   cursor: 'pointer',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                  transition: 'background 0.2s',
                 }}
               >
-                <X size={18} color="#333" />
+                <X size={18} color="#111827" />
               </button>
             </motion.div>
           </motion.div>
