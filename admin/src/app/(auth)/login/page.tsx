@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import Image from "next/image";
 import { Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import logoImg from "@/assets/images/logo.png";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
@@ -60,7 +62,17 @@ export default function LoginPage() {
                 {/* Textura sutil vintage de fundo (opcional/css) */}
                 <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] pointer-events-none" />
 
-                <div className="z-10 text-center">
+                <div className="z-10 text-center flex flex-col items-center">
+                    <div className="bg-black rounded-full w-24 h-24 sm:w-32 sm:h-32 flex items-center justify-center mb-6 overflow-hidden">
+                        <Image 
+                            src="/images/logo_bar.png" 
+                            alt="Logo Seu Manel" 
+                            width={100} 
+                            height={100} 
+                            className="object-contain"
+                            priority
+                        />
+                    </div>
                     <h1 className="text-6xl font-serif font-bold text-foreground tracking-tighter mb-4">
                         SEU MANEL
                     </h1>
@@ -73,7 +85,8 @@ export default function LoginPage() {
             {/* Direita: Form (50%) */}
             <div className="w-full lg:w-1/2 flex justify-center items-center bg-card p-8 border-l border-border">
                 <div className="w-full max-w-sm space-y-8">
-                    <div className="text-center lg:text-left space-y-2">
+                    <div className="text-center lg:text-left space-y-2 flex flex-col items-center lg:items-start">
+                        <Image src={logoImg} alt="Logo" className="w-24 h-auto mb-4" priority />
                         <h2 className="text-2xl font-semibold text-foreground tracking-tight">
                             Bem-vindo de volta
                         </h2>
@@ -123,9 +136,12 @@ export default function LoginPage() {
                                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                     </button>
                                 </div>
-                                <div className="flex justify-end pt-1">
+                                <div className="flex justify-between items-center pt-2">
+                                    <Link href="/register" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                                        Criar conta
+                                    </Link>
                                     <Link href="/login/reset" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-                                        Esqueci minha senha
+                                        Recuperar senha
                                     </Link>
                                 </div>
                             </div>
