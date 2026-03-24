@@ -49,40 +49,47 @@ export default function PromocoesPage() {
         .single();
 
       if (data) {
+        const pad = (n: number) => n.toString().padStart(2, '0');
+        const localString = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        const getDefaults = () => {
+          const now = new Date();
+          const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 13, 0, 0);
+          const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 5, 0, 0);
+          return { inicio: localString(start), fim: localString(end) };
+        };
+
         // Migrate old single promo into array if array is empty
-        let loadedPromocoes = Array.isArray(data.promocoes) ? data.promocoes.map((p: any) => ({
-          ...p,
-          inicio: p.inicio ? formatToLocal(p.inicio) : "",
-          fim: p.fim ? formatToLocal(p.fim) : "",
-        })) : [];
+        let loadedPromocoes = Array.isArray(data.promocoes) ? data.promocoes.map((p: any) => {
+          const def = getDefaults();
+          return {
+            ...p,
+            inicio: p.inicio ? formatToLocal(p.inicio) : def.inicio,
+            fim: p.fim ? formatToLocal(p.fim) : def.fim,
+          };
+        }) : [];
         
         if (loadedPromocoes.length === 0 && (data.promocao_imagem_url || data.promocao_titulo)) {
+          const def = getDefaults();
           loadedPromocoes = [{
             imagem_url: data.promocao_imagem_url || "",
             titulo: data.promocao_titulo || "",
             preco: data.promocao_preco ? String(data.promocao_preco) : "",
             produto_id: data.promocao_produto_id || "",
             rodape: data.promocao_rodape || "",
-            inicio: data.promocao_inicio ? formatToLocal(data.promocao_inicio) : "",
-            fim: data.promocao_fim ? formatToLocal(data.promocao_fim) : "",
+            inicio: data.promocao_inicio ? formatToLocal(data.promocao_inicio) : def.inicio,
+            fim: data.promocao_fim ? formatToLocal(data.promocao_fim) : def.fim,
           }];
         } else if (loadedPromocoes.length === 0) {
+          const def = getDefaults();
           // Initialize with one empty promo setting defaults: today 13:00 to tomorrow 05:00
-          const now = new Date();
-          const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 13, 0, 0);
-          const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 5, 0, 0);
-
-          const pad = (n: number) => n.toString().padStart(2, '0');
-          const localString = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-          
           loadedPromocoes = [{
             imagem_url: "",
             titulo: "",
             preco: "",
             produto_id: "",
             rodape: "",
-            inicio: localString(start),
-            fim: localString(end),
+            inicio: def.inicio,
+            fim: def.fim,
           }];
         }
 
@@ -178,10 +185,10 @@ export default function PromocoesPage() {
 
   function formatToLocal(isoString: string) {
     if (!isoString) return "";
-
     const date = new Date(isoString);
-    date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-    return date.toISOString().slice(0, 16);
+    if (isNaN(date.getTime())) return "";
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
   }
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
