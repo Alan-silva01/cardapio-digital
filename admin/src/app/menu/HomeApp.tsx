@@ -222,6 +222,30 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
   const searchRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const [cartCount, setCartCount] = useState(0);
+  const [config, setConfig] = useState<any>(null);
+  const [showPromo, setShowPromo] = useState(false);
+
+  // Fetch global settings (promo, singer, couvert)
+  useEffect(() => {
+    async function fetchConfig() {
+      const { data } = await supabase.from("configuracoes").select("*").limit(1).single();
+      if (data) {
+        setConfig(data);
+        // Show promo modal if active and in time window
+        if (data.promocao_ativa && data.promocao_imagem_url) {
+          const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+          const start = data.promocao_inicio ? new Date(data.promocao_inicio) : null;
+          const end = data.promocao_fim ? new Date(data.promocao_fim) : null;
+          const inWindow = (!start || now >= start) && (!end || now <= end);
+          if (inWindow && !sessionStorage.getItem('promoVisto')) {
+            setShowPromo(true);
+            sessionStorage.setItem('promoVisto', 'true');
+          }
+        }
+      }
+    }
+    fetchConfig();
+  }, []);
 
   // Shuffle once on mount — random order each visit, all 20 before repeating
   const shuffledImages = useMemo(() => shuffleArray(HERO_IMAGES), []);
@@ -397,6 +421,43 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
             />
           </div>
         </div>
+
+        {/* ── Singer Marquee ── */}
+        {config?.cantor_ativo && config?.cantor_nome && (() => {
+          const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+          const start = config.cantor_inicio ? new Date(config.cantor_inicio) : null;
+          const end = config.cantor_fim ? new Date(config.cantor_fim) : null;
+          if ((!start || now >= start) && (!end || now <= end)) {
+            return (
+              <div style={{
+                width: '100%',
+                background: 'linear-gradient(90deg, rgba(0,0,0,0.95), rgba(20,20,20,0.95))',
+                overflow: 'hidden',
+                whiteSpace: 'nowrap',
+                padding: '8px 0',
+                display: 'flex',
+                alignItems: 'center',
+                borderBottom: '1px solid rgba(212,175,55,0.15)',
+              }}>
+                <style dangerouslySetInnerHTML={{__html: `
+                  @keyframes marqueeHome { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
+                `}} />
+                <div style={{
+                  display: 'inline-block',
+                  fontSize: '12px',
+                  fontWeight: '700',
+                  letterSpacing: '1px',
+                  color: '#D4AF37',
+                  animation: 'marqueeHome 18s linear infinite',
+                  textShadow: '0 0 8px rgba(212,175,55,0.3)',
+                }}>
+                  🎤 {config.cantor_nome}
+                </div>
+              </div>
+            );
+          }
+          return null;
+        })()}
 
         {/* ── Search ── */}
         <div className="home-search-wrap">
@@ -576,6 +637,65 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
               </div>
             </motion.div>
           </>
+        )}
+      </AnimatePresence>
+
+      {/* ── Promo Modal Overlay ── */}
+      <AnimatePresence>
+        {showPromo && config?.promocao_imagem_url && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            onClick={() => setShowPromo(false)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 9999,
+              background: 'rgba(0,0,0,0.85)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '24px',
+              cursor: 'pointer',
+            }}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: 'spring', damping: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              style={{ position: 'relative', maxWidth: '340px', width: '100%' }}
+            >
+              <img
+                src={config.promocao_imagem_url}
+                alt="Promoção do Dia"
+                style={{ width: '100%', borderRadius: '16px', boxShadow: '0 20px 60px rgba(0,0,0,0.6)' }}
+              />
+              <button
+                onClick={() => setShowPromo(false)}
+                style={{
+                  position: 'absolute',
+                  top: '-12px',
+                  right: '-12px',
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  background: '#fff',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                }}
+              >
+                <X size={18} color="#333" />
+              </button>
+            </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
