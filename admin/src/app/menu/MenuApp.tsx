@@ -1573,7 +1573,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                                     ? ['Senses', 'Gin e Tônica', 'Tropical', 'Red Mix', 'Green Mix']
                                                     : currentProduct.slug.startsWith('red-bull-')
                                                     ? ['Melancia', 'Tropical', 'Blueberry', 'Pitaia', 'Morango e Pêssego', 'Frutas Vermelhas']
-                                                    : ['Fanta Laranja', 'Fanta Uva', 'Sprite', 'Coca-Cola', 'Coca Zero']
+                                                    : ['Coca-Cola', 'Fanta Laranja', 'Fanta Uva', 'Sprite', 'Coca Zero']
                                                 ).map((flavor, flavorIdx) => {
                                                     const baseSlug = currentProduct.slug.startsWith('ice-') ? 'ice' : currentProduct.slug.startsWith('skol-beats-') ? 'skol-beats' : currentProduct.slug.startsWith('red-bull-') ? 'red-bull' : 'refri';
                                                     const flavorsArray = currentProduct.slug.startsWith('ice-')
@@ -1582,7 +1582,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                                         ? ['Senses', 'Gin e Tônica', 'Tropical', 'Red Mix', 'Green Mix']
                                                         : currentProduct.slug.startsWith('red-bull-')
                                                         ? ['Melancia', 'Tropical', 'Blueberry', 'Pitaia', 'Morango e Pêssego', 'Frutas Vermelhas']
-                                                        : ['Fanta Laranja', 'Fanta Uva', 'Sprite', 'Coca-Cola', 'Coca Zero'];
+                                                        : ['Coca-Cola', 'Fanta Laranja', 'Fanta Uva', 'Sprite', 'Coca Zero'];
 
                                                     let cleanFlavor = flavor.toLowerCase().replace(/ã/g, 'a').replace(/á/g, 'a').replace(/ô/g, 'o').replace(/é/g, 'e').replace(/ê/g, 'e').replace(/ /g, '-');
                                                     if (flavor === 'Gin e Tônica') cleanFlavor = 'gin-tonica';
