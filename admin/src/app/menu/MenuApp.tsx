@@ -1565,14 +1565,14 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                                     ? ['Limão', 'Balada', 'Fruit Mix', 'Kiwi', 'Maracujá', 'Tangerina']
                                                     : currentProduct.slug.startsWith('skol-beats-')
                                                     ? ['Senses', 'Gin e Tônica', 'Tropical', 'Red Mix', 'Green Mix']
-                                                    : ['Original', 'Sugar Free', 'Melancia', 'Tropical', 'Pitaia', 'Morango e Pêssego', 'Blueberry', 'Frutas Vermelhas']
+                                                    : ['Melancia', 'Tropical', 'Pitaia', 'Morango e Pêssego', 'Blueberry', 'Frutas Vermelhas']
                                                 ).map((flavor, flavorIdx) => {
                                                     const baseSlug = currentProduct.slug.startsWith('ice-') ? 'ice' : currentProduct.slug.startsWith('skol-beats-') ? 'skol-beats' : 'red-bull';
                                                     const flavorsArray = currentProduct.slug.startsWith('ice-')
                                                         ? ['Limão', 'Balada', 'Fruit Mix', 'Kiwi', 'Maracujá', 'Tangerina']
                                                         : currentProduct.slug.startsWith('skol-beats-')
                                                         ? ['Senses', 'Gin e Tônica', 'Tropical', 'Red Mix', 'Green Mix']
-                                                        : ['Original', 'Sugar Free', 'Melancia', 'Tropical', 'Pitaia', 'Morango e Pêssego', 'Blueberry', 'Frutas Vermelhas'];
+                                                        : ['Melancia', 'Tropical', 'Pitaia', 'Morango e Pêssego', 'Blueberry', 'Frutas Vermelhas'];
 
                                                     let cleanFlavor = flavor.toLowerCase().replace(/ã/g, 'a').replace(/á/g, 'a').replace(/ô/g, 'o').replace(/ê/g, 'e').replace(/ /g, '-');
                                                     if (flavor === 'Gin e Tônica') cleanFlavor = 'gin-tonica';
