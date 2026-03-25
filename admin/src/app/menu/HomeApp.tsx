@@ -27,6 +27,8 @@ import {
   Cake,
   Ban,
   Zap,
+  Package,
+  AlertTriangle,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -152,11 +154,23 @@ const CATEGORIES: CategoryDef[] = [
     ],
   },
   {
-    id: "sobremesas",
-    label: "Sobremesas",
-    subtitle: "Pudim & Brownie",
-    icon: Cake,
-    image: "https://res.cloudinary.com/dvhkcemd0/image/upload/f_auto,q_auto,w_400/v1774445935/sobremesa_nv2je8.png",
+    id: "diversos",
+    label: "Diversos",
+    subtitle: "Gelo, Balas & Utilidades",
+    icon: Package,
+    image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400&q=80",
+    itemCount: 4,
+    subs: [
+      { id: "div-diversos", label: "Diversos", icon: Package, dbCategories: ["Diversos"] },
+      { id: "div-balas", label: "Balas", icon: Star, dbCategories: ["Balas"] },
+    ],
+  },
+  {
+    id: "danos",
+    label: "Danos",
+    subtitle: "Vidros & Copos Quebrados",
+    icon: AlertTriangle,
+    image: "https://images.unsplash.com/photo-1574634534894-89d7576c8259?w=400&q=80",
     itemCount: 3,
     subs: [],
   },

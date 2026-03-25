@@ -844,6 +844,32 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
         }
     }
 
+    // Helper functions for pagination and initial product selection
+    const getPrefix = useCallback((prod: any) => {
+        if (!prod || !prod.slug) return null;
+        if (prod.slug.startsWith('ice-')) return 'ice-';
+        if (prod.slug.startsWith('skol-beats-')) return 'skol-beats-';
+        if (prod.slug.startsWith('red-bull-')) return 'red-bull-';
+        if (prod.slug.startsWith('refri-')) return 'refri-';
+        if (prod.slug.startsWith('refri220-')) return 'refri220-';
+        if (prod.slug.startsWith('suco1l-')) return 'suco1l-';
+        return null;
+    }, []);
+
+    const isValidMaster = useCallback((prod: any) => {
+        if (!prod) return false;
+        // It's a flavor but NOT the master flavor -> Skip it
+        if (prod.slug?.startsWith('ice-') && prod.slug !== 'ice-limao') return false;
+        if (prod.slug?.startsWith('skol-beats-') && prod.slug !== 'skol-beats-senses') return false;
+        const validRb = ['red-bull-energy-drink', 'red-bull-tradicional', 'red-bull-original'];
+        if (prod.slug?.startsWith('red-bull-') && !validRb.includes(prod.slug)) return false;
+        if (prod.slug?.startsWith('refri-') && prod.slug !== 'refri-coca-cola') return false;
+        if (prod.slug?.startsWith('refri220-') && prod.slug !== 'refri220-coca-cola') return false;
+        if (prod.slug?.startsWith('suco1l-') && prod.slug !== 'suco1l-maracuja') return false;
+
+        return true;
+    }, []);
+
     // Reactively filter products when Home changes the filter/search props
     useEffect(() => {
         const all = allProductsRef.current;
@@ -868,15 +894,18 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                 );
             }
             setProducts(filtered);
-            setCurrentIndex(0);
+            const firstMasterIdx = filtered.findIndex((p: any) => isValidMaster(p));
+            setCurrentIndex(firstMasterIdx !== -1 ? firstMasterIdx : 0);
         } else if (searchProductName) {
             const term = searchProductName.toLowerCase().trim();
             const filtered = all.filter(p => p.name.toLowerCase().includes(term));
             setProducts(filtered);
-            setCurrentIndex(0);
+            const firstMasterIdx = filtered.findIndex((p: any) => isValidMaster(p));
+            setCurrentIndex(firstMasterIdx !== -1 ? firstMasterIdx : 0);
         } else {
             setProducts(all);
-            setCurrentIndex(0);
+            const firstMasterIdx = all.findIndex((p: any) => isValidMaster(p));
+            setCurrentIndex(firstMasterIdx !== -1 ? firstMasterIdx : 0);
         }
         setIsFiltering(false);
     }, [filterCategories, filterSubcategoria, searchProductName]);
@@ -969,33 +998,43 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
 
     const paginate = (newDirection) => {
         setDirection(newDirection);
-        setIsInternalSpin(false); // Arrow/swipe is not an internal spin
-        // Circular navigation
+        setIsInternalSpin(false); 
+
+        if (products.length <= 1) return;
+
         let nextIndex = currentIndex + newDirection;
+        const currentProd = products[currentIndex];
+        const currentPrefix = getPrefix(currentProd);
 
-        // Helper to check if a product is a "master" or standalone
-        const isValidMaster = (prod) => {
-            if (!prod) return false;
-            // It's a flavor but NOT the master flavor -> Skip it
-            if (prod.slug?.startsWith('ice-') && prod.slug !== 'ice-limao') return false;
-            if (prod.slug?.startsWith('skol-beats-') && prod.slug !== 'skol-beats-senses') return false;
-            if (prod.slug?.startsWith('red-bull-') && prod.slug !== 'red-bull-melancia') return false;
-            if (prod.slug?.startsWith('refri-') && prod.slug !== 'refri-coca-cola') return false;
-            if (prod.slug?.startsWith('refri220-') && prod.slug !== 'refri220-coca-cola') return false;
-            if (prod.slug?.startsWith('suco1l-') && prod.slug !== 'suco1l-maracuja') return false;
-
-            return true;
-        };
-
-        // Advance until we find a master product or normal product
-        while (true) {
+        let loopGuard = 0;
+        
+        while (loopGuard < products.length) {
+            loopGuard++;
             if (nextIndex < 0) nextIndex = products.length - 1;
             if (nextIndex >= products.length) nextIndex = 0;
 
-            if (isValidMaster(products[nextIndex])) {
+            const nextProd = products[nextIndex];
+            
+            // 1. Never land on the same product family we are swiping AWAY from (e.g., skip flavors)
+            const nextPrefix = getPrefix(nextProd);
+            if (currentPrefix && nextPrefix === currentPrefix) {
+                nextIndex += newDirection;
+                continue;
+            }
+
+            // 2. Only land on masters for other families
+            if (isValidMaster(nextProd)) {
                 break;
             }
+            
             nextIndex += newDirection;
+        }
+
+        // Fallback if no valid master found of ANOTHER brand
+        if (loopGuard >= products.length) {
+            nextIndex = currentIndex + newDirection;
+            if (nextIndex < 0) nextIndex = products.length - 1;
+            if (nextIndex >= products.length) nextIndex = 0;
         }
 
         setCurrentIndex(nextIndex);
@@ -1583,7 +1622,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                                     : currentProduct.slug.startsWith('skol-beats-')
                                                     ? ['Senses', 'Gin e Tônica', 'Tropical', 'Red Mix', 'Green Mix']
                                                     : currentProduct.slug.startsWith('red-bull-')
-                                                    ? ['Melancia', 'Tropical', 'Blueberry', 'Pitaia', 'Morango e Pêssego', 'Frutas Vermelhas']
+                                                    ? ['Energy Drink', 'Melancia', 'Tropical', 'Blueberry', 'Pitaia', 'Morango e Pêssego', 'Frutas Vermelhas']
                                                     : currentProduct.slug.startsWith('suco1l-')
                                                     ? ['Maracujá', 'Uva', 'Manga', 'Laranja']
                                                     : ['Coca-Cola', 'Fanta Laranja', 'Fanta Uva', 'Sprite', 'Coca Zero']
@@ -1594,7 +1633,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                                         : currentProduct.slug.startsWith('skol-beats-')
                                                         ? ['Senses', 'Gin e Tônica', 'Tropical', 'Red Mix', 'Green Mix']
                                                         : currentProduct.slug.startsWith('red-bull-')
-                                                        ? ['Melancia', 'Tropical', 'Blueberry', 'Pitaia', 'Morango e Pêssego', 'Frutas Vermelhas']
+                                                        ? ['Energy Drink', 'Melancia', 'Tropical', 'Blueberry', 'Pitaia', 'Morango e Pêssego', 'Frutas Vermelhas']
                                                         : currentProduct.slug.startsWith('suco1l-')
                                                         ? ['Maracujá', 'Uva', 'Manga', 'Laranja']
                                                         : ['Coca-Cola', 'Fanta Laranja', 'Fanta Uva', 'Sprite', 'Coca Zero'];
