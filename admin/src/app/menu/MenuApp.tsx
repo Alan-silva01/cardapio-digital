@@ -1535,7 +1535,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
 
                             {/* MULTI-FLAVOR / VARIATION SELECTION (HORIZONTAL SCROLL STYLE) */}
                             {((currentProduct.variations && Object.keys(currentProduct.variations).length > 1) ||
-                                (currentProduct.slug && (currentProduct.slug.startsWith('ice-') || currentProduct.slug.startsWith('skol-beats-')))) && (
+                                (currentProduct.slug && (currentProduct.slug.startsWith('ice-') || currentProduct.slug.startsWith('skol-beats-') || currentProduct.slug.startsWith('red-bull-')))) && (
                                     <div style={{ marginTop: '0px', marginBottom: 'clamp(8px, 3vw, 20px)', width: '100%' }}>
                                         <div style={{
                                             textAlign: 'center',
@@ -1559,25 +1559,29 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                             }}
                                         >
 
-                                            {/* OPTION 1: SLUG-BASED (ICES & SKOL BEATS) */}
-                                            {currentProduct.slug && (currentProduct.slug.startsWith('ice-') || currentProduct.slug.startsWith('skol-beats-')) ? (
+                                            {/* OPTION 1: SLUG-BASED (ICES, SKOL BEATS, RED BULL) */}
+                                            {currentProduct.slug && (currentProduct.slug.startsWith('ice-') || currentProduct.slug.startsWith('skol-beats-') || currentProduct.slug.startsWith('red-bull-')) ? (
                                                 (currentProduct.slug.startsWith('ice-')
                                                     ? ['Limão', 'Balada', 'Fruit Mix', 'Kiwi', 'Maracujá', 'Tangerina']
-                                                    : ['Senses', 'Gin e Tônica', 'Tropical', 'Red Mix', 'Green Mix']
+                                                    : currentProduct.slug.startsWith('skol-beats-')
+                                                    ? ['Senses', 'Gin e Tônica', 'Tropical', 'Red Mix', 'Green Mix']
+                                                    : ['Original', 'Sugar Free', 'Melancia', 'Tropical', 'Pitaia', 'Morango e Pêssego', 'Blueberry', 'Frutas Vermelhas']
                                                 ).map((flavor, flavorIdx) => {
-                                                    const baseSlug = currentProduct.slug.startsWith('ice-') ? 'ice' : 'skol-beats';
+                                                    const baseSlug = currentProduct.slug.startsWith('ice-') ? 'ice' : currentProduct.slug.startsWith('skol-beats-') ? 'skol-beats' : 'red-bull';
                                                     const flavorsArray = currentProduct.slug.startsWith('ice-')
                                                         ? ['Limão', 'Balada', 'Fruit Mix', 'Kiwi', 'Maracujá', 'Tangerina']
-                                                        : ['Senses', 'Gin e Tônica', 'Tropical', 'Red Mix', 'Green Mix'];
+                                                        : currentProduct.slug.startsWith('skol-beats-')
+                                                        ? ['Senses', 'Gin e Tônica', 'Tropical', 'Red Mix', 'Green Mix']
+                                                        : ['Original', 'Sugar Free', 'Melancia', 'Tropical', 'Pitaia', 'Morango e Pêssego', 'Blueberry', 'Frutas Vermelhas'];
 
-                                                    let cleanFlavor = flavor.toLowerCase().replace(/ã/g, 'a').replace(/á/g, 'a').replace(/ô/g, 'o').replace(/ /g, '-');
+                                                    let cleanFlavor = flavor.toLowerCase().replace(/ã/g, 'a').replace(/á/g, 'a').replace(/ô/g, 'o').replace(/ê/g, 'e').replace(/ /g, '-');
                                                     if (flavor === 'Gin e Tônica') cleanFlavor = 'gin-tonica';
 
                                                     const flavorSlug = `${baseSlug}-${cleanFlavor}`;
                                                     const isSelected = currentProduct.slug === flavorSlug;
 
                                                     const currentFlavorIdx = flavorsArray.findIndex(f => {
-                                                        let cf = f.toLowerCase().replace(/ã/g, 'a').replace(/á/g, 'a').replace(/ô/g, 'o').replace(/ /g, '-');
+                                                        let cf = f.toLowerCase().replace(/ã/g, 'a').replace(/á/g, 'a').replace(/ô/g, 'o').replace(/ê/g, 'e').replace(/ /g, '-');
                                                         if (f === 'Gin e Tônica') cf = 'gin-tonica';
                                                         return `${baseSlug}-${cf}` === currentProduct.slug;
                                                     });
