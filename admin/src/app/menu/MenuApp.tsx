@@ -973,6 +973,8 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
             // It's a flavor but NOT the master flavor -> Skip it
             if (prod.slug?.startsWith('ice-') && prod.slug !== 'ice-limao') return false;
             if (prod.slug?.startsWith('skol-beats-') && prod.slug !== 'skol-beats-senses') return false;
+            if (prod.slug?.startsWith('red-bull-') && prod.slug !== 'red-bull-melancia') return false;
+            if (prod.slug?.startsWith('refri-') && prod.slug !== 'refri-coca-cola') return false;
 
             return true;
         };
