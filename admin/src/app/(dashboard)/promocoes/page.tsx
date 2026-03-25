@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Megaphone, Mic2, Ticket, Upload, Save, Loader2, Image as ImageIcon, Plus, Trash2, Search, X, Check } from "lucide-react";
+import { Megaphone, Mic2, Ticket, Upload, Save, Loader2, Image as ImageIcon, Plus, Trash, Trash2, Search, X, Check } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { uploadImageAction } from "@/app/actions/upload-image";
 import { toast } from "sonner";
@@ -384,11 +384,11 @@ export default function PromocoesPage() {
                     </Button>
                   </div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={removePromo} className="text-red-500 h-8 text-xs hover:bg-red-50 hover:border-red-200">
-                      <Trash2 className="h-3.5 w-3.5 mr-1" /> Remover
+                    <Button variant="outline" size="sm" onClick={removePromo} className="h-8 px-3 rounded-md border-border bg-white hover:bg-muted text-[13px] font-medium text-foreground shadow-xs flex items-center gap-1.5 transition-colors">
+                      <Trash strokeWidth={1.8} className="h-4 w-4 text-muted-foreground" /> Remover
                     </Button>
-                    <Button variant="outline" size="sm" onClick={addPromo} className="h-8 text-xs font-semibold text-emerald-600 border-emerald-200 hover:bg-emerald-50">
-                      <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar Promo
+                    <Button variant="outline" size="sm" onClick={addPromo} className="h-8 px-3 rounded-md border-border bg-white hover:bg-muted text-[13px] font-medium text-foreground shadow-xs flex items-center gap-1.5 transition-colors">
+                      <Plus strokeWidth={2} className="h-4 w-4 text-muted-foreground" /> Nova Promo
                     </Button>
                   </div>
                 </div>
@@ -593,7 +593,7 @@ export default function PromocoesPage() {
                         />
                         {parsedAtracoes.length > 1 && (
                           <Button variant="ghost" size="icon" onClick={() => removeAtracao(index)} className="h-9 w-9 text-muted-foreground hover:text-red-500 shrink-0">
-                            <Trash2 className="h-4 w-4" />
+                            <Trash className="h-4 w-4" />
                           </Button>
                         )}
                       </div>
