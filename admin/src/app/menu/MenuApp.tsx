@@ -1558,6 +1558,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                         </div>
                                         <div
                                             className="flavors-grid"
+                                            onPointerDownCapture={(e) => e.stopPropagation()}
                                             style={{
                                                 display: 'flex',
                                                 flexWrap: 'wrap',
