@@ -63,7 +63,7 @@ const CATEGORIES: CategoryDef[] = [
     label: "Cervejas",
     subtitle: "Long Necks & Garrafas",
     icon: Beer,
-    image: "https://images.unsplash.com/photo-1535958636474-b021ee887b13?w=400&q=80",
+    image: "https://res.cloudinary.com/dvhkcemd0/image/upload/f_auto,q_auto,w_400/v1774444444/Cervejas_1080px_2_thjyhf.png",
     itemCount: 34,
     subs: [
       { id: "cervejas-longneck", label: "Long Neck", icon: Beer, dbCategories: ["Cervejas"], subcategoria: "Long Neck" },
