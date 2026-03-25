@@ -36,6 +36,8 @@ const CATEGORY_MAP: Record<string, string[]> = {
   petiscos: ["Petiscos", "Pastéis"],
   grelha: ["Espetinhos", "Pratos & Executivos", "Guarnições"],
   sobremesas: ["Sobremesas"],
+  diversos: ["Diversos"],
+  danos: ["Danos"],
 };
 
 /* ── Page transition variants ── */

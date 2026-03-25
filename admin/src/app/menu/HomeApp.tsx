@@ -170,8 +170,8 @@ const CATEGORIES: CategoryDef[] = [
     image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400&q=80",
     itemCount: 4,
     subs: [
-      { id: "div-diversos", label: "Diversos", icon: Package, dbCategories: ["Diversos"] },
-      { id: "div-balas", label: "Balas", icon: Star, dbCategories: ["Balas"] },
+      { id: "div-diversos", label: "Diversos", icon: Package, dbCategories: ["Diversos"], subcategoria: "Diversos" },
+      { id: "div-balas", label: "Balas", icon: Star, dbCategories: ["Diversos"], subcategoria: "Balas" },
     ],
   },
   {
