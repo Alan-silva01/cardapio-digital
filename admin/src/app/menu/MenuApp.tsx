@@ -1541,7 +1541,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
 
                             {/* MULTI-FLAVOR / VARIATION SELECTION (HORIZONTAL SCROLL STYLE) */}
                             {((currentProduct.variations && Object.keys(currentProduct.variations).length > 1) ||
-                                (currentProduct.slug && (currentProduct.slug.startsWith('ice-') || currentProduct.slug.startsWith('skol-beats-') || currentProduct.slug.startsWith('red-bull-')))) && (
+                                (currentProduct.slug && (currentProduct.slug.startsWith('ice-') || currentProduct.slug.startsWith('skol-beats-') || currentProduct.slug.startsWith('red-bull-') || currentProduct.slug.startsWith('refri-')))) && (
                                     <div style={{ marginTop: '0px', marginBottom: 'clamp(8px, 3vw, 20px)', width: '100%' }}>
                                         <div style={{
                                             textAlign: 'center',
