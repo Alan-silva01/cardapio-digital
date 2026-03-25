@@ -1001,8 +1001,8 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
     }, [currentIndex]);
 
     const variants = {
-        enter: ({ direction, isFood, isIce, isSkolBeats, isRedBull, isInternalSpin, isWineSpin }: any) => {
-            const isCircular = isFood || ((isIce || isSkolBeats || isRedBull) && isInternalSpin) || isWineSpin;
+        enter: ({ direction, isFood, isIce, isSkolBeats, isRedBull, isRefri, isInternalSpin, isWineSpin }: any) => {
+            const isCircular = isFood || ((isIce || isSkolBeats || isRedBull || isRefri) && isInternalSpin) || isWineSpin;
             return {
                 x: direction > 0 ? (isCircular ? 80 : 30) : (isCircular ? -80 : -30),
                 y: isCircular ? 30 : 0,
@@ -1017,8 +1017,8 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
             rotate: 0,
             opacity: 1,
         },
-        exit: ({ direction, isFood, isIce, isSkolBeats, isRedBull, isInternalSpin, isWineSpin }: any) => {
-            const isCircular = isFood || ((isIce || isSkolBeats || isRedBull) && isInternalSpin) || isWineSpin;
+        exit: ({ direction, isFood, isIce, isSkolBeats, isRedBull, isRefri, isInternalSpin, isWineSpin }: any) => {
+            const isCircular = isFood || ((isIce || isSkolBeats || isRedBull || isRefri) && isInternalSpin) || isWineSpin;
             return {
                 zIndex: 0,
                 x: direction < 0 ? (isCircular ? 80 : 30) : (isCircular ? -80 : -30),
@@ -1165,10 +1165,10 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
 
             {/* ANIMATED HERO SECTION */}
             <div className="hero">
-                <AnimatePresence initial={false} custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-'), isSkolBeats: currentProduct?.slug?.startsWith('skol-beats-'), isRedBull: currentProduct?.slug?.startsWith('red-bull-'), isInternalSpin, isWineSpin: isInternalSpin && currentProduct?.category && /vinho|combo/.test(currentProduct?.category?.toLowerCase()) }}>
+                <AnimatePresence initial={false} custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-'), isSkolBeats: currentProduct?.slug?.startsWith('skol-beats-'), isRedBull: currentProduct?.slug?.startsWith('red-bull-'), isRefri: currentProduct?.slug?.startsWith('refri-'), isInternalSpin, isWineSpin: isInternalSpin && currentProduct?.category && /vinho|combo/.test(currentProduct?.category?.toLowerCase()) }}>
                     <motion.div
                         key={`${currentProduct.id}-${selectedVariation || ''}`}
-                        custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-'), isSkolBeats: currentProduct?.slug?.startsWith('skol-beats-'), isRedBull: currentProduct?.slug?.startsWith('red-bull-'), isInternalSpin, isWineSpin: isInternalSpin && currentProduct?.category && /vinho|combo/.test(currentProduct?.category?.toLowerCase()) }}
+                        custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-'), isSkolBeats: currentProduct?.slug?.startsWith('skol-beats-'), isRedBull: currentProduct?.slug?.startsWith('red-bull-'), isRefri: currentProduct?.slug?.startsWith('refri-'), isInternalSpin, isWineSpin: isInternalSpin && currentProduct?.category && /vinho|combo/.test(currentProduct?.category?.toLowerCase()) }}
                         variants={variants}
                         initial="enter"
                         animate="center"
@@ -1565,20 +1565,24 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                             }}
                                         >
 
-                                            {/* OPTION 1: SLUG-BASED (ICES, SKOL BEATS, RED BULL) */}
-                                            {currentProduct.slug && (currentProduct.slug.startsWith('ice-') || currentProduct.slug.startsWith('skol-beats-') || currentProduct.slug.startsWith('red-bull-')) ? (
+                                            {/* OPTION 1: SLUG-BASED (ICES, SKOL BEATS, RED BULL, REFRI) */}
+                                            {currentProduct.slug && (currentProduct.slug.startsWith('ice-') || currentProduct.slug.startsWith('skol-beats-') || currentProduct.slug.startsWith('red-bull-') || currentProduct.slug.startsWith('refri-')) ? (
                                                 (currentProduct.slug.startsWith('ice-')
                                                     ? ['Limão', 'Balada', 'Fruit Mix', 'Kiwi', 'Maracujá', 'Tangerina']
                                                     : currentProduct.slug.startsWith('skol-beats-')
                                                     ? ['Senses', 'Gin e Tônica', 'Tropical', 'Red Mix', 'Green Mix']
-                                                    : ['Melancia', 'Tropical', 'Blueberry', 'Pitaia', 'Morango e Pêssego', 'Frutas Vermelhas']
+                                                    : currentProduct.slug.startsWith('red-bull-')
+                                                    ? ['Melancia', 'Tropical', 'Blueberry', 'Pitaia', 'Morango e Pêssego', 'Frutas Vermelhas']
+                                                    : ['Fanta Laranja', 'Fanta Uva', 'Sprite', 'Coca-Cola', 'Coca Zero']
                                                 ).map((flavor, flavorIdx) => {
-                                                    const baseSlug = currentProduct.slug.startsWith('ice-') ? 'ice' : currentProduct.slug.startsWith('skol-beats-') ? 'skol-beats' : 'red-bull';
+                                                    const baseSlug = currentProduct.slug.startsWith('ice-') ? 'ice' : currentProduct.slug.startsWith('skol-beats-') ? 'skol-beats' : currentProduct.slug.startsWith('red-bull-') ? 'red-bull' : 'refri';
                                                     const flavorsArray = currentProduct.slug.startsWith('ice-')
                                                         ? ['Limão', 'Balada', 'Fruit Mix', 'Kiwi', 'Maracujá', 'Tangerina']
                                                         : currentProduct.slug.startsWith('skol-beats-')
                                                         ? ['Senses', 'Gin e Tônica', 'Tropical', 'Red Mix', 'Green Mix']
-                                                        : ['Melancia', 'Tropical', 'Blueberry', 'Pitaia', 'Morango e Pêssego', 'Frutas Vermelhas'];
+                                                        : currentProduct.slug.startsWith('red-bull-')
+                                                        ? ['Melancia', 'Tropical', 'Blueberry', 'Pitaia', 'Morango e Pêssego', 'Frutas Vermelhas']
+                                                        : ['Fanta Laranja', 'Fanta Uva', 'Sprite', 'Coca-Cola', 'Coca Zero'];
 
                                                     let cleanFlavor = flavor.toLowerCase().replace(/ã/g, 'a').replace(/á/g, 'a').replace(/ô/g, 'o').replace(/é/g, 'e').replace(/ê/g, 'e').replace(/ /g, '-');
                                                     if (flavor === 'Gin e Tônica') cleanFlavor = 'gin-tonica';
@@ -1605,12 +1609,12 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                                                 }
                                                             }}
                                                             style={{
-                                                            padding: currentProduct.slug.startsWith('red-bull-') ? 'clamp(4px, 1vw, 6px) clamp(5px, 1.5vw, 10px)' : 'clamp(5px, 1.5vw, 8px) clamp(8px, 3vw, 14px)',
+                                                            padding: (currentProduct.slug.startsWith('red-bull-') || currentProduct.slug.startsWith('refri-')) ? 'clamp(4px, 1vw, 6px) clamp(5px, 1.5vw, 10px)' : 'clamp(5px, 1.5vw, 8px) clamp(8px, 3vw, 14px)',
                                                                 borderRadius: '18px',
                                                                 border: `1.1px solid ${isSelected ? '#D4AF37' : 'rgba(255,255,255,0.1)'}`,
                                                                 background: isSelected ? 'rgba(212, 175, 55, 0.15)' : 'rgba(255,255,255,0.03)',
                                                                 color: isSelected ? '#D4AF37' : '#999',
-                                                                fontSize: currentProduct.slug.startsWith('red-bull-') ? 'clamp(8.5px, 2.2vw, 10px)' : 'clamp(9px, 2.5vw, 11px)',
+                                                                fontSize: (currentProduct.slug.startsWith('red-bull-') || currentProduct.slug.startsWith('refri-')) ? 'clamp(8.5px, 2.2vw, 10px)' : 'clamp(9px, 2.5vw, 11px)',
                                                                 fontWeight: '700',
                                                                 textTransform: 'uppercase',
                                                                 letterSpacing: '0.5px',
