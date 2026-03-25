@@ -1104,8 +1104,14 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
         }
     }
 
-    // Swap volume: show ml_taca when Taça is selected
-    const displayVolume = (currentProduct.tipo_vinho && isTaca) ? currentProduct.ml_taca : currentProduct.volume_ml;
+    // Swap volume: show ml_taca when Taça is selected, or parse from variation name (e.g. "220ml", "350ml")
+    let displayVolume = (currentProduct.tipo_vinho && isTaca) ? currentProduct.ml_taca : currentProduct.volume_ml;
+    if (selectedVariation && !isTaca) {
+        const mlMatch = selectedVariation.match(/(\d+)\s*ml/i);
+        if (mlMatch) {
+            displayVolume = parseInt(mlMatch[1]);
+        }
+    }
 
 
     return (
