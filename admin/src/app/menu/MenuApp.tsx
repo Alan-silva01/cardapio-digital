@@ -758,8 +758,14 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                     curtidas: p.curtidas || 0,
                     tipo_vinho: p.tipo_vinho || null,
                     ml_taca: p.ml_taca || 200,
-                    disponivel: p.disponivel
+                    disponivel: p.disponivel,
+                    ordem: p.ordem || 0
                 };
+            });
+
+            enrichedProducts.sort((a, b) => {
+                if (a.ordem !== b.ordem) return a.ordem - b.ordem;
+                return a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' });
             });
 
             // Preload only on initial load

@@ -926,12 +926,13 @@ function EstoqueContent() {
     const filtered = useMemo(() => {
         let result = items;
         if (search) {
-            const s = search.toLowerCase();
+            const removeAccents = (str: string) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            const s = removeAccents(search.toLowerCase());
             result = result.filter(i =>
-                i.produto_nome.toLowerCase().includes(s) ||
-                i.variacao_nome.toLowerCase().includes(s) ||
-                i.categoria_nome.toLowerCase().includes(s) ||
-                (i.pais_origem && i.pais_origem.toLowerCase().includes(s))
+                removeAccents(i.produto_nome.toLowerCase()).includes(s) ||
+                removeAccents(i.variacao_nome.toLowerCase()).includes(s) ||
+                removeAccents(i.categoria_nome.toLowerCase()).includes(s) ||
+                (i.pais_origem && removeAccents(i.pais_origem.toLowerCase()).includes(s))
             );
         }
         if (filter !== "todos") {
