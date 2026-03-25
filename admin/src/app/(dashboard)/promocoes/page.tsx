@@ -58,9 +58,23 @@ export default function PromocoesPage() {
           return { inicio: localString(start), fim: localString(end) };
         };
 
+        const nowMs = Date.now();
+
         // Migrate old single promo into array if array is empty
         let loadedPromocoes = Array.isArray(data.promocoes) ? data.promocoes.map((p: any) => {
           const def = getDefaults();
+          const fimDate = p.fim ? new Date(p.fim) : null;
+          if (fimDate && fimDate.getTime() < nowMs) {
+            return {
+              imagem_url: "",
+              titulo: "",
+              preco: "",
+              produto_id: "",
+              rodape: "",
+              inicio: def.inicio,
+              fim: def.fim,
+            };
+          }
           return {
             ...p,
             inicio: p.inicio ? formatToLocal(p.inicio) : def.inicio,
@@ -68,17 +82,32 @@ export default function PromocoesPage() {
           };
         }) : [];
         
+        let singlePromoExpired = false;
         if (loadedPromocoes.length === 0 && (data.promocao_imagem_url || data.promocao_titulo)) {
           const def = getDefaults();
-          loadedPromocoes = [{
-            imagem_url: data.promocao_imagem_url || "",
-            titulo: data.promocao_titulo || "",
-            preco: data.promocao_preco ? String(data.promocao_preco) : "",
-            produto_id: data.promocao_produto_id || "",
-            rodape: data.promocao_rodape || "",
-            inicio: data.promocao_inicio ? formatToLocal(data.promocao_inicio) : def.inicio,
-            fim: data.promocao_fim ? formatToLocal(data.promocao_fim) : def.fim,
-          }];
+          const fimDate = data.promocao_fim ? new Date(data.promocao_fim) : null;
+          if (fimDate && fimDate.getTime() < nowMs) {
+             singlePromoExpired = true;
+             loadedPromocoes = [{
+               imagem_url: "",
+               titulo: "",
+               preco: "",
+               produto_id: "",
+               rodape: "",
+               inicio: def.inicio,
+               fim: def.fim,
+             }];
+          } else {
+            loadedPromocoes = [{
+              imagem_url: data.promocao_imagem_url || "",
+              titulo: data.promocao_titulo || "",
+              preco: data.promocao_preco ? String(data.promocao_preco) : "",
+              produto_id: data.promocao_produto_id || "",
+              rodape: data.promocao_rodape || "",
+              inicio: data.promocao_inicio ? formatToLocal(data.promocao_inicio) : def.inicio,
+              fim: data.promocao_fim ? formatToLocal(data.promocao_fim) : def.fim,
+            }];
+          }
         } else if (loadedPromocoes.length === 0) {
           const def = getDefaults();
           // Initialize with one empty promo setting defaults: today 13:00 to tomorrow 05:00
@@ -93,20 +122,33 @@ export default function PromocoesPage() {
           }];
         }
 
+        let finalCantorAtivo = data.cantor_ativo || false;
+        let finalCantorNome = data.cantor_nome || "";
+        let finalCantorInicio = data.cantor_inicio ? formatToLocal(data.cantor_inicio) : "";
+        let finalCantorFim = data.cantor_fim ? formatToLocal(data.cantor_fim) : "";
+
+        if (data.cantor_fim && new Date(data.cantor_fim).getTime() < nowMs) {
+          finalCantorAtivo = false;
+          finalCantorNome = "";
+          const def = getDefaults();
+          finalCantorInicio = def.inicio;
+          finalCantorFim = def.fim;
+        }
+
         setConfig({
           promocao_ativa: data.promocao_ativa || false,
           promocoes: loadedPromocoes,
-          promocao_imagem_url: data.promocao_imagem_url || "",
-          promocao_titulo: data.promocao_titulo || "",
-          promocao_preco: data.promocao_preco ? String(data.promocao_preco) : "",
-          promocao_produto_id: data.promocao_produto_id || "",
-          promocao_rodape: data.promocao_rodape || "",
-          promocao_inicio: data.promocao_inicio ? formatToLocal(data.promocao_inicio) : "",
-          promocao_fim: data.promocao_fim ? formatToLocal(data.promocao_fim) : "",
-          cantor_ativo: data.cantor_ativo || false,
-          cantor_nome: data.cantor_nome || "",
-          cantor_inicio: data.cantor_inicio ? formatToLocal(data.cantor_inicio) : "",
-          cantor_fim: data.cantor_fim ? formatToLocal(data.cantor_fim) : "",
+          promocao_imagem_url: singlePromoExpired ? "" : (data.promocao_imagem_url || ""),
+          promocao_titulo: singlePromoExpired ? "" : (data.promocao_titulo || ""),
+          promocao_preco: singlePromoExpired ? "" : (data.promocao_preco ? String(data.promocao_preco) : ""),
+          promocao_produto_id: singlePromoExpired ? "" : (data.promocao_produto_id || ""),
+          promocao_rodape: singlePromoExpired ? "" : (data.promocao_rodape || ""),
+          promocao_inicio: singlePromoExpired ? "" : (data.promocao_inicio ? formatToLocal(data.promocao_inicio) : ""),
+          promocao_fim: singlePromoExpired ? "" : (data.promocao_fim ? formatToLocal(data.promocao_fim) : ""),
+          cantor_ativo: finalCantorAtivo,
+          cantor_nome: finalCantorNome,
+          cantor_inicio: finalCantorInicio,
+          cantor_fim: finalCantorFim,
           couvert_ativo: data.couvert_ativo || false,
           couvert_valor: data.valor_couvert || 10.0,
         });
