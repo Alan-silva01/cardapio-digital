@@ -847,6 +847,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
     // Helper functions for pagination and initial product selection
     const getPrefix = useCallback((prod: any) => {
         if (!prod || !prod.slug) return null;
+        if (prod.slug === 'red-bull-energy-drink') return 'red-bull-energy-drink';
         if (prod.slug.startsWith('ice-')) return 'ice-';
         if (prod.slug.startsWith('skol-beats-')) return 'skol-beats-';
         if (prod.slug.startsWith('red-bull-')) return 'red-bull-';
@@ -861,7 +862,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
         // It's a flavor but NOT the master flavor -> Skip it
         if (prod.slug?.startsWith('ice-') && prod.slug !== 'ice-limao') return false;
         if (prod.slug?.startsWith('skol-beats-') && prod.slug !== 'skol-beats-senses') return false;
-        const validRb = ['red-bull-energy-drink', 'red-bull-tradicional', 'red-bull-original'];
+        const validRb = ['red-bull-energy-drink', 'red-bull-melancia', 'red-bull-tradicional', 'red-bull-original'];
         if (prod.slug?.startsWith('red-bull-') && !validRb.includes(prod.slug)) return false;
         if (prod.slug?.startsWith('refri-') && prod.slug !== 'refri-coca-cola') return false;
         if (prod.slug?.startsWith('refri220-') && prod.slug !== 'refri220-coca-cola') return false;
@@ -1590,7 +1591,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
 
                             {/* MULTI-FLAVOR / VARIATION SELECTION (HORIZONTAL SCROLL STYLE) */}
                             {((currentProduct.variations && Object.keys(currentProduct.variations).length > 1) ||
-                                (currentProduct.slug && (currentProduct.slug.startsWith('ice-') || currentProduct.slug.startsWith('skol-beats-') || currentProduct.slug.startsWith('red-bull-') || currentProduct.slug.startsWith('refri-') || currentProduct.slug.startsWith('refri220-') || currentProduct.slug.startsWith('suco1l-')))) && (
+                                (currentProduct.slug && currentProduct.slug !== 'red-bull-energy-drink' && (currentProduct.slug.startsWith('ice-') || currentProduct.slug.startsWith('skol-beats-') || currentProduct.slug.startsWith('red-bull-') || currentProduct.slug.startsWith('refri-') || currentProduct.slug.startsWith('refri220-') || currentProduct.slug.startsWith('suco1l-')))) && (
                                     <div style={{ marginTop: '0px', marginBottom: 'clamp(8px, 3vw, 20px)', width: '100%' }}>
                                         <div style={{
                                             textAlign: 'center',
@@ -1616,13 +1617,13 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                         >
 
                                             {/* OPTION 1: SLUG-BASED (ICES, SKOL BEATS, RED BULL, REFRI, SUCO 1L) */}
-                                            {currentProduct.slug && (currentProduct.slug.startsWith('ice-') || currentProduct.slug.startsWith('skol-beats-') || currentProduct.slug.startsWith('red-bull-') || currentProduct.slug.startsWith('refri-') || currentProduct.slug.startsWith('refri220-') || currentProduct.slug.startsWith('suco1l-')) ? (
+                                            {currentProduct.slug && currentProduct.slug !== 'red-bull-energy-drink' && (currentProduct.slug.startsWith('ice-') || currentProduct.slug.startsWith('skol-beats-') || currentProduct.slug.startsWith('red-bull-') || currentProduct.slug.startsWith('refri-') || currentProduct.slug.startsWith('refri220-') || currentProduct.slug.startsWith('suco1l-')) ? (
                                                 (currentProduct.slug.startsWith('ice-')
                                                     ? ['Limão', 'Balada', 'Fruit Mix', 'Kiwi', 'Maracujá', 'Tangerina']
                                                     : currentProduct.slug.startsWith('skol-beats-')
                                                     ? ['Senses', 'Gin e Tônica', 'Tropical', 'Red Mix', 'Green Mix']
                                                     : currentProduct.slug.startsWith('red-bull-')
-                                                    ? ['Energy Drink', 'Melancia', 'Tropical', 'Blueberry', 'Pitaia', 'Morango e Pêssego', 'Frutas Vermelhas']
+                                                    ? ['Melancia', 'Tropical', 'Blueberry', 'Pitaia', 'Morango e Pêssego', 'Frutas Vermelhas']
                                                     : currentProduct.slug.startsWith('suco1l-')
                                                     ? ['Maracujá', 'Uva', 'Manga', 'Laranja']
                                                     : ['Coca-Cola', 'Fanta Laranja', 'Fanta Uva', 'Sprite', 'Coca Zero']
@@ -1633,7 +1634,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                                         : currentProduct.slug.startsWith('skol-beats-')
                                                         ? ['Senses', 'Gin e Tônica', 'Tropical', 'Red Mix', 'Green Mix']
                                                         : currentProduct.slug.startsWith('red-bull-')
-                                                        ? ['Energy Drink', 'Melancia', 'Tropical', 'Blueberry', 'Pitaia', 'Morango e Pêssego', 'Frutas Vermelhas']
+                                                        ? ['Melancia', 'Tropical', 'Blueberry', 'Pitaia', 'Morango e Pêssego', 'Frutas Vermelhas']
                                                         : currentProduct.slug.startsWith('suco1l-')
                                                         ? ['Maracujá', 'Uva', 'Manga', 'Laranja']
                                                         : ['Coca-Cola', 'Fanta Laranja', 'Fanta Uva', 'Sprite', 'Coca Zero'];
