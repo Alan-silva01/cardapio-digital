@@ -312,7 +312,7 @@ const SUBCATEGORY_MAP: Record<string, string[]> = {
 
 // Categories that show alcohol fields
 const ALCOHOL_CATEGORIES = ["Cervejas", "Vinhos", "Destilados", "Whiskeys", "Vodkas", "Drinks", "Gins"];
-const VOLUME_CATEGORIES = ["Cervejas", "Vinhos", "Destilados", "Whiskeys", "Vodkas", "Gins"];
+const VOLUME_CATEGORIES = ["Cervejas", "Vinhos", "Destilados", "Whiskeys", "Vodkas", "Gins", "Bebidas"];
 const FOOD_CATEGORIES = ["Petiscos", "Pratos & Executivos", "Combos", "Pastéis", "Espetinhos", "Sobremesas", "Guarnições"];
 const WINE_CATEGORIES = ["Vinhos"];
 
