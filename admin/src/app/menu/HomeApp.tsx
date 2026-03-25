@@ -76,7 +76,7 @@ const CATEGORIES: CategoryDef[] = [
     label: "Drinks",
     subtitle: "Coquetéis & Shots",
     icon: Martini,
-    image: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=400&q=80",
+    image: "https://res.cloudinary.com/dvhkcemd0/image/upload/f_auto,q_auto,w_400/v1774445206/drinks_jxg1vr.png",
     itemCount: 7,
     subs: [
       { id: "drinks-all", label: "Menu de Drinks", icon: Martini, dbCategories: ["Drinks"], subcategoria: "Menu de Drinks" },
@@ -102,7 +102,7 @@ const CATEGORIES: CategoryDef[] = [
     label: "Vinhos",
     subtitle: "Tintos, Brancos & Rosés",
     icon: Wine,
-    image: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=400&q=80",
+    image: "https://res.cloudinary.com/dvhkcemd0/image/upload/f_auto,q_auto,w_400/v1774445605/Vinhos_1080px_unfpaw.png",
     itemCount: 13,
     subs: [
       { id: "vinhos-tinto", label: "Vinhos Tintos", icon: Wine, dbCategories: ["Vinhos"], subcategoria: ["Vinhos Tintos", "Tinto"] },
@@ -156,7 +156,7 @@ const CATEGORIES: CategoryDef[] = [
     label: "Sobremesas",
     subtitle: "Pudim & Brownie",
     icon: Cake,
-    image: "https://images.unsplash.com/photo-1551024601-bec78aea704b?w=400&q=80",
+    image: "https://res.cloudinary.com/dvhkcemd0/image/upload/f_auto,q_auto,w_400/v1774445935/sobremesa_nv2je8.png",
     itemCount: 3,
     subs: [],
   },
