@@ -1001,8 +1001,8 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
     }, [currentIndex]);
 
     const variants = {
-        enter: ({ direction, isFood, isIce, isSkolBeats, isInternalSpin, isWineSpin }) => {
-            const isCircular = isFood || ((isIce || isSkolBeats) && isInternalSpin) || isWineSpin;
+        enter: ({ direction, isFood, isIce, isSkolBeats, isRedBull, isInternalSpin, isWineSpin }: any) => {
+            const isCircular = isFood || ((isIce || isSkolBeats || isRedBull) && isInternalSpin) || isWineSpin;
             return {
                 x: direction > 0 ? (isCircular ? 80 : 30) : (isCircular ? -80 : -30),
                 y: isCircular ? 30 : 0,
@@ -1017,8 +1017,8 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
             rotate: 0,
             opacity: 1,
         },
-        exit: ({ direction, isFood, isIce, isSkolBeats, isInternalSpin, isWineSpin }) => {
-            const isCircular = isFood || ((isIce || isSkolBeats) && isInternalSpin) || isWineSpin;
+        exit: ({ direction, isFood, isIce, isSkolBeats, isRedBull, isInternalSpin, isWineSpin }: any) => {
+            const isCircular = isFood || ((isIce || isSkolBeats || isRedBull) && isInternalSpin) || isWineSpin;
             return {
                 zIndex: 0,
                 x: direction < 0 ? (isCircular ? 80 : 30) : (isCircular ? -80 : -30),
@@ -1159,10 +1159,10 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
 
             {/* ANIMATED HERO SECTION */}
             <div className="hero">
-                <AnimatePresence initial={false} custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-'), isSkolBeats: currentProduct?.slug?.startsWith('skol-beats-'), isInternalSpin, isWineSpin: isInternalSpin && currentProduct?.category && /vinho|combo/.test(currentProduct?.category?.toLowerCase()) }}>
+                <AnimatePresence initial={false} custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-'), isSkolBeats: currentProduct?.slug?.startsWith('skol-beats-'), isRedBull: currentProduct?.slug?.startsWith('red-bull-'), isInternalSpin, isWineSpin: isInternalSpin && currentProduct?.category && /vinho|combo/.test(currentProduct?.category?.toLowerCase()) }}>
                     <motion.div
                         key={`${currentProduct.id}-${selectedVariation || ''}`}
-                        custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-'), isSkolBeats: currentProduct?.slug?.startsWith('skol-beats-'), isInternalSpin, isWineSpin: isInternalSpin && currentProduct?.category && /vinho|combo/.test(currentProduct?.category?.toLowerCase()) }}
+                        custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-'), isSkolBeats: currentProduct?.slug?.startsWith('skol-beats-'), isRedBull: currentProduct?.slug?.startsWith('red-bull-'), isInternalSpin, isWineSpin: isInternalSpin && currentProduct?.category && /vinho|combo/.test(currentProduct?.category?.toLowerCase()) }}
                         variants={variants}
                         initial="enter"
                         animate="center"
@@ -1565,23 +1565,23 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                                     ? ['Limão', 'Balada', 'Fruit Mix', 'Kiwi', 'Maracujá', 'Tangerina']
                                                     : currentProduct.slug.startsWith('skol-beats-')
                                                     ? ['Senses', 'Gin e Tônica', 'Tropical', 'Red Mix', 'Green Mix']
-                                                    : ['Melancia', 'Tropical', 'Pitaia', 'Morango e Pêssego', 'Blueberry', 'Frutas Vermelhas']
+                                                    : ['Melancia', 'Tropical', 'Blueberry', 'Pitaia', 'Morango e Pêssego', 'Frutas Vermelhas']
                                                 ).map((flavor, flavorIdx) => {
                                                     const baseSlug = currentProduct.slug.startsWith('ice-') ? 'ice' : currentProduct.slug.startsWith('skol-beats-') ? 'skol-beats' : 'red-bull';
                                                     const flavorsArray = currentProduct.slug.startsWith('ice-')
                                                         ? ['Limão', 'Balada', 'Fruit Mix', 'Kiwi', 'Maracujá', 'Tangerina']
                                                         : currentProduct.slug.startsWith('skol-beats-')
                                                         ? ['Senses', 'Gin e Tônica', 'Tropical', 'Red Mix', 'Green Mix']
-                                                        : ['Melancia', 'Tropical', 'Pitaia', 'Morango e Pêssego', 'Blueberry', 'Frutas Vermelhas'];
+                                                        : ['Melancia', 'Tropical', 'Blueberry', 'Pitaia', 'Morango e Pêssego', 'Frutas Vermelhas'];
 
-                                                    let cleanFlavor = flavor.toLowerCase().replace(/ã/g, 'a').replace(/á/g, 'a').replace(/ô/g, 'o').replace(/ê/g, 'e').replace(/ /g, '-');
+                                                    let cleanFlavor = flavor.toLowerCase().replace(/ã/g, 'a').replace(/á/g, 'a').replace(/ô/g, 'o').replace(/é/g, 'e').replace(/ê/g, 'e').replace(/ /g, '-');
                                                     if (flavor === 'Gin e Tônica') cleanFlavor = 'gin-tonica';
 
                                                     const flavorSlug = `${baseSlug}-${cleanFlavor}`;
                                                     const isSelected = currentProduct.slug === flavorSlug;
 
                                                     const currentFlavorIdx = flavorsArray.findIndex(f => {
-                                                        let cf = f.toLowerCase().replace(/ã/g, 'a').replace(/á/g, 'a').replace(/ô/g, 'o').replace(/ê/g, 'e').replace(/ /g, '-');
+                                                        let cf = f.toLowerCase().replace(/ã/g, 'a').replace(/á/g, 'a').replace(/ô/g, 'o').replace(/é/g, 'e').replace(/ê/g, 'e').replace(/ /g, '-');
                                                         if (f === 'Gin e Tônica') cf = 'gin-tonica';
                                                         return `${baseSlug}-${cf}` === currentProduct.slug;
                                                     });
@@ -1599,12 +1599,12 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                                                 }
                                                             }}
                                                             style={{
-                                                                padding: 'clamp(5px, 1.5vw, 8px) clamp(8px, 3vw, 14px)',
+                                                            padding: currentProduct.slug.startsWith('red-bull-') ? 'clamp(4px, 1vw, 6px) clamp(5px, 1.5vw, 10px)' : 'clamp(5px, 1.5vw, 8px) clamp(8px, 3vw, 14px)',
                                                                 borderRadius: '18px',
                                                                 border: `1.1px solid ${isSelected ? '#D4AF37' : 'rgba(255,255,255,0.1)'}`,
                                                                 background: isSelected ? 'rgba(212, 175, 55, 0.15)' : 'rgba(255,255,255,0.03)',
                                                                 color: isSelected ? '#D4AF37' : '#999',
-                                                                fontSize: 'clamp(9px, 2.5vw, 11px)',
+                                                                fontSize: currentProduct.slug.startsWith('red-bull-') ? 'clamp(8.5px, 2.2vw, 10px)' : 'clamp(9px, 2.5vw, 11px)',
                                                                 fontWeight: '700',
                                                                 textTransform: 'uppercase',
                                                                 letterSpacing: '0.5px',
