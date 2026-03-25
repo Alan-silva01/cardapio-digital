@@ -154,6 +154,15 @@ const CATEGORIES: CategoryDef[] = [
     ],
   },
   {
+    id: "sobremesas",
+    label: "Sobremesas",
+    subtitle: "Pudim & Brownie",
+    icon: Cake,
+    image: "https://res.cloudinary.com/dvhkcemd0/image/upload/f_auto,q_auto,w_400/v1774445935/sobremesa_nv2je8.png",
+    itemCount: 3,
+    subs: [],
+  },
+  {
     id: "diversos",
     label: "Diversos",
     subtitle: "Gelo, Balas & Utilidades",
