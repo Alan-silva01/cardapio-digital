@@ -376,7 +376,140 @@ body.is-browser .home-topbar {
   color: #6B7280;
 }
 
-/* ── Category Grid ── */
+/* ═══════════════════════════════════════════
+   LIST VIEW — Premium Horizontal Cards
+   Inspired by curated daily selections UI
+   ═══════════════════════════════════════════ */
+
+.home-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.home-list-card {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  height: 78px;
+  padding: 0 12px 0 0;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: #000000;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.home-list-card:active {
+  transform: scale(0.98);
+  background: #0A0A0A;
+}
+
+/* ── Thumbnail ── */
+.hlc-img-wrap {
+  width: 90px;
+  height: 100%;
+  min-height: 76px;
+  border-radius: 13px 0 0 13px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: #111111;
+  position: relative;
+  align-self: stretch;
+}
+
+.hlc-img-wrap::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 24px;
+  background: linear-gradient(to right, transparent, #000000);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hlc-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.home-list-card:active .hlc-img {
+  transform: scale(1.08);
+}
+
+/* ── Card Body ── */
+.hlc-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: 10px 0 10px 12px;
+}
+
+.hlc-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.hlc-title {
+  font-size: 17px;
+  font-weight: 800;
+  color: #FFFFFF;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.hlc-count {
+  position: absolute;
+  top: 6px;
+  right: 32px;
+  font-size: 9px;
+  font-weight: 600;
+  color: #D4AF37;
+  white-space: nowrap;
+}
+
+.hlc-subtitle {
+  font-size: 12px;
+  font-weight: 400;
+  color: #888888;
+  margin: 0;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Arrow ── */
+.hlc-arrow {
+  color: #444444;
+  flex-shrink: 0;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.home-list-card:active .hlc-arrow {
+  color: #888888;
+  transform: translateX(2px);
+}
+
+/* ── Category Grid (ORIGINAL — kept for reversion) ── */
 .home-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

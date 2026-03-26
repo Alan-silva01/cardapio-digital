@@ -6,6 +6,12 @@
         "shadcn@latest",
         "mcp"
       ]
+    },
+    "stitch": {
+      "serverUrl": "https://stitch.googleapis.com/mcp",
+      "headers": {
+        "X-Goog-Api-Key": "AQ.Ab8RN6K3BDc6fy87b1LGkOML-_TutU2muDmwSSAfereUXWrseA"
+      }
     }
   }
 }

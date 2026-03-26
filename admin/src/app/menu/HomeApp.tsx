@@ -59,6 +59,9 @@ interface ProductResult {
   imagem_url: string;
 }
 
+/* ─── Layout Toggle: set to false to revert to original grid cards ─── */
+const USE_LIST_VIEW = true;
+
 const CATEGORIES: CategoryDef[] = [
   {
     id: "cervejas",
@@ -119,7 +122,7 @@ const CATEGORIES: CategoryDef[] = [
     label: "Sem Álcool",
     subtitle: "Refrigerantes & Sucos",
     icon: Citrus,
-    image: "https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=400&q=80",
+    image: "/images/nao_alcoolicos_thumb_1774554364537.png",
     itemCount: 11,
     subs: [
       { id: "bebidas-agua", label: "Água & Refri", icon: GlassWater, dbCategories: ["Bebidas"], subcategoria: ["Água & Refri", "Refrigerantes & Águas"] },
@@ -167,7 +170,7 @@ const CATEGORIES: CategoryDef[] = [
     label: "Diversos",
     subtitle: "Gelo, Balas & Utilidades",
     icon: Package,
-    image: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400&q=80",
+    image: "/images/diversos_thumb_1774554400887.png",
     itemCount: 4,
     subs: [
       { id: "div-diversos", label: "Diversos", icon: Package, dbCategories: ["Diversos"], subcategoria: "Diversos" },
@@ -179,7 +182,7 @@ const CATEGORIES: CategoryDef[] = [
     label: "Danos",
     subtitle: "Vidros & Copos Quebrados",
     icon: AlertTriangle,
-    image: "https://images.unsplash.com/photo-1574634534894-89d7576c8259?w=400&q=80",
+    image: "/images/danos_thumb_1774554384902.png",
     itemCount: 3,
     subs: [],
   },
@@ -624,40 +627,82 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
               <span className="home-section-count">{filteredCategories.length} categorias</span>
             </div>
 
-            {/* Categories Grid */}
-            <motion.div
-              className="home-grid"
-              variants={containerVariants}
-              initial="hidden"
-              animate="show"
-            >
-              {filteredCategories.map((cat) => (
-                <motion.button
-                  key={cat.id}
-                  className="home-card"
-                  variants={cardVariants}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => handleCategoryTap(cat)}
-                >
-                  <div className="hc-img-area">
-                    <img
-                      src={cat.image}
-                      alt={cat.label}
-                      loading="lazy"
-                      decoding="async"
-                      className="hc-img"
-                    />
-                  </div>
-                  <div className="hc-body">
-                    <div className="hc-title-row">
-                      <h3 className="hc-title">{cat.label}</h3>
-                      <span className="hc-count">{cat.itemCount} itens</span>
+            {/* ═══ LIST VIEW: Horizontal Premium Cards ═══ */}
+            {USE_LIST_VIEW ? (
+              <motion.div
+                className="home-list"
+                variants={containerVariants}
+                initial="hidden"
+                animate="show"
+              >
+                {filteredCategories.map((cat) => (
+                  <motion.button
+                    key={cat.id}
+                    className="home-list-card"
+                    variants={cardVariants}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleCategoryTap(cat)}
+                  >
+                    <div className="hlc-img-wrap">
+                      <img
+                        src={cat.image}
+                        alt={cat.label}
+                        loading="lazy"
+                        decoding="async"
+                        className="hlc-img"
+                      />
                     </div>
-                    <p className="hc-subtitle">{cat.subtitle}</p>
-                  </div>
-                </motion.button>
-              ))}
-            </motion.div>
+                    <div className="hlc-body">
+                      <div className="hlc-title-row">
+                        <h3 className="hlc-title">{cat.label}</h3>
+                      </div>
+                      <p className="hlc-subtitle">
+                        {cat.subs.length > 0
+                          ? cat.subs.map(s => s.label).join(', ')
+                          : cat.subtitle}
+                      </p>
+                    </div>
+                    <span className="hlc-count">{cat.itemCount} itens</span>
+                    <ChevronRight size={20} className="hlc-arrow" />
+                  </motion.button>
+                ))}
+              </motion.div>
+            ) : (
+              /* ═══ GRID VIEW: Original 2-Column Cards ═══ */
+              <motion.div
+                className="home-grid"
+                variants={containerVariants}
+                initial="hidden"
+                animate="show"
+              >
+                {filteredCategories.map((cat) => (
+                  <motion.button
+                    key={cat.id}
+                    className="home-card"
+                    variants={cardVariants}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => handleCategoryTap(cat)}
+                  >
+                    <div className="hc-img-area">
+                      <img
+                        src={cat.image}
+                        alt={cat.label}
+                        loading="lazy"
+                        decoding="async"
+                        className="hc-img"
+                      />
+                    </div>
+                    <div className="hc-body">
+                      <div className="hc-title-row">
+                        <h3 className="hc-title">{cat.label}</h3>
+                        <span className="hc-count">{cat.itemCount} itens</span>
+                      </div>
+                      <p className="hc-subtitle">{cat.subtitle}</p>
+                    </div>
+                  </motion.button>
+                ))}
+              </motion.div>
+            )}
           </>
         )}
 
