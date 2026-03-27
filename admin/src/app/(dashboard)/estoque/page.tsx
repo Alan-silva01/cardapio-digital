@@ -1364,7 +1364,7 @@ function EstoqueContent() {
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex gap-1 border-b border-border pb-0 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <div className="flex gap-1 border-b border-border pb-1 overflow-x-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40 transition-colors">
                 {filterButtons.map(fb => (
                     <button
                         key={fb.key}
