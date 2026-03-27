@@ -35,6 +35,7 @@ export default function PromocoesPage() {
   const [currentPromoIndex, setCurrentPromoIndex] = useState(0);
 
   const [produtos, setProdutos] = useState<any[]>([]);
+  const [variacoes, setVariacoes] = useState<any[]>([]);
   const [productSearch, setProductSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
@@ -162,9 +163,15 @@ export default function PromocoesPage() {
 
       const { data: prods } = await supabase
         .from("produtos")
-        .select("id, nome, subcategoria, imagem_url, categorias(nome)")
+        .select("id, nome, subcategoria, grupo_id_sabor, imagem_url, categorias(nome)")
         .order("nome");
       if (prods) setProdutos(prods);
+
+      const { data: vars } = await supabase
+        .from("variacoes_produto")
+        .select("id, produto_id, nome, preco")
+        .eq("ativo", true);
+      if (vars) setVariacoes(vars);
 
       setLoading(false);
     }
@@ -471,7 +478,10 @@ export default function PromocoesPage() {
                                     imagem_url: p.imagem_url || "",
                                     titulo: `Promoção: ${p.nome}`,
                                     preco: "",
-                                    produto_id: p.id
+                                    produto_id: p.id,
+                                    grupo_id_sabor: p.grupo_id_sabor || null,
+                                    aplicar_grupo: !!p.grupo_id_sabor,
+                                    variacao_id: null
                                   };
                                   setConfig({ ...config, promocoes: newPromos });
                                   setProductSearch(p.nome);
@@ -502,10 +512,50 @@ export default function PromocoesPage() {
                         );
                       })()}
 
-                      {selectedProduct && (
-                        <p className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1 mt-1">
-                          ✓ {selectedProduct.nome} selecionado
-                        </p>
+                      {selectedProduct && config.promocoes[currentPromoIndex]?.produto_id === selectedProduct.id && (
+                        <div className="mt-2 p-3 bg-brand/5 border border-brand/20 rounded-lg space-y-3">
+                          <p className="text-[11px] text-brand font-semibold flex items-center gap-1">
+                            ✓ {selectedProduct.nome} selecionado
+                          </p>
+
+                          {selectedProduct.grupo_id_sabor && (
+                            <div className="flex items-center justify-between p-2 mt-1 bg-white rounded border border-border/50 shadow-sm">
+                              <div className="space-y-0.5">
+                                <label className="text-[11px] font-semibold">Desconto para toda a linha?</label>
+                                <p className="text-[10px] text-muted-foreground">Aplicar a todos sabores da linha {selectedProduct.grupo_id_sabor}</p>
+                              </div>
+                              <Switch
+                                checked={config.promocoes[currentPromoIndex]?.aplicar_grupo ?? true}
+                                onCheckedChange={(checked) => updateCurrentPromo("aplicar_grupo", checked)}
+                              />
+                            </div>
+                          )}
+
+                          {/* Variation Selector (only if multiple variations or applying to specific) */}
+                          {(!selectedProduct.grupo_id_sabor || !config.promocoes[currentPromoIndex]?.aplicar_grupo) && (() => {
+                            const productVars = variacoes.filter(v => v.produto_id === selectedProduct.id);
+                            if (productVars.length > 1) {
+                              return (
+                                <div className="space-y-1.5 mt-2">
+                                  <label className="text-[11px] font-semibold text-foreground">A qual tamanho/formato aplicar?</label>
+                                  <select 
+                                    className="w-full text-[12px] h-8 rounded-md border border-input bg-transparent px-3 py-1 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                    value={config.promocoes[currentPromoIndex]?.variacao_id || ""}
+                                    onChange={(e) => updateCurrentPromo("variacao_id", e.target.value === "" ? null : e.target.value)}
+                                  >
+                                    <option value="">Todas as variações deste produto</option>
+                                    {productVars.map(v => (
+                                      <option key={v.id} value={v.id}>
+                                        {v.nome} - R$ {v.preco}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                              );
+                            }
+                            return null;
+                          })()}
+                        </div>
                       )}
                     </div>
 

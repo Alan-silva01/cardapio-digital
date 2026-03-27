@@ -713,26 +713,55 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                 glassMapToPreload = glassMap;
             }
 
+            let activePromosList = [];
+            if (configData && configData.promocao_ativa && Array.isArray(configData.promocoes)) {
+                const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+                activePromosList = configData.promocoes.filter(p => {
+                    const start = p.inicio ? new Date(p.inicio) : null;
+                    const end = p.fim ? new Date(p.fim) : null;
+                    return (!start || now >= start) && (!end || now <= end);
+                });
+            }
+
             // Reconstruct the data shape expected by the frontend
             const enrichedProducts = prodData.map(p => {
                 const myVariants = varData.filter(v => v.produto_id === p.id);
 
+                let matchingPromo = activePromosList.find(promo => {
+                    if (promo.aplicar_grupo && p.grupo_id_sabor && promo.grupo_id_sabor === p.grupo_id_sabor) return true;
+                    if (promo.produto_id === p.id) return true;
+                    return false;
+                });
+
                 // Organize variants dict
                 let varsDict = null;
                 let defaultPrice = 0;
+                let defaultOriginalPrice = null;
 
                 if (myVariants.length > 0) {
                     varsDict = {};
                     myVariants.forEach(v => {
+                        let priceToUse = v.preco;
+                        let originalPrice = null;
+
+                        if (matchingPromo && (!matchingPromo.variacao_id || matchingPromo.variacao_id === v.id) && matchingPromo.preco) {
+                            priceToUse = Number(matchingPromo.preco);
+                            originalPrice = v.preco;
+                        }
+
                         varsDict[v.nome] = {
                             id: v.id,
-                            price: v.preco,
+                            price: priceToUse,
+                            originalPrice: originalPrice,
                             stock: v.estoque,
                             imagem_url: v.imagem_url,
                             descricao: v.descricao
                         };
                     });
-                    defaultPrice = myVariants[0].preco;
+                    
+                    const firstVariation = Object.values(varsDict)[0] as any;
+                    defaultPrice = firstVariation.price;
+                    defaultOriginalPrice = firstVariation.originalPrice;
                 }
 
                 // Visual properties linked by slug
@@ -748,6 +777,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                     description: p.descricao,
                     imageUrl: optimizeCloudinaryUrl(p.imagem_url),
                     price: defaultPrice,
+                    originalPrice: defaultOriginalPrice,
                     variations: varsDict,
                     flagUrl: p.pais_origem ? countryFlags[p.pais_origem] : null,
                     paisOrigem: p.pais_origem || null,
@@ -1122,10 +1152,14 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
 
     // Format current price
     let displayPrice = currentProduct.price;
+    let originalDisplayPrice = currentProduct.originalPrice || null;
+
     if (currentProduct.variations && selectedVariation && currentProduct.variations[selectedVariation]) {
         displayPrice = currentProduct.variations[selectedVariation].price;
+        originalDisplayPrice = currentProduct.variations[selectedVariation].originalPrice || null;
     }
     const formattedPrice = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(displayPrice);
+    const formattedOriginalPrice = originalDisplayPrice ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(originalDisplayPrice) : null;
 
     const isTaca = selectedVariation && (selectedVariation.toLowerCase().includes('taça') || selectedVariation.toLowerCase().includes('taca'));
     let displayImage = currentProduct.imageUrl;
@@ -1533,7 +1567,12 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
 
                                 {/* Right Container: Price */}
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px', zIndex: 1 }}>
-                                    <div className="price-tag" style={{ border: '1px solid rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', fontSize: '14px', fontWeight: '800' }}>
+                                    <div className="price-tag flex items-center gap-2" style={{ border: '1px solid rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', fontSize: '14px', fontWeight: '800' }}>
+                                        {formattedOriginalPrice && (
+                                            <span style={{ textDecoration: 'line-through', fontSize: '12px', color: 'rgba(255,255,255,0.5)', fontWeight: 'normal' }}>
+                                                {formattedOriginalPrice}
+                                            </span>
+                                        )}
                                         {formattedPrice}
                                     </div>
                                 </div>
