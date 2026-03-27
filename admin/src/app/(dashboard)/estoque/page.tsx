@@ -1297,7 +1297,10 @@ function EstoqueContent() {
                                 const isUpdating = updatingIds.has(item.variacao_id);
                                 const flagUrl = item.pais_origem ? COUNTRY_FLAGS[item.pais_origem as keyof typeof COUNTRY_FLAGS] : null;
 
-                                let displayVariacao = item.variacao_nome === 'Unidade' && item.subcategoria ? item.subcategoria : item.variacao_nome;
+                                const vName = item.variacao_nome.toLowerCase();
+                                const isDefaultVariation = vName === 'unidade' || vName === 'única' || vName === 'unica';
+                                let displayVariacao = isDefaultVariation && item.subcategoria ? item.subcategoria : item.variacao_nome;
+                                
                                 if (displayVariacao) {
                                     displayVariacao = displayVariacao.replace(/long\s*neck/i, 'Long Neck');
                                 }
