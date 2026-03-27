@@ -92,14 +92,14 @@ export function Sidebar() {
                     <div key={item.href} className="relative w-full group flex items-center h-8">
                         {/* Active Indicator - Stationary on the left edge */}
                         {isActive && (
-                            <div className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-[1.5px] bg-[#ff5e1e] rounded-r-full z-20" />
+                            <div className="absolute -left-2 top-1/2 -translate-y-1/2 h-4 w-[1.5px] bg-[#ff5e1e] rounded-r-full z-20" />
                         )}
 
                         <Link
                             href={item.href}
                             onClick={(e) => e.stopPropagation()}
                             className={cn(
-                                "flex items-center rounded-md transition-colors duration-200 overflow-hidden mx-2 h-8 w-full",
+                                "flex items-center rounded-md transition-colors duration-200 overflow-hidden w-full h-8",
                                 isActive
                                     ? "bg-sidebar-accent text-sidebar-accent-foreground"
                                     : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
@@ -118,8 +118,8 @@ export function Sidebar() {
 
                             {/* Label - Only transitions in opacity and width, no horizontal movement for the icon */}
                             <span className={cn(
-                                "text-[13px] font-medium whitespace-nowrap transition-all duration-300 ease-out pl-2",
-                                isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2 pointer-events-none w-0"
+                                "text-[13px] font-medium whitespace-nowrap transition-all duration-300 ease-out",
+                                isExpanded ? "opacity-100 translate-x-0 pl-2" : "opacity-0 -translate-x-2 pointer-events-none w-0 pl-0"
                             )}>
                                 {item.label}
                             </span>
@@ -154,10 +154,10 @@ export function Sidebar() {
                 }}>
                     <nav className="flex flex-col items-start pt-6 pb-4 w-full">
                         {navigationGroups.map((group) => (
-                            <div key={group.label} className="w-full mb-6 cursor-default">
+                            <div key={group.label} className="w-full px-2 mb-6 cursor-default">
                                 <h3 className={cn(
-                                    "px-4 text-[10px] font-bold text-sidebar-foreground/70 tracking-widest transition-all duration-300 ease-out uppercase mb-2",
-                                    isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2"
+                                    "px-2 text-[10px] font-bold text-sidebar-foreground/70 tracking-widest transition-all duration-300 ease-out uppercase mb-2",
+                                    isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2 hidden"
                                 )}>
                                     {group.label}
                                 </h3>
@@ -168,7 +168,7 @@ export function Sidebar() {
                 </ScrollArea>
 
                 {/* Footer */}
-                <div className="flex flex-col gap-1 border-t border-sidebar-border p-1 bg-sidebar cursor-default">
+                <div className="flex flex-col gap-1 border-t border-sidebar-border p-2 bg-sidebar cursor-default">
                     {/* Pin Menu */}
                     <button
                         onClick={(e) => {
@@ -176,15 +176,15 @@ export function Sidebar() {
                             setIsPinned(!isPinned);
                         }}
                         className={cn(
-                            "flex h-8 items-center rounded-md hover:bg-sidebar-accent transition-colors text-sidebar-foreground hover:text-sidebar-accent-foreground mx-2 cursor-pointer",
+                            "flex h-8 w-full items-center rounded-md hover:bg-sidebar-accent transition-colors text-sidebar-foreground hover:text-sidebar-accent-foreground cursor-pointer",
                         )}
                     >
                         <div className="w-8 h-8 shrink-0 flex items-center justify-center">
                             {isPinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
                         </div>
                         <span className={cn(
-                            "text-[12px] font-medium whitespace-nowrap transition-all duration-300 ease-out pl-2",
-                            isExpanded ? "opacity-100" : "opacity-0 w-0"
+                            "text-[12px] font-medium whitespace-nowrap transition-all duration-300 ease-out",
+                            isExpanded ? "opacity-100 pl-2" : "opacity-0 w-0 pl-0 pointer-events-none"
                         )}>
                             {isPinned ? "Desafixar Menu" : "Fixar Menu"}
                         </span>
@@ -194,14 +194,14 @@ export function Sidebar() {
                     <button
                         onClick={handleLogout}
                         disabled={isLoggingOut}
-                        className="flex h-8 items-center rounded-md hover:bg-red-500/10 transition-colors text-muted-foreground hover:text-red-500 mx-2 cursor-pointer group"
+                        className="flex h-8 w-full items-center rounded-md hover:bg-red-500/10 transition-colors text-muted-foreground hover:text-red-500 cursor-pointer group"
                     >
                         <div className="w-8 h-8 shrink-0 flex items-center justify-center">
                             <LogOut className="h-4 w-4" />
                         </div>
                         <span className={cn(
-                            "text-[12px] font-medium whitespace-nowrap transition-all duration-300 ease-out pl-2",
-                            isExpanded ? "opacity-100" : "opacity-0 w-0"
+                            "text-[12px] font-medium whitespace-nowrap transition-all duration-300 ease-out",
+                            isExpanded ? "opacity-100 pl-2" : "opacity-0 w-0 pl-0 pointer-events-none"
                         )}>
                             {isLoggingOut ? "Saindo..." : "Sair"}
                         </span>
