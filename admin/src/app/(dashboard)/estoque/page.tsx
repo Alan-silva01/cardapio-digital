@@ -877,6 +877,40 @@ function EstoqueContent() {
         status: new Set()
     });
 
+    // Drag to scroll
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const [hasDragged, setHasDragged] = useState(false);
+    const [startX, setStartX] = useState(0);
+    const [scrollLeft, setScrollLeft] = useState(0);
+
+    const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (!scrollRef.current) return;
+        setIsDragging(true);
+        setHasDragged(false);
+        setStartX(e.pageX - scrollRef.current.offsetLeft);
+        setScrollLeft(scrollRef.current.scrollLeft);
+    };
+
+    const handleMouseLeave = () => {
+        setIsDragging(false);
+        setHasDragged(false);
+    };
+    
+    const handleMouseUp = () => {
+        setIsDragging(false);
+        setTimeout(() => setHasDragged(false), 50); // reset after click cycle
+    };
+    
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (!isDragging || !scrollRef.current) return;
+        e.preventDefault();
+        const x = e.pageX - scrollRef.current.offsetLeft;
+        const walk = (x - startX) * 1.5; // scroll speed multiplier
+        if (Math.abs(walk) > 5) setHasDragged(true);
+        scrollRef.current.scrollLeft = scrollLeft - walk;
+    };
+
     const toggleColumnFilter = (col: keyof typeof columnFilters, val: string) => {
         setColumnFilters(prev => {
             const newSet = new Set(prev[col]);
@@ -1364,11 +1398,23 @@ function EstoqueContent() {
             </div>
 
             {/* Filter Tabs */}
-            <div className="flex gap-1 border-b border-border pb-1 overflow-x-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-muted-foreground/20 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/40 transition-colors">
+            <div 
+                ref={scrollRef}
+                onMouseDown={handleMouseDown}
+                onMouseLeave={handleMouseLeave}
+                onMouseUp={handleMouseUp}
+                onMouseMove={handleMouseMove}
+                className={cn(
+                    "flex gap-1 border-b border-border pb-0 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] select-none",
+                    isDragging ? "cursor-grabbing" : "cursor-grab"
+                )}
+            >
                 {filterButtons.map(fb => (
                     <button
                         key={fb.key}
-                        onClick={() => setFilter(fb.key)}
+                        onClick={() => {
+                            if (!hasDragged) setFilter(fb.key);
+                        }}
                         className={cn(
                             "flex items-center gap-1.5 px-3 py-2 text-[12px] font-medium transition-colors border-b-2 -mb-[1px] whitespace-nowrap",
                             filter === fb.key
