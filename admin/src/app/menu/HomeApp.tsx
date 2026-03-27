@@ -257,13 +257,40 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
       const { data } = await supabase.from("configuracoes").select("*").limit(1).single();
       if (data) {
         setConfig(data);
-        // Show promo modal if active and in time window
-        if (data.promocao_ativa && data.promocao_imagem_url) {
-          const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-          const start = data.promocao_inicio ? new Date(data.promocao_inicio) : null;
-          const end = data.promocao_fim ? new Date(data.promocao_fim) : null;
-          const inWindow = (!start || now >= start) && (!end || now <= end);
-          if (inWindow && !sessionStorage.getItem('promoVisto')) {
+
+        // Check promos array for active items (SP timezone)
+        if (data.promocao_ativa && Array.isArray(data.promocoes) && data.promocoes.length > 0) {
+          const nowSP = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+
+          // Separate active vs expired promos
+          const activeOnes: any[] = [];
+          const hasExpired = data.promocoes.some((p: any) => {
+            if (!p.imagem_url) return false;
+            const start = p.inicio ? new Date(p.inicio) : null;
+            const end = p.fim ? new Date(p.fim) : null;
+            const isActive = (!start || nowSP >= start) && (!end || nowSP <= end);
+            if (isActive) activeOnes.push(p);
+            return end && nowSP > end; // expired
+          });
+
+          // Auto-delete expired promos from the DB
+          if (hasExpired) {
+            const remaining = data.promocoes.filter((p: any) => {
+              const end = p.fim ? new Date(p.fim) : null;
+              return !end || nowSP <= end;
+            });
+            await supabase.from("configuracoes").update({
+              promocoes: remaining,
+              promocao_ativa: remaining.length > 0,
+            }).eq("id", "global");
+            // Update local state with cleaned data
+            data.promocoes = remaining;
+            data.promocao_ativa = remaining.length > 0;
+            setConfig({ ...data });
+          }
+
+          // Show promo modal if there are active promos right now
+          if (activeOnes.length > 0 && !sessionStorage.getItem('promoVisto')) {
             setShowPromo(true);
             sessionStorage.setItem('promoVisto', 'true');
           }
@@ -414,16 +441,16 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
   // ── Promo State & Logic ──
   const [currentPromoIndex, setCurrentPromoIndex] = useState(0);
 
-  // Filter active promotions based on current time
+  // Filter active promotions based on current time (SP timezone)
   const activePromos = useMemo(() => {
     if (!config?.promocao_ativa || !config?.promocoes || !Array.isArray(config.promocoes)) return [];
     
-    const now = new Date();
+    const nowSP = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
     return config.promocoes.filter((promo: any) => {
       if (!promo.imagem_url) return false;
       const start = promo.inicio ? new Date(promo.inicio) : null;
       const end = promo.fim ? new Date(promo.fim) : null;
-      return (!start || now >= start) && (!end || now <= end);
+      return (!start || nowSP >= start) && (!end || nowSP <= end);
     });
   }, [config]);
 

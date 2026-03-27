@@ -58,35 +58,41 @@ export default function PromocoesPage() {
           return { inicio: localString(start), fim: localString(end) };
         };
 
-        const nowMs = Date.now();
 
         // Migrate old single promo into array if array is empty
-        let loadedPromocoes = Array.isArray(data.promocoes) ? data.promocoes.map((p: any) => {
+        let loadedPromocoes = Array.isArray(data.promocoes) ? [...data.promocoes] : [];
+
+        // Auto-delete expired promos from the DB (SP timezone)
+        const nowSP = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+        const beforeCount = loadedPromocoes.length;
+        loadedPromocoes = loadedPromocoes.filter((p: any) => {
+          const end = p.fim ? new Date(p.fim) : null;
+          return !end || nowSP <= end;
+        });
+
+        // If any expired promos were removed, persist cleanup to DB
+        if (loadedPromocoes.length < beforeCount) {
+          await supabase.from("configuracoes").update({
+            promocoes: loadedPromocoes,
+            promocao_ativa: loadedPromocoes.length > 0 ? data.promocao_ativa : false,
+          }).eq("id", "global");
+        }
+
+        // Format remaining promos for local display
+        loadedPromocoes = loadedPromocoes.map((p: any) => {
           const def = getDefaults();
-          const fimDate = p.fim ? new Date(p.fim) : null;
-          if (fimDate && fimDate.getTime() < nowMs) {
-            return {
-              imagem_url: "",
-              titulo: "",
-              preco: "",
-              produto_id: "",
-              rodape: "",
-              inicio: def.inicio,
-              fim: def.fim,
-            };
-          }
           return {
             ...p,
             inicio: p.inicio ? formatToLocal(p.inicio) : def.inicio,
             fim: p.fim ? formatToLocal(p.fim) : def.fim,
           };
-        }) : [];
+        });
         
         let singlePromoExpired = false;
         if (loadedPromocoes.length === 0 && (data.promocao_imagem_url || data.promocao_titulo)) {
           const def = getDefaults();
           const fimDate = data.promocao_fim ? new Date(data.promocao_fim) : null;
-          if (fimDate && fimDate.getTime() < nowMs) {
+          if (fimDate && fimDate.getTime() < nowSP.getTime()) {
              singlePromoExpired = true;
              loadedPromocoes = [{
                imagem_url: "",
@@ -127,7 +133,7 @@ export default function PromocoesPage() {
         let finalCantorInicio = data.cantor_inicio ? formatToLocal(data.cantor_inicio) : "";
         let finalCantorFim = data.cantor_fim ? formatToLocal(data.cantor_fim) : "";
 
-        if (data.cantor_fim && new Date(data.cantor_fim).getTime() < nowMs) {
+        if (data.cantor_fim && new Date(data.cantor_fim).getTime() < nowSP.getTime()) {
           finalCantorAtivo = false;
           finalCantorNome = "";
           const def = getDefaults();
