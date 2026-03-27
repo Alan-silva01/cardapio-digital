@@ -854,6 +854,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
         if (prod.slug.startsWith('refri-')) return 'refri-';
         if (prod.slug.startsWith('refri220-')) return 'refri220-';
         if (prod.slug.startsWith('suco1l-')) return 'suco1l-';
+        if (prod.slug.startsWith('halls-')) return 'halls-';
         return null;
     }, []);
 
@@ -867,6 +868,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
         if (prod.slug?.startsWith('refri-') && prod.slug !== 'refri-coca-cola') return false;
         if (prod.slug?.startsWith('refri220-') && prod.slug !== 'refri220-coca-cola') return false;
         if (prod.slug?.startsWith('suco1l-') && prod.slug !== 'suco1l-maracuja') return false;
+        if (prod.slug?.startsWith('halls-') && prod.slug !== 'halls-extra-forte') return false;
 
         return true;
     }, []);
@@ -1591,7 +1593,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
 
                             {/* MULTI-FLAVOR / VARIATION SELECTION (HORIZONTAL SCROLL STYLE) */}
                             {((currentProduct.variations && Object.keys(currentProduct.variations).length > 1) ||
-                                (currentProduct.slug && currentProduct.slug !== 'red-bull-energy-drink' && (currentProduct.slug.startsWith('ice-') || currentProduct.slug.startsWith('skol-beats-') || currentProduct.slug.startsWith('red-bull-') || currentProduct.slug.startsWith('refri-') || currentProduct.slug.startsWith('refri220-') || currentProduct.slug.startsWith('suco1l-')))) && (
+                                (currentProduct.slug && currentProduct.slug !== 'red-bull-energy-drink' && (currentProduct.slug.startsWith('ice-') || currentProduct.slug.startsWith('skol-beats-') || currentProduct.slug.startsWith('red-bull-') || currentProduct.slug.startsWith('refri-') || currentProduct.slug.startsWith('refri220-') || currentProduct.slug.startsWith('suco1l-') || currentProduct.slug.startsWith('halls-')))) && (
                                     <div style={{ marginTop: '0px', marginBottom: 'clamp(8px, 3vw, 20px)', width: '100%' }}>
                                         <div style={{
                                             textAlign: 'center',
@@ -1616,8 +1618,8 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                             }}
                                         >
 
-                                            {/* OPTION 1: SLUG-BASED (ICES, SKOL BEATS, RED BULL, REFRI, SUCO 1L) */}
-                                            {currentProduct.slug && currentProduct.slug !== 'red-bull-energy-drink' && (currentProduct.slug.startsWith('ice-') || currentProduct.slug.startsWith('skol-beats-') || currentProduct.slug.startsWith('red-bull-') || currentProduct.slug.startsWith('refri-') || currentProduct.slug.startsWith('refri220-') || currentProduct.slug.startsWith('suco1l-')) ? (
+                                            {/* OPTION 1: SLUG-BASED (ICES, SKOL BEATS, RED BULL, REFRI, SUCO 1L, HALLS) */}
+                                            {currentProduct.slug && currentProduct.slug !== 'red-bull-energy-drink' && (currentProduct.slug.startsWith('ice-') || currentProduct.slug.startsWith('skol-beats-') || currentProduct.slug.startsWith('red-bull-') || currentProduct.slug.startsWith('refri-') || currentProduct.slug.startsWith('refri220-') || currentProduct.slug.startsWith('suco1l-') || currentProduct.slug.startsWith('halls-')) ? (
                                                 (currentProduct.slug.startsWith('ice-')
                                                     ? ['Limão', 'Balada', 'Fruit Mix', 'Kiwi', 'Maracujá', 'Tangerina']
                                                     : currentProduct.slug.startsWith('skol-beats-')
@@ -1626,9 +1628,11 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                                     ? ['Melancia', 'Tropical', 'Blueberry', 'Pitaia', 'Morango e Pêssego', 'Frutas Vermelhas']
                                                     : currentProduct.slug.startsWith('suco1l-')
                                                     ? ['Maracujá', 'Uva', 'Manga', 'Laranja']
+                                                    : currentProduct.slug.startsWith('halls-')
+                                                    ? ['Extra Forte', 'Menta', 'Melancia', 'Mentol', 'Morango']
                                                     : ['Coca-Cola', 'Fanta Laranja', 'Fanta Uva', 'Sprite', 'Coca Zero']
                                                 ).map((flavor, flavorIdx) => {
-                                                    const baseSlug = currentProduct.slug.startsWith('ice-') ? 'ice' : currentProduct.slug.startsWith('skol-beats-') ? 'skol-beats' : currentProduct.slug.startsWith('red-bull-') ? 'red-bull' : currentProduct.slug.startsWith('refri220-') ? 'refri220' : currentProduct.slug.startsWith('suco1l-') ? 'suco1l' : 'refri';
+                                                    const baseSlug = currentProduct.slug.startsWith('ice-') ? 'ice' : currentProduct.slug.startsWith('skol-beats-') ? 'skol-beats' : currentProduct.slug.startsWith('red-bull-') ? 'red-bull' : currentProduct.slug.startsWith('refri220-') ? 'refri220' : currentProduct.slug.startsWith('suco1l-') ? 'suco1l' : currentProduct.slug.startsWith('halls-') ? 'halls' : 'refri';
                                                     const flavorsArray = currentProduct.slug.startsWith('ice-')
                                                         ? ['Limão', 'Balada', 'Fruit Mix', 'Kiwi', 'Maracujá', 'Tangerina']
                                                         : currentProduct.slug.startsWith('skol-beats-')
@@ -1637,6 +1641,8 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                                         ? ['Melancia', 'Tropical', 'Blueberry', 'Pitaia', 'Morango e Pêssego', 'Frutas Vermelhas']
                                                         : currentProduct.slug.startsWith('suco1l-')
                                                         ? ['Maracujá', 'Uva', 'Manga', 'Laranja']
+                                                        : currentProduct.slug.startsWith('halls-')
+                                                        ? ['Extra Forte', 'Menta', 'Melancia', 'Mentol', 'Morango']
                                                         : ['Coca-Cola', 'Fanta Laranja', 'Fanta Uva', 'Sprite', 'Coca Zero'];
 
                                                     let cleanFlavor = flavor.toLowerCase().replace(/ã/g, 'a').replace(/á/g, 'a').replace(/ô/g, 'o').replace(/é/g, 'e').replace(/ê/g, 'e').replace(/ /g, '-');
@@ -1664,12 +1670,12 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                                                 }
                                                             }}
                                                             style={{
-                                                            padding: (currentProduct.slug.startsWith('red-bull-') || currentProduct.slug.startsWith('refri-')) ? 'clamp(4px, 1vw, 6px) clamp(5px, 1.5vw, 10px)' : 'clamp(5px, 1.5vw, 8px) clamp(8px, 3vw, 14px)',
+                                                            padding: (currentProduct.slug.startsWith('red-bull-') || currentProduct.slug.startsWith('refri-') || currentProduct.slug.startsWith('halls-')) ? 'clamp(4px, 1vw, 6px) clamp(5px, 1.5vw, 10px)' : 'clamp(5px, 1.5vw, 8px) clamp(8px, 3vw, 14px)',
                                                                 borderRadius: '18px',
                                                                 border: `1.1px solid ${isSelected ? '#D4AF37' : 'rgba(255,255,255,0.1)'}`,
                                                                 background: isSelected ? 'rgba(212, 175, 55, 0.15)' : 'rgba(255,255,255,0.03)',
                                                                 color: isSelected ? '#D4AF37' : '#999',
-                                                                fontSize: (currentProduct.slug.startsWith('red-bull-') || currentProduct.slug.startsWith('refri-')) ? 'clamp(8.5px, 2.2vw, 10px)' : 'clamp(9px, 2.5vw, 11px)',
+                                                                fontSize: (currentProduct.slug.startsWith('red-bull-') || currentProduct.slug.startsWith('refri-') || currentProduct.slug.startsWith('halls-')) ? 'clamp(8.5px, 2.2vw, 10px)' : 'clamp(9px, 2.5vw, 11px)',
                                                                 fontWeight: '700',
                                                                 textTransform: 'uppercase',
                                                                 letterSpacing: '0.5px',
