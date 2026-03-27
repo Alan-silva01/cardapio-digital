@@ -1297,10 +1297,7 @@ function EstoqueContent() {
                                 const isUpdating = updatingIds.has(item.variacao_id);
                                 const flagUrl = item.pais_origem ? COUNTRY_FLAGS[item.pais_origem as keyof typeof COUNTRY_FLAGS] : null;
 
-                                const vName = item.variacao_nome.toLowerCase();
-                                const isDefaultVariation = vName === 'unidade' || vName === 'única' || vName === 'unica';
-                                let displayVariacao = isDefaultVariation && item.subcategoria ? item.subcategoria : item.variacao_nome;
-                                
+                                let displayVariacao = item.variacao_nome;
                                 if (displayVariacao) {
                                     displayVariacao = displayVariacao.replace(/long\s*neck/i, 'Long Neck');
                                 }
@@ -1380,9 +1377,16 @@ function EstoqueContent() {
                                             {displayVariacao}
                                         </TableCell>
                                         <TableCell>
-                                            <Badge variant="outline" className="text-[10px] font-medium bg-muted border text-muted-foreground rounded-md px-2 py-0.5">
-                                                {item.categoria_nome}
-                                            </Badge>
+                                            <div className="flex flex-col items-start gap-1">
+                                                <Badge variant="outline" className="text-[10px] font-medium bg-muted border text-muted-foreground rounded-md px-2 py-0.5">
+                                                    {item.categoria_nome}
+                                                </Badge>
+                                                {item.subcategoria && (
+                                                    <span className="text-[10px] text-muted-foreground font-medium pl-1">
+                                                        ↳ {item.subcategoria.replace(/long\s*neck/i, 'Long Neck')}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </TableCell>
 
                                         {/* Origin with flag */}
