@@ -1276,6 +1276,7 @@ function EstoqueContent() {
                             <TableHead className="text-muted-foreground text-[11px] font-semibold uppercase">Produto</TableHead>
                             <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">Variação</TableHead>
                             <TableHead className="text-muted-foreground text-[11px] font-semibold uppercase">Categoria</TableHead>
+                            <TableHead className="text-muted-foreground text-[11px] font-semibold uppercase">Subcategoria</TableHead>
                             <TableHead className="text-muted-foreground text-[11px] font-semibold uppercase">Origem</TableHead>
                             <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">Estoque</TableHead>
                             <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">Status</TableHead>
@@ -1287,7 +1288,7 @@ function EstoqueContent() {
                     <TableBody>
                         {filtered.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={10} className="text-center text-muted-foreground py-12">
+                                <TableCell colSpan={11} className="text-center text-muted-foreground py-12">
                                     Nenhum produto encontrado
                                 </TableCell>
                             </TableRow>
@@ -1377,16 +1378,18 @@ function EstoqueContent() {
                                             {displayVariacao}
                                         </TableCell>
                                         <TableCell>
-                                            <div className="flex flex-col items-start gap-1">
-                                                <Badge variant="outline" className="text-[10px] font-medium bg-muted border text-muted-foreground rounded-md px-2 py-0.5">
-                                                    {item.categoria_nome}
-                                                </Badge>
-                                                {item.subcategoria && (
-                                                    <span className="text-[10px] text-muted-foreground font-medium pl-1">
-                                                        ↳ {item.subcategoria.replace(/long\s*neck/i, 'Long Neck')}
-                                                    </span>
-                                                )}
-                                            </div>
+                                            <Badge variant="outline" className="text-[10px] font-medium bg-muted border text-muted-foreground rounded-md px-2 py-0.5">
+                                                {item.categoria_nome}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            {item.subcategoria ? (
+                                                <span className="text-[11px] font-medium text-muted-foreground">
+                                                    {item.subcategoria.replace(/long\s*neck/i, 'Long Neck')}
+                                                </span>
+                                            ) : (
+                                                <span className="text-[11px] text-muted-foreground/40">—</span>
+                                            )}
                                         </TableCell>
 
                                         {/* Origin with flag */}
