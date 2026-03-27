@@ -661,8 +661,8 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
                           ? cat.subs.map(s => s.label).join(', ')
                           : cat.subtitle}
                       </p>
+                      <span className="hlc-count">{cat.itemCount} itens</span>
                     </div>
-                    <span className="hlc-count">{cat.itemCount} itens</span>
                     <ChevronRight size={20} className="hlc-arrow" />
                   </motion.button>
                 ))}
@@ -705,6 +705,11 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
             )}
           </>
         )}
+
+        {/* ── Branding ── */}
+        <div className="intelflux-watermark">
+          intelflux
+        </div>
 
         <div style={{ height: 100 }} />
       </div>

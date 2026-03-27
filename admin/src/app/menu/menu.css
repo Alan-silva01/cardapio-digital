@@ -2,13 +2,13 @@
   --cream: #F3F4F6;
   --black: #000000;
   --dark-gray: #1A1A1A;
-  --accent-gold: #d4af37;
+  --accent-gold: #fb4f00;
   --text-white: #FFFFFF;
   --text-muted: #8A8A8A;
   --handle-color: #333333;
-  --star-color: #EAB308;
-  --cart-animation-start: #D4AF37;
-  --cart-animation-end: #FFD700;
+  --star-color: #fb4f00;
+  --cart-animation-start: #fb4f00;
+  --cart-animation-end: #ff7333;
   --bg-dark: #0A0A0A;
 }
 
