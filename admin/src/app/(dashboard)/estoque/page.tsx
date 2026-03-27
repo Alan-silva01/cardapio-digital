@@ -1356,7 +1356,9 @@ function EstoqueContent() {
                                                         </div>
                                                         <div className="p-4 bg-card border-t">
                                                             <p className="text-foreground font-medium text-sm leading-tight">{item.produto_nome}</p>
-                                                            <p className="text-muted-foreground text-xs mt-1">{item.variacao_nome}</p>
+                                                            <p className="text-muted-foreground text-xs mt-1">
+                                                                {item.variacao_nome === 'Unidade' && item.subcategoria ? item.subcategoria : item.variacao_nome}
+                                                            </p>
                                                         </div>
                                                     </HoverCardContent>
                                                 )}
@@ -1367,7 +1369,7 @@ function EstoqueContent() {
                                             <div className="font-semibold text-foreground text-sm">{item.produto_nome}</div>
                                         </TableCell>
                                         <TableCell className="text-center text-muted-foreground text-sm">
-                                            {item.variacao_nome}
+                                            {item.variacao_nome === 'Unidade' && item.subcategoria ? item.subcategoria : item.variacao_nome}
                                         </TableCell>
                                         <TableCell>
                                             <Badge variant="outline" className="text-[10px] font-medium bg-muted border text-muted-foreground rounded-md px-2 py-0.5">
