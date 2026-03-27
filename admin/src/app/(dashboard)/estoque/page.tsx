@@ -1299,8 +1299,8 @@ function EstoqueContent() {
                                 const flagUrl = item.pais_origem ? COUNTRY_FLAGS[item.pais_origem as keyof typeof COUNTRY_FLAGS] : null;
 
                                 let displayVariacao = item.variacao_nome;
-                                if (displayVariacao) {
-                                    displayVariacao = displayVariacao.replace(/long\s*neck/i, 'Long Neck');
+                                if (displayVariacao && displayVariacao.toLowerCase().replace(/\s/g, '') === 'longneck') {
+                                    displayVariacao = 'Unidade';
                                 }
 
                                 return (
