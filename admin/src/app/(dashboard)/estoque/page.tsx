@@ -172,6 +172,9 @@ interface StockItem {
     ml_taca: number | null;
     subcategoria: string | null;
     rating: number | null;
+    grupo_id_sabor: string | null;
+    nome_curto_sabor: string | null;
+    is_master_sabor: boolean;
 }
 
 const NEW_PRODUCT_TEMPLATE: StockItem = {
@@ -197,6 +200,9 @@ const NEW_PRODUCT_TEMPLATE: StockItem = {
     ml_taca: null,
     subcategoria: null,
     rating: 5,
+    grupo_id_sabor: null,
+    nome_curto_sabor: null,
+    is_master_sabor: false,
 };
 
 // --- Interactive Star Rating ---
@@ -346,6 +352,9 @@ function EditProductModal({
         ml_taca: number | null;
         subcategoria: string | null;
         rating: number | null;
+        grupo_id_sabor: string | null;
+        nome_curto_sabor: string | null;
+        is_master_sabor: boolean;
     }) => Promise<void>;
     categoriesList: { label: string; value: string }[];
     originsList: string[];
@@ -370,6 +379,9 @@ function EditProductModal({
     const [mlTaca, setMlTaca] = useState("");
     const [subcategoria, setSubcategoria] = useState("");
     const [rating, setRating] = useState(5);
+    const [grupoIdSabor, setGrupoIdSabor] = useState("");
+    const [nomeCurtoSabor, setNomeCurtoSabor] = useState("");
+    const [isMasterSabor, setIsMasterSabor] = useState(false);
 
     // Derive selected category name for conditional rendering
     const selectedCatName = useMemo(() => {
@@ -403,6 +415,9 @@ function EditProductModal({
             setMlTaca(item.ml_taca != null ? String(item.ml_taca) : "");
             setSubcategoria(item.subcategoria || "");
             setRating(item.rating ?? 5);
+            setGrupoIdSabor(item.grupo_id_sabor || "");
+            setNomeCurtoSabor(item.nome_curto_sabor || "");
+            setIsMasterSabor(item.is_master_sabor || false);
         }
     }, [item]);
 
@@ -427,6 +442,9 @@ function EditProductModal({
                 ml_taca: mlTaca ? parseInt(mlTaca) : null,
                 subcategoria: subcategoria || null,
                 rating: rating,
+                grupo_id_sabor: grupoIdSabor || null,
+                nome_curto_sabor: nomeCurtoSabor || null,
+                is_master_sabor: isMasterSabor,
             });
             onClose();
         } catch (err: any) {
@@ -694,6 +712,45 @@ function EditProductModal({
                         <StarRating value={rating} onChange={setRating} />
                     </div>
 
+                    {/* Agrupamento de Sabores */}
+                    <div className="pt-3 border-t border-border/50">
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                            <span>🍬</span> Agrupamento de Sabores (Opcional)
+                        </p>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-1.5">
+                                <Label className="text-xs font-medium text-muted-foreground">ID do Grupo</Label>
+                                <Input
+                                    value={grupoIdSabor}
+                                    onChange={(e) => setGrupoIdSabor(e.target.value.toLowerCase().replace(/\s+/g, '-'))}
+                                    className="bg-background border-border h-9 text-sm font-mono"
+                                    placeholder="ex: trident, red-bull"
+                                />
+                            </div>
+                            <div className="space-y-1.5">
+                                <Label className="text-xs font-medium text-muted-foreground">Nome no Botão</Label>
+                                <Input
+                                    value={nomeCurtoSabor}
+                                    onChange={(e) => setNomeCurtoSabor(e.target.value)}
+                                    className="bg-background border-border h-9 text-sm"
+                                    placeholder="ex: Morango, Canela"
+                                />
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2 mt-3">
+                            <input
+                                type="checkbox"
+                                id="is-master-sabor"
+                                checked={isMasterSabor}
+                                onChange={(e) => setIsMasterSabor(e.target.checked)}
+                                className="h-4 w-4 rounded border-border accent-amber-400 cursor-pointer"
+                            />
+                            <Label htmlFor="is-master-sabor" className="text-xs font-medium text-muted-foreground cursor-pointer">
+                                Este é o produto principal do grupo (aparece na listagem)
+                            </Label>
+                        </div>
+                    </div>
+
                     {/* Variação upload específico */}
                     <div className="pt-4 border-t border-border/50 pb-2">
                         <p className="text-[10.5px] font-bold text-foreground uppercase tracking-widest mb-3 flex items-center gap-2"><Tag className="h-3.5 w-3.5"/> Dados Específicos Desta Variação</p>
@@ -848,6 +905,9 @@ function EstoqueContent() {
                     ml_taca,
                     subcategoria,
                     rating,
+                    grupo_id_sabor,
+                    nome_curto_sabor,
+                    is_master_sabor,
                     categorias (
                         nome
                     )
@@ -893,6 +953,9 @@ function EstoqueContent() {
                 ml_taca: v.produtos.ml_taca,
                 subcategoria: v.produtos.subcategoria,
                 rating: v.produtos.rating,
+                grupo_id_sabor: v.produtos.grupo_id_sabor || null,
+                nome_curto_sabor: v.produtos.nome_curto_sabor || null,
+                is_master_sabor: v.produtos.is_master_sabor || false,
             };
         });
 
@@ -1074,6 +1137,9 @@ function EstoqueContent() {
         ml_taca: number | null;
         subcategoria: string | null;
         rating: number | null;
+        grupo_id_sabor: string | null;
+        nome_curto_sabor: string | null;
+        is_master_sabor: boolean;
     }) {
         if (!editingItem) return;
 

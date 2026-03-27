@@ -49,6 +49,9 @@ export async function saveProductAction(data: any, isCreating: boolean, editingI
                 ml_taca: data.ml_taca,
                 subcategoria: data.subcategoria,
                 rating: data.rating,
+                grupo_id_sabor: data.grupo_id_sabor || null,
+                nome_curto_sabor: data.nome_curto_sabor || null,
+                is_master_sabor: data.is_master_sabor || false,
                 disponivel: true,
                 eh_combo: false
             })
@@ -94,6 +97,9 @@ export async function saveProductAction(data: any, isCreating: boolean, editingI
                 ml_taca: data.ml_taca,
                 subcategoria: data.subcategoria,
                 rating: data.rating,
+                grupo_id_sabor: data.grupo_id_sabor || null,
+                nome_curto_sabor: data.nome_curto_sabor || null,
+                is_master_sabor: data.is_master_sabor || false,
             })
             .eq("id", editingItem.produto_id);
 

@@ -665,7 +665,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
             ] = await Promise.all([
                 supabase.from('categorias').select('id, nome, icone').eq('ativo', true),
                 supabase.from('produtos')
-                    .select('id, categoria_id, nome, slug, descricao, imagem_url, disponivel, ordem, pais_origem, volume_ml, teor_alcolico, serve_pessoas, rating, curtidas, tipo_vinho, ml_taca, subcategoria')
+                    .select('id, categoria_id, nome, slug, descricao, imagem_url, disponivel, ordem, pais_origem, volume_ml, teor_alcolico, serve_pessoas, rating, curtidas, tipo_vinho, ml_taca, subcategoria, grupo_id_sabor, nome_curto_sabor, is_master_sabor')
                     .order('ordem', { ascending: true }),
                 supabase.from('variacoes_produto').select('*').eq('ativo', true).order('ordem', { ascending: true }),
                 supabase.from('tipos_vinho').select('tipo, imagem_taca_url'),
@@ -759,7 +759,11 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                     tipo_vinho: p.tipo_vinho || null,
                     ml_taca: p.ml_taca || 200,
                     disponivel: p.disponivel,
-                    ordem: p.ordem || 0
+                    ordem: p.ordem || 0,
+                    // Dynamic flavor group fields
+                    grupo_id_sabor: p.grupo_id_sabor || null,
+                    nome_curto_sabor: p.nome_curto_sabor || null,
+                    is_master_sabor: p.is_master_sabor || false,
                 };
             });
 
@@ -845,33 +849,18 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
     }
 
     // Helper functions for pagination and initial product selection
+    // DYNAMIC: uses grupo_id_sabor from DB instead of hardcoded slug checks
     const getPrefix = useCallback((prod: any) => {
-        if (!prod || !prod.slug) return null;
-        if (prod.slug === 'red-bull-energy-drink') return 'red-bull-energy-drink';
-        if (prod.slug.startsWith('ice-')) return 'ice-';
-        if (prod.slug.startsWith('skol-beats-')) return 'skol-beats-';
-        if (prod.slug.startsWith('red-bull-')) return 'red-bull-';
-        if (prod.slug.startsWith('refri-')) return 'refri-';
-        if (prod.slug.startsWith('refri220-')) return 'refri220-';
-        if (prod.slug.startsWith('suco1l-')) return 'suco1l-';
-        if (prod.slug.startsWith('halls-')) return 'halls-';
-        if (prod.slug.startsWith('trident-')) return 'trident-';
+        if (!prod) return null;
+        // If the product has a DB-driven flavor group, use that as the prefix key
+        if (prod.grupo_id_sabor) return prod.grupo_id_sabor;
         return null;
     }, []);
 
     const isValidMaster = useCallback((prod: any) => {
         if (!prod) return false;
-        // It's a flavor but NOT the master flavor -> Skip it
-        if (prod.slug?.startsWith('ice-') && prod.slug !== 'ice-limao') return false;
-        if (prod.slug?.startsWith('skol-beats-') && prod.slug !== 'skol-beats-senses') return false;
-        const validRb = ['red-bull-energy-drink', 'red-bull-melancia', 'red-bull-tradicional', 'red-bull-original'];
-        if (prod.slug?.startsWith('red-bull-') && !validRb.includes(prod.slug)) return false;
-        if (prod.slug?.startsWith('refri-') && prod.slug !== 'refri-coca-cola') return false;
-        if (prod.slug?.startsWith('refri220-') && prod.slug !== 'refri220-coca-cola') return false;
-        if (prod.slug?.startsWith('suco1l-') && prod.slug !== 'suco1l-maracuja') return false;
-        if (prod.slug?.startsWith('halls-') && prod.slug !== 'halls-extra-forte') return false;
-        if (prod.slug?.startsWith('trident-') && prod.slug !== 'trident-morango') return false;
-
+        // If DB marks this product as part of a flavor group but NOT the master, hide it from the main listing
+        if (prod.grupo_id_sabor && !prod.is_master_sabor) return false;
         return true;
     }, []);
 
@@ -1593,9 +1582,9 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                 {displayDescription}
                             </p>
 
-                            {/* MULTI-FLAVOR / VARIATION SELECTION (HORIZONTAL SCROLL STYLE) */}
+                            {/* MULTI-FLAVOR / VARIATION SELECTION — DYNAMIC (reads DB) */}
                             {((currentProduct.variations && Object.keys(currentProduct.variations).length > 1) ||
-                                (currentProduct.slug && currentProduct.slug !== 'red-bull-energy-drink' && (currentProduct.slug.startsWith('ice-') || currentProduct.slug.startsWith('skol-beats-') || currentProduct.slug.startsWith('red-bull-') || currentProduct.slug.startsWith('refri-') || currentProduct.slug.startsWith('refri220-') || currentProduct.slug.startsWith('suco1l-') || currentProduct.slug.startsWith('halls-') || currentProduct.slug.startsWith('trident-')))) && (
+                                currentProduct.grupo_id_sabor) && (
                                     <div style={{ marginTop: '0px', marginBottom: 'clamp(8px, 3vw, 20px)', width: '100%' }}>
                                         <div style={{
                                             textAlign: 'center',
@@ -1619,81 +1608,52 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                                 padding: '0 5px'
                                             }}
                                         >
-
-                                            {/* OPTION 1: SLUG-BASED (ICES, SKOL BEATS, RED BULL, REFRI, SUCO 1L, HALLS, TRIDENT) */}
-                                            {currentProduct.slug && currentProduct.slug !== 'red-bull-energy-drink' && (currentProduct.slug.startsWith('ice-') || currentProduct.slug.startsWith('skol-beats-') || currentProduct.slug.startsWith('red-bull-') || currentProduct.slug.startsWith('refri-') || currentProduct.slug.startsWith('refri220-') || currentProduct.slug.startsWith('suco1l-') || currentProduct.slug.startsWith('halls-') || currentProduct.slug.startsWith('trident-')) ? (
-                                                (currentProduct.slug.startsWith('ice-')
-                                                    ? ['Limão', 'Balada', 'Fruit Mix', 'Kiwi', 'Maracujá', 'Tangerina']
-                                                    : currentProduct.slug.startsWith('skol-beats-')
-                                                    ? ['Senses', 'Gin e Tônica', 'Tropical', 'Red Mix', 'Green Mix']
-                                                    : currentProduct.slug.startsWith('red-bull-')
-                                                    ? ['Melancia', 'Tropical', 'Blueberry', 'Pitaia', 'Morango e Pêssego', 'Frutas Vermelhas']
-                                                    : currentProduct.slug.startsWith('suco1l-')
-                                                    ? ['Maracujá', 'Uva', 'Manga', 'Laranja']
-                                                    : currentProduct.slug.startsWith('halls-')
-                                                    ? ['Extra Forte', 'Menta', 'Melancia', 'Mentol', 'Morango']
-                                                    : currentProduct.slug.startsWith('trident-')
-                                                    ? ['Morango', 'Hortelã', 'Menta', 'Melancia', 'Tutti-Frutti', 'Canela', 'Fresh Intense']
-                                                    : ['Coca-Cola', 'Fanta Laranja', 'Fanta Uva', 'Sprite', 'Coca Zero']
-                                                ).map((flavor, flavorIdx) => {
-                                                    const baseSlug = currentProduct.slug.startsWith('ice-') ? 'ice' : currentProduct.slug.startsWith('skol-beats-') ? 'skol-beats' : currentProduct.slug.startsWith('red-bull-') ? 'red-bull' : currentProduct.slug.startsWith('refri220-') ? 'refri220' : currentProduct.slug.startsWith('suco1l-') ? 'suco1l' : currentProduct.slug.startsWith('halls-') ? 'halls' : currentProduct.slug.startsWith('trident-') ? 'trident' : 'refri';
-                                                    const flavorsArray = currentProduct.slug.startsWith('ice-')
-                                                        ? ['Limão', 'Balada', 'Fruit Mix', 'Kiwi', 'Maracujá', 'Tangerina']
-                                                        : currentProduct.slug.startsWith('skol-beats-')
-                                                        ? ['Senses', 'Gin e Tônica', 'Tropical', 'Red Mix', 'Green Mix']
-                                                        : currentProduct.slug.startsWith('red-bull-')
-                                                        ? ['Melancia', 'Tropical', 'Blueberry', 'Pitaia', 'Morango e Pêssego', 'Frutas Vermelhas']
-                                                        : currentProduct.slug.startsWith('suco1l-')
-                                                        ? ['Maracujá', 'Uva', 'Manga', 'Laranja']
-                                                        : currentProduct.slug.startsWith('halls-')
-                                                        ? ['Extra Forte', 'Menta', 'Melancia', 'Mentol', 'Morango']
-                                                        : currentProduct.slug.startsWith('trident-')
-                                                        ? ['Morango', 'Hortelã', 'Menta', 'Melancia', 'Tutti-Frutti', 'Canela', 'Fresh Intense']
-                                                        : ['Coca-Cola', 'Fanta Laranja', 'Fanta Uva', 'Sprite', 'Coca Zero'];
-
-                                                    let cleanFlavor = flavor.toLowerCase().replace(/ã/g, 'a').replace(/á/g, 'a').replace(/ô/g, 'o').replace(/é/g, 'e').replace(/ê/g, 'e').replace(/ /g, '-');
-                                                    if (flavor === 'Gin e Tônica') cleanFlavor = 'gin-tonica';
-
-                                                    const flavorSlug = `${baseSlug}-${cleanFlavor}`;
-                                                    const isSelected = currentProduct.slug === flavorSlug;
-
-                                                    const currentFlavorIdx = flavorsArray.findIndex(f => {
-                                                        let cf = f.toLowerCase().replace(/ã/g, 'a').replace(/á/g, 'a').replace(/ô/g, 'o').replace(/é/g, 'e').replace(/ê/g, 'e').replace(/ /g, '-');
-                                                        if (f === 'Gin e Tônica') cf = 'gin-tonica';
-                                                        return `${baseSlug}-${cf}` === currentProduct.slug;
+                                            {/* OPTION 1: DB-DRIVEN FLAVOR GROUP (grupo_id_sabor) */}
+                                            {currentProduct.grupo_id_sabor ? (
+                                                // Get all sibling products that share the same grupo_id_sabor, ordered by ordem
+                                                (() => {
+                                                    const siblings = products
+                                                        .filter(p => p.grupo_id_sabor === currentProduct.grupo_id_sabor)
+                                                        .sort((a, b) => {
+                                                            if (a.is_master_sabor && !b.is_master_sabor) return -1;
+                                                            if (!a.is_master_sabor && b.is_master_sabor) return 1;
+                                                            return (a.ordem || 0) - (b.ordem || 0);
+                                                        });
+                                                    return siblings.map((sibling, siblingIdx) => {
+                                                        const isSelected = sibling.id === currentProduct.id;
+                                                        const currentSiblingIdx = siblings.findIndex(s => s.id === currentProduct.id);
+                                                        return (
+                                                            <button
+                                                                key={sibling.id}
+                                                                onClick={() => {
+                                                                    const targetIndex = products.findIndex(p => p.id === sibling.id);
+                                                                    if (targetIndex !== -1 && targetIndex !== currentIndex) {
+                                                                        const spinDirection = siblingIdx > currentSiblingIdx ? 1 : -1;
+                                                                        setDirection(spinDirection);
+                                                                        setIsInternalSpin(true);
+                                                                        setTimeout(() => setCurrentIndex(targetIndex), 0);
+                                                                    }
+                                                                }}
+                                                                style={{
+                                                                    padding: 'clamp(4px, 1vw, 6px) clamp(5px, 1.5vw, 10px)',
+                                                                    borderRadius: '18px',
+                                                                    border: `1.1px solid ${isSelected ? '#D4AF37' : 'rgba(255,255,255,0.1)'}`,
+                                                                    background: isSelected ? 'rgba(212, 175, 55, 0.15)' : 'rgba(255,255,255,0.03)',
+                                                                    color: isSelected ? '#D4AF37' : '#999',
+                                                                    fontSize: 'clamp(8.5px, 2.2vw, 10px)',
+                                                                    fontWeight: '700',
+                                                                    textTransform: 'uppercase',
+                                                                    letterSpacing: '0.5px',
+                                                                    transition: 'all 0.2s ease',
+                                                                    cursor: 'pointer',
+                                                                    boxShadow: isSelected ? '0 4px 12px rgba(212, 175, 55, 0.15)' : 'none'
+                                                                }}
+                                                            >
+                                                                {sibling.nome_curto_sabor || sibling.name}
+                                                            </button>
+                                                        );
                                                     });
-
-                                                    return (
-                                                        <button
-                                                            key={flavor}
-                                                            onClick={() => {
-                                                                const targetIndex = products.findIndex(p => p.slug === flavorSlug);
-                                                                if (targetIndex !== -1 && targetIndex !== currentIndex) {
-                                                                    const spinDirection = flavorIdx > currentFlavorIdx ? 1 : -1;
-                                                                    setDirection(spinDirection);
-                                                                    setIsInternalSpin(true);
-                                                                    setTimeout(() => setCurrentIndex(targetIndex), 0);
-                                                                }
-                                                            }}
-                                                            style={{
-                                                            padding: (currentProduct.slug.startsWith('red-bull-') || currentProduct.slug.startsWith('refri-') || currentProduct.slug.startsWith('halls-') || currentProduct.slug.startsWith('trident-')) ? 'clamp(4px, 1vw, 6px) clamp(5px, 1.5vw, 10px)' : 'clamp(5px, 1.5vw, 8px) clamp(8px, 3vw, 14px)',
-                                                                borderRadius: '18px',
-                                                                border: `1.1px solid ${isSelected ? '#D4AF37' : 'rgba(255,255,255,0.1)'}`,
-                                                                background: isSelected ? 'rgba(212, 175, 55, 0.15)' : 'rgba(255,255,255,0.03)',
-                                                                color: isSelected ? '#D4AF37' : '#999',
-                                                                fontSize: (currentProduct.slug.startsWith('red-bull-') || currentProduct.slug.startsWith('refri-') || currentProduct.slug.startsWith('halls-') || currentProduct.slug.startsWith('trident-')) ? 'clamp(8.5px, 2.2vw, 10px)' : 'clamp(9px, 2.5vw, 11px)',
-                                                                fontWeight: '700',
-                                                                textTransform: 'uppercase',
-                                                                letterSpacing: '0.5px',
-                                                                transition: 'all 0.2s ease',
-                                                                cursor: 'pointer',
-                                                                boxShadow: isSelected ? '0 4px 12px rgba(212, 175, 55, 0.15)' : 'none'
-                                                            }}
-                                                        >
-                                                            {flavor}
-                                                        </button>
-                                                    );
-                                                })
+                                                })()
                                             ) : (
                                                 /* OPTION 2: VARIATIONS (OTHER PRODUCTS) */
                                                 Object.keys(currentProduct.variations).map((variant, variantIdx) => {
