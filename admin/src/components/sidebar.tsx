@@ -84,29 +84,32 @@ export function Sidebar() {
     const isExpanded = isPinned || isHovered;
 
     const renderNavItems = (items: SidebarItem[]) => (
-        <div className="flex flex-col gap-0.5 w-full">
+        <div className="flex flex-col gap-0.5 w-full px-2">
             {items.map((item) => {
                 const isActive = pathname === item.href;
                 const Icon = item.icon;
                 return (
-                    <div key={item.href} className="relative w-full group flex items-center h-8">
+                    <div key={item.href} className="relative w-full group flex items-center h-9">
                         {/* Active Indicator - Stationary on the left edge */}
                         {isActive && (
-                            <div className="absolute -left-2 top-1/2 -translate-y-1/2 h-4 w-[1.5px] bg-[#ff5e1e] rounded-r-full z-20" />
+                            <div className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-[2px] bg-[#ff5e1e] rounded-r-full z-20" />
                         )}
 
                         <Link
                             href={item.href}
                             onClick={(e) => e.stopPropagation()}
                             className={cn(
-                                "flex items-center rounded-md transition-colors duration-200 overflow-hidden w-full h-8",
+                                "flex items-center rounded-md transition-colors duration-200 overflow-hidden w-full h-9",
                                 isActive
                                     ? "bg-sidebar-accent text-sidebar-accent-foreground"
                                     : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                             )}
                         >
-                            {/* Icon Container - Always 32px and centered to stay stationary */}
-                            <div className="w-8 h-8 shrink-0 flex items-center justify-center transition-transform duration-200">
+                            {/* Icon Container - 44px matches sidebar inner width (48-4) when collapsed, perfectly centered */}
+                            <div className={cn(
+                                "h-9 shrink-0 flex items-center justify-center transition-all duration-300",
+                                isExpanded ? "w-10" : "w-full"
+                            )}>
                                 <Icon
                                     className={cn(
                                         "h-[18px] w-[18px]",
@@ -116,10 +119,10 @@ export function Sidebar() {
                                 />
                             </div>
 
-                            {/* Label - Only transitions in opacity and width, no horizontal movement for the icon */}
+                            {/* Label */}
                             <span className={cn(
                                 "text-[13px] font-medium whitespace-nowrap transition-all duration-300 ease-out",
-                                isExpanded ? "opacity-100 translate-x-0 pl-2" : "opacity-0 -translate-x-2 pointer-events-none w-0 pl-0"
+                                isExpanded ? "opacity-100" : "opacity-0 pointer-events-none w-0 overflow-hidden"
                             )}>
                                 {item.label}
                             </span>
@@ -154,10 +157,11 @@ export function Sidebar() {
                 }}>
                     <nav className="flex flex-col items-start pt-6 pb-4 w-full">
                         {navigationGroups.map((group) => (
-                            <div key={group.label} className="w-full px-2 mb-6 cursor-default">
+                            <div key={group.label} className="w-full mb-4 cursor-default">
+                                {/* Section header - keeps its height when collapsed so icons don't jump */}
                                 <h3 className={cn(
-                                    "px-2 text-[10px] font-bold text-sidebar-foreground/70 tracking-widest transition-all duration-300 ease-out uppercase mb-2",
-                                    isExpanded ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2 hidden"
+                                    "text-[10px] font-bold text-sidebar-foreground/70 tracking-widest transition-all duration-300 ease-out uppercase mb-2 h-4 flex items-center",
+                                    isExpanded ? "opacity-100 px-4" : "opacity-0 px-2 pointer-events-none"
                                 )}>
                                     {group.label}
                                 </h3>
@@ -176,15 +180,18 @@ export function Sidebar() {
                             setIsPinned(!isPinned);
                         }}
                         className={cn(
-                            "flex h-8 w-full items-center rounded-md hover:bg-sidebar-accent transition-colors text-sidebar-foreground hover:text-sidebar-accent-foreground cursor-pointer",
+                            "flex h-9 w-full items-center rounded-md hover:bg-sidebar-accent transition-colors text-sidebar-foreground hover:text-sidebar-accent-foreground cursor-pointer",
                         )}
                     >
-                        <div className="w-8 h-8 shrink-0 flex items-center justify-center">
+                        <div className={cn(
+                            "h-9 shrink-0 flex items-center justify-center transition-all duration-300",
+                            isExpanded ? "w-10" : "w-full"
+                        )}>
                             {isPinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
                         </div>
                         <span className={cn(
                             "text-[12px] font-medium whitespace-nowrap transition-all duration-300 ease-out",
-                            isExpanded ? "opacity-100 pl-2" : "opacity-0 w-0 pl-0 pointer-events-none"
+                            isExpanded ? "opacity-100" : "opacity-0 w-0 overflow-hidden pointer-events-none"
                         )}>
                             {isPinned ? "Desafixar Menu" : "Fixar Menu"}
                         </span>
@@ -194,14 +201,17 @@ export function Sidebar() {
                     <button
                         onClick={handleLogout}
                         disabled={isLoggingOut}
-                        className="flex h-8 w-full items-center rounded-md hover:bg-red-500/10 transition-colors text-muted-foreground hover:text-red-500 cursor-pointer group"
+                        className="flex h-9 w-full items-center rounded-md hover:bg-red-500/10 transition-colors text-muted-foreground hover:text-red-500 cursor-pointer group"
                     >
-                        <div className="w-8 h-8 shrink-0 flex items-center justify-center">
+                        <div className={cn(
+                            "h-9 shrink-0 flex items-center justify-center transition-all duration-300",
+                            isExpanded ? "w-10" : "w-full"
+                        )}>
                             <LogOut className="h-4 w-4" />
                         </div>
                         <span className={cn(
                             "text-[12px] font-medium whitespace-nowrap transition-all duration-300 ease-out",
-                            isExpanded ? "opacity-100 pl-2" : "opacity-0 w-0 pl-0 pointer-events-none"
+                            isExpanded ? "opacity-100" : "opacity-0 w-0 overflow-hidden pointer-events-none"
                         )}>
                             {isLoggingOut ? "Saindo..." : "Sair"}
                         </span>
