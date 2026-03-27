@@ -61,7 +61,7 @@ const navigationGroups: SidebarGroup[] = [
             { icon: QrCode, label: "QR Codes", href: "/qrcodes" },
             { icon: Users, label: "Equipe", href: "/equipe" },
             { icon: Clock, label: "Horários", href: "/horarios" },
-            { icon: Settings, label: "Configurações", href: "/configuracoes" },
+            { icon: Settings, label: "Ajustes", href: "/configuracoes" },
         ]
     }
 ];
