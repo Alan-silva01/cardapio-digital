@@ -17,6 +17,13 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import {
+    DropdownMenu,
+    DropdownMenuCheckboxItem,
+    DropdownMenuContent,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
     Dialog,
     DialogContent,
     DialogHeader,
@@ -33,6 +40,8 @@ import {
     Pencil,
     Check,
     ChevronsUpDown,
+    ChevronDown,
+    Filter,
     Camera,
     UploadCloud,
     Wine,
@@ -852,6 +861,33 @@ function EstoqueContent() {
     const [editingItem, setEditingItem] = useState<StockItem | null>(null);
     const [itemToDelete, setItemToDelete] = useState<StockItem | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
+    
+    // Column Filters
+    const [columnFilters, setColumnFilters] = useState<{
+        categoria: Set<string>;
+        subcategoria: Set<string>;
+        variacao: Set<string>;
+        origem: Set<string>;
+        status: Set<string>;
+    }>({
+        categoria: new Set(),
+        subcategoria: new Set(),
+        variacao: new Set(),
+        origem: new Set(),
+        status: new Set()
+    });
+
+    const toggleColumnFilter = (col: keyof typeof columnFilters, val: string) => {
+        setColumnFilters(prev => {
+            const newSet = new Set(prev[col]);
+            if (newSet.has(val)) {
+                newSet.delete(val);
+            } else {
+                newSet.add(val);
+            }
+            return { ...prev, [col]: newSet };
+        });
+    };
     const [linkedCombosModal, setLinkedCombosModal] = useState<{
         isOpen: boolean;
         whiskeyName: string;
@@ -985,6 +1021,22 @@ function EstoqueContent() {
         return Array.from(origs).sort();
     }, [items]);
 
+    const allSubcategorias = useMemo(() => {
+        const subcats = new Set(items.map(i => i.subcategoria).filter(Boolean) as string[]);
+        return Array.from(subcats).sort();
+    }, [items]);
+
+    const allVariacoes = useMemo(() => {
+        const vars = new Set(items.map(i => {
+           let v = i.variacao_nome;
+           if (v && v.toLowerCase().replace(/\s/g, '') === 'longneck') v = 'Unidade';
+           return v;
+        }).filter(Boolean));
+        return Array.from(vars).sort();
+    }, [items]);
+
+    const allStatus = ['Em Estoque', 'Estoque Baixo', 'Esgotado', 'Desativado'];
+
     // Filter
     const filtered = useMemo(() => {
         let result = items;
@@ -1001,8 +1053,37 @@ function EstoqueContent() {
         if (filter !== "todos") {
             result = result.filter(i => i.categoria_nome === filter);
         }
+
+        // Apply columnFilters
+        if (columnFilters.categoria.size > 0) {
+            result = result.filter(i => columnFilters.categoria.has(i.categoria_nome));
+        }
+        if (columnFilters.subcategoria.size > 0) {
+            result = result.filter(i => i.subcategoria && columnFilters.subcategoria.has(i.subcategoria));
+        }
+        if (columnFilters.variacao.size > 0) {
+            result = result.filter(i => {
+                let v = i.variacao_nome;
+                if (v && v.toLowerCase().replace(/\s/g, '') === 'longneck') v = 'Unidade';
+                return columnFilters.variacao.has(v);
+            });
+        }
+        if (columnFilters.origem.size > 0) {
+            result = result.filter(i => i.pais_origem && columnFilters.origem.has(i.pais_origem));
+        }
+        if (columnFilters.status.size > 0) {
+            result = result.filter(i => {
+                let s = "";
+                if (!i.disponivel) s = "Desativado";
+                else if (i.estoque === 0) s = "Esgotado";
+                else if (i.estoque > 0 && i.estoque <= i.estoque_minimo) s = "Estoque Baixo";
+                else s = "Em Estoque";
+                return columnFilters.status.has(s);
+            });
+        }
+
         return result;
-    }, [items, search, filter]);
+    }, [items, search, filter, columnFilters]);
 
     // Quick stock adjustment
     async function adjustStock(variacaoId: string, delta: number) {
@@ -1186,6 +1267,46 @@ function EstoqueContent() {
         ];
     }, [counts.total, categories, items]);
 
+    const FilterHeader = ({ title, column, options, centered }: { title: string, column: keyof typeof columnFilters, options: string[], centered?: boolean }) => {
+        const activeCount = columnFilters[column].size;
+        return (
+            <TableHead className="p-0 h-10 align-middle">
+                <DropdownMenu>
+                    <DropdownMenuTrigger 
+                        className={cn(
+                            "h-full w-full rounded-none flex items-center gap-1.5 px-3 text-[11px] font-semibold text-muted-foreground hover:bg-muted/50 data-[state=open]:bg-muted/50 uppercase outline-none focus:outline-none", 
+                            centered ? "justify-center" : "justify-start"
+                        )}
+                    >
+                        {title}
+                        {activeCount > 0 && <span className="rounded bg-primary px-1 text-[9px] text-primary-foreground">{activeCount}</span>}
+                        <ChevronDown className="h-3 w-3 opacity-50" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align={centered ? "center" : "start"} className="w-[180px] max-h-[300px] overflow-y-auto">
+                        <DropdownMenuCheckboxItem
+                            checked={activeCount === 0}
+                            onCheckedChange={() => setColumnFilters(p => ({ ...p, [column]: new Set() }))}
+                            className="text-[12px] font-medium"
+                        >
+                            Todos
+                        </DropdownMenuCheckboxItem>
+                        <DropdownMenuSeparator />
+                        {options.map(opt => (
+                            <DropdownMenuCheckboxItem
+                                key={opt}
+                                checked={columnFilters[column].has(opt)}
+                                onCheckedChange={() => toggleColumnFilter(column, opt)}
+                                className="text-[12px]"
+                            >
+                                {opt}
+                            </DropdownMenuCheckboxItem>
+                        ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </TableHead>
+        );
+    };
+
     if (loading) {
         return (
             <div className="flex-1 flex items-center justify-center h-[60vh]">
@@ -1274,12 +1395,12 @@ function EstoqueContent() {
                         <TableRow className="hover:bg-transparent border-border">
                             <TableHead className="w-[50px] text-muted-foreground text-[11px] font-semibold uppercase"></TableHead>
                             <TableHead className="text-muted-foreground text-[11px] font-semibold uppercase">Produto</TableHead>
-                            <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">Variação</TableHead>
-                            <TableHead className="text-muted-foreground text-[11px] font-semibold uppercase">Categoria</TableHead>
-                            <TableHead className="text-muted-foreground text-[11px] font-semibold uppercase">Subcategoria</TableHead>
-                            <TableHead className="text-muted-foreground text-[11px] font-semibold uppercase">Origem</TableHead>
+                            <FilterHeader title="Variação" column="variacao" options={allVariacoes} centered />
+                            <FilterHeader title="Categoria" column="categoria" options={categories} />
+                            <FilterHeader title="Subcategoria" column="subcategoria" options={allSubcategorias} />
+                            <FilterHeader title="Origem" column="origem" options={allOrigins} />
                             <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">Estoque</TableHead>
-                            <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">Status</TableHead>
+                            <FilterHeader title="Status" column="status" options={allStatus} centered />
                             <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">App</TableHead>
                             <TableHead className="text-muted-foreground text-[11px] font-semibold uppercase">Preço</TableHead>
                             <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">Ação</TableHead>
