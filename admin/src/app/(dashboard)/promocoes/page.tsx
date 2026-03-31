@@ -2,14 +2,15 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Megaphone, Mic2, Ticket, Upload, Save, Loader2, Image as ImageIcon, Plus, Trash, Trash2, Search, X, Check } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { uploadImageAction } from "@/app/actions/upload-image";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-export default function PromocoesPage() {
+export default function PromocoesPage() { 
+    const supabase = createClient();
   const [loading, setLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [uploading, setUploading] = useState(false);

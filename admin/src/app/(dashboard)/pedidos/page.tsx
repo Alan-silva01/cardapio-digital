@@ -31,7 +31,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { useNotificationSound } from "@/hooks/useNotificationSound";
 import { OrderDetailModal } from "@/components/order-detail-modal";
 
@@ -202,7 +202,8 @@ function groupByStatus(comandas: ComandaAgrupada[]): ColumnsState {
   return grouped;
 }
 
-export default function PedidosPage() {
+export default function PedidosPage() { 
+    const supabase = createClient();
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [columns, setColumns] = useState<ColumnsState>({

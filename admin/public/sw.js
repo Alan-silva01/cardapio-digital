@@ -90,17 +90,9 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Supabase API: Network-First
+    // Supabase API: No cache. Always fetch from network to avoid serving stale data or tokens.
     if (url.hostname.includes('supabase')) {
-        event.respondWith(
-            fetch(request).then((response) => {
-                if (response.ok) {
-                    const clone = response.clone();
-                    caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-                }
-                return response;
-            }).catch(() => caches.match(request))
-        );
+        event.respondWith(fetch(request));
         return;
     }
 });

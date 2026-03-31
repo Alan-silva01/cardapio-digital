@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -121,7 +121,8 @@ function getDateRange(period: PeriodKey): { from: Date; to: Date } {
   }
 }
 
-export default function RelatoriosPage() {
+export default function RelatoriosPage() { 
+    const supabase = createClient();
   const [period, setPeriod] = useState<PeriodKey>("7d");
   const [pedidos, setPedidos] = useState<PedidoRow[]>([]);
   const [itensPedido, setItensPedido] = useState<ItemPedidoRow[]>([]);

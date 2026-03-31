@@ -30,7 +30,7 @@ import {
   Package,
   AlertTriangle,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 
 /* ─── Subcategory Definitions ─── */
 interface SubCategory {
@@ -240,7 +240,8 @@ function shuffleArray<T>(arr: T[]): T[] {
   return a;
 }
 
-export default function HomeApp({ onCategorySelect, onProductSearch, activeTab = "menu", onTabChange }: HomeAppProps) {
+export default function HomeApp({ onCategorySelect, onProductSearch, activeTab = "menu", onTabChange }: HomeAppProps) { 
+    const supabase = createClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [openSheet, setOpenSheet] = useState<CategoryDef | null>(null);
   const [searchResults, setSearchResults] = useState<ProductResult[]>([]);

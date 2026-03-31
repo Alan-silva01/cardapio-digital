@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { supabase } from "@/lib/supabase";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import {
@@ -293,7 +292,7 @@ function ConfirmationDialog({
   );
 }
 
-export default function LayoutPage() {
+export default function LayoutPage() { 
   const router = useRouter();
   const supabase = useMemo(() => createClient(), []);
   const [mesas, setMesas] = useState<MesaLayout[]>([]);

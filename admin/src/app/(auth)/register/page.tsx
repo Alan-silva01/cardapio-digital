@@ -25,6 +25,13 @@ export default function RegisterPage() {
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
+
+        // [SEC-C5] Bloqueio do Registro Público: Para evitar spam e ataques de bots,
+        // o registro de novas contas pelo formulário foi desativado.
+        // Administradores devem criar/convidar usuários diretamente no painel do Supabase.
+        setError("O registro de novas contas está desativado por motivos de segurança. Solicite seu acesso diretamente ao administrador do sistema.");
+        return;
+
         setLoading(true);
 
         try {

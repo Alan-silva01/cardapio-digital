@@ -1,8 +1,33 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { z } from "zod";
 
-export async function saveProductAction(data: any, isCreating: boolean, editingItem: any) {
+// Zod schema for product validation
+const productSchema = z.object({
+  nome: z.string().min(1, "Nome é obrigatório").max(100),
+  descricao: z.string().optional().nullable(),
+  preco: z.coerce.number().min(0, "O preço não pode ser negativo").optional(),
+  estoque: z.coerce.number().min(-1, "Estoque inválido").optional(),
+  imagem_url: z.string().url("URL de imagem inválida").optional().or(z.literal("")).nullable(),
+  categoria_id: z.string().optional(),
+  categoria_nova: z.string().optional(),
+  pais_origem: z.string().optional().nullable(),
+  teor_alcolico: z.coerce.number().optional().nullable(),
+  volume_ml: z.coerce.number().optional().nullable(),
+  serve_pessoas: z.coerce.number().optional().nullable(),
+  tipo_vinho: z.string().optional().nullable(),
+  ml_taca: z.coerce.number().optional().nullable(),
+  subcategoria: z.string().optional().nullable(),
+  rating: z.coerce.number().min(0).max(5).optional().nullable(),
+  grupo_id_sabor: z.string().optional().nullable(),
+  nome_curto_sabor: z.string().optional().nullable(),
+  is_master_sabor: z.boolean().optional(),
+  var_imagem_url: z.string().optional().or(z.literal("")).nullable(),
+  var_descricao: z.string().optional().nullable(),
+});
+
+export async function saveProductAction(rawData: any, isCreating: boolean, editingItem: any) {
     const supabase = await createClient();
 
     // Check auth
@@ -10,6 +35,13 @@ export async function saveProductAction(data: any, isCreating: boolean, editingI
     if (!user) {
         return { error: "Sua sessão expirou ou não foi enviada para o servidor. Faça login novamente." };
     }
+
+    // Validate data using Zod
+    const parsed = productSchema.safeParse(rawData);
+    if (!parsed.success) {
+        return { error: "Dados inválidos: " + parsed.error.issues[0].message };
+    }
+    const data = parsed.data;
 
     let finalCatId = data.categoria_id;
 

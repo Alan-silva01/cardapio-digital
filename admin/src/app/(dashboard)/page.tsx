@@ -32,7 +32,7 @@ import {
     ChartTooltip,
     ChartTooltipContent,
 } from "@/components/ui/chart";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { format, subDays, startOfDay, endOfDay, eachDayOfInterval, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { MetricCardSkeleton, ChartSkeleton, ListSkeleton } from "@/components/dashboard/skeleton";
@@ -57,6 +57,7 @@ const trafficChartConfig = {
 const CATEGORY_COLORS = ["#EC662D", "#2F3232", "#838585", "#D9D3D1", "#4B4E4E", "#8B8B8B", "#FF8C00", "#10b981"];
 
 export default function DashboardPage() {
+    const supabase = createClient();
     const [pedidos, setPedidos] = useState<any[]>([]);
     const [pedidosHoje, setPedidosHoje] = useState<any[]>([]);
     const [pedidosOntem, setPedidosOntem] = useState<any[]>([]);
