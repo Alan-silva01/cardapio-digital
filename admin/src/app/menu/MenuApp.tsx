@@ -888,34 +888,29 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
             const term = searchProductName.toLowerCase().trim();
             const termNoSpace = term.replace(/\s+/g, "");
 
-            // Find direct matches (allow fuzzy matching without spaces)
-            const directlyMatched = all.filter(p => {
+            // 1. Find the first direct match in the DB
+            const matchedProduct = all.find(p => {
                 if (!p.name) return false;
                 const n = p.name.toLowerCase();
                 const nNoSpace = n.replace(/\s+/g, "");
                 return n.includes(term) || nNoSpace.includes(termNoSpace);
             });
 
-            // Find all unique flavor group IDs from the matched items
-            const matchedGroups = new Set(
-                directlyMatched
-                    .filter(p => p.grupo_id_sabor)
-                    .map(p => p.grupo_id_sabor)
-            );
+            if (matchedProduct) {
+                // 2. Identify the category
+                const targetCat = matchedProduct.category;
 
-            // The final list contains the directly matched items PLUS any sibling of a matched group
-            const filtered = all.filter(p => {
-                if (!p.name) return false;
-                const n = p.name.toLowerCase();
-                const nNoSpace = n.replace(/\s+/g, "");
-                const isDirectMatch = n.includes(term) || nNoSpace.includes(termNoSpace);
-                const isSiblingMatch = p.grupo_id_sabor && matchedGroups.has(p.grupo_id_sabor);
-                return isDirectMatch || isSiblingMatch;
-            });
+                // 3. Filter products to the entire category so users can swipe left/right to adjoining products
+                const categoryProducts = all.filter(p => p.category === targetCat);
+                setProducts(categoryProducts);
 
-            setProducts(filtered);
-            const firstMasterIdx = filtered.findIndex((p: any) => isValidMaster(p));
-            setCurrentIndex(firstMasterIdx !== -1 ? firstMasterIdx : 0);
+                // 4. Jump dynamically to the matching product index
+                const targetIdx = categoryProducts.findIndex(p => p.id === matchedProduct.id);
+                setCurrentIndex(targetIdx !== -1 ? targetIdx : 0);
+            } else {
+                setProducts(all);
+                setCurrentIndex(0);
+            }
         } else {
             setProducts(all);
             const firstMasterIdx = all.findIndex((p: any) => isValidMaster(p));
