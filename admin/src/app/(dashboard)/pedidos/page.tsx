@@ -564,6 +564,41 @@ export default function PedidosPage() {
     fetchPedidos();
   };
 
+  const handleRemoveItem = async (itemId: string, comandaId: string) => {
+    const { data, error } = await supabase.rpc("remover_item_comanda", { p_item_id: itemId });
+    if (error || (data && !data.success)) {
+      console.error("Erro ao remover item:", error || data?.message);
+      alert("Erro ao remover o item: " + (error?.message || data?.message));
+    } else {
+      fetchPedidos();
+    }
+  };
+
+  const handleAddProduct = async (
+    comandaId: string,
+    produtoId: string,
+    variacaoId: string | null,
+    quantidade: number,
+    observacao: string,
+    nomePessoa: string
+  ) => {
+    const { data, error } = await supabase.rpc("adicionar_item_comanda_admin", {
+      p_comanda_id: comandaId,
+      p_nome_pessoa: nomePessoa,
+      p_produto_id: produtoId,
+      p_variacao_id: variacaoId,
+      p_quantidade: quantidade,
+      p_observacao: observacao,
+    });
+
+    if (error || (data && !data.success)) {
+      console.error("Erro ao adicionar produto:", error || data?.message);
+      alert("Erro ao adicionar o produto: " + (error?.message || data?.message));
+    } else {
+      fetchPedidos();
+    }
+  };
+
   const clearMesaStatus = async (numero: number, type: 'garcom' | 'conta') => {
     // Optimistic UI update
     setMesasStatus((prev) => ({
@@ -1376,6 +1411,8 @@ export default function PedidosPage() {
         onOpenChange={(open) => { if (!open) setSelectedComanda(null); }}
         config={config}
         onAddCouvert={handleAddCouvert}
+        onRemoveItem={handleRemoveItem}
+        onAddProduct={handleAddProduct}
         onToggleItemServido={toggleItemServido}
         onConfirmPayment={handlePayAll}
         onCancelOrder={handleCancelOrder}

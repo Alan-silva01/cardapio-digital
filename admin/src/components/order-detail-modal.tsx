@@ -18,6 +18,8 @@ import {
   Eye,
   CheckCircle2,
   Ticket,
+  Trash2,
+  PlusCircle,
 } from "lucide-react";
 import {
   Dialog,
@@ -37,6 +39,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { Input } from "@/components/ui/input";
+import { AddProductModal } from "./add-product-modal";
 
 interface ItemPedido {
   id: string;
@@ -85,6 +88,15 @@ interface OrderDetailModalProps {
   onClearService?: (mesa: number, type: 'garcom' | 'conta') => void;
   config?: any;
   onAddCouvert?: (comandaId: string, quantidade: number, valorUnitario: number) => void;
+  onRemoveItem?: (itemId: string, comandaId: string) => void;
+  onAddProduct?: (
+    comandaId: string,
+    produtoId: string,
+    variacaoId: string | null,
+    quantidade: number,
+    observacao: string,
+    nomePessoa: string
+  ) => Promise<void>;
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon?: any }> = {
@@ -116,10 +128,12 @@ function ItemCheckbox({
   item,
   comandaStatus,
   onToggle,
+  onRemove,
 }: {
   item: ItemPedido;
   comandaStatus: string;
   onToggle: (itemId: string, currentValue: boolean) => void;
+  onRemove?: (itemId: string) => void;
 }) {
   const isServed = item.servido || comandaStatus === "pronto" || comandaStatus === "entregue";
   const canToggle = comandaStatus !== "entregue";
@@ -146,8 +160,8 @@ function ItemCheckbox({
             <Check className="h-3 w-3 text-background animate-in zoom-in-50 duration-200" />
           )}
         </button>
-        <div className="flex-1 flex justify-between items-start text-[13px] leading-relaxed text-foreground select-none min-w-0 pr-2">
-          <span className="truncate pr-2 border-b border-transparent border-dashed break-words whitespace-normal">
+        <div className="flex-1 flex gap-2 justify-between items-start text-[13px] leading-relaxed text-foreground select-none min-w-0 pr-2">
+          <span className="truncate flex-1 border-b border-transparent border-dashed break-words whitespace-normal">
             <span className="font-medium">{item.quantidade}x</span>{" "}
             {item.nome_produto}
             {(item.nome_variacao && item.nome_variacao.toLowerCase() !== 'unidade') && (
@@ -172,6 +186,15 @@ function ItemCheckbox({
               </span>
             )}
           </div>
+          {onRemove && comandaStatus !== "entregue" && comandaStatus !== "cancelado" && (
+            <button
+              onClick={() => onRemove(item.id)}
+              className="p-1.5 ml-1 text-muted-foreground/30 hover:text-red-500 hover:bg-red-500/10 rounded-md transition-colors opacity-0 group-hover/item:opacity-100 focus:opacity-100"
+              title="Remover item do pedido"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -357,6 +380,8 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
   onClearService,
   config,
   onAddCouvert,
+  onRemoveItem,
+  onAddProduct,
 }: OrderDetailModalProps) {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -364,6 +389,8 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
   const [showCoverModal, setShowCoverModal] = useState(false);
   const [showCouvertPrompt, setShowCouvertPrompt] = useState(false);
   const [couvertFromPrompt, setCouvertFromPrompt] = useState(false);
+  const [itemToRemove, setItemToRemove] = useState<string | null>(null);
+  const [showAddProduct, setShowAddProduct] = useState(false);
 
   const hasCouvert = useMemo(() => {
     if (!comanda) return false;
@@ -599,7 +626,6 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
                         </div>
                       </div>
 
-                      {/* Items */}
                       <div className="space-y-0.5">
                         {pessoa.itens.map((item) => (
                           <MemoizedItemCheckbox
@@ -607,6 +633,7 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
                             item={item}
                             comandaStatus={comanda.status}
                             onToggle={onToggleItemServido}
+                            onRemove={setItemToRemove}
                           />
                         ))}
                       </div>
@@ -657,6 +684,16 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
                     >
                       <Ticket className="h-3.5 w-3.5 mr-1" />
                       Add Couvert
+                    </Button>
+                  )}
+                  {onAddProduct && (
+                    <Button
+                      variant="outline"
+                      className="flex-1 max-w-[125px] h-9 px-2 text-xs font-semibold text-emerald-600 border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10 transition-colors shrink-0"
+                      onClick={() => setShowAddProduct(true)}
+                    >
+                      <PlusCircle className="h-3.5 w-3.5 mr-1" />
+                      Add Item
                     </Button>
                   )}
                   <Button
@@ -732,6 +769,35 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
           if (onAddCouvert) onAddCouvert(comanda.comanda_id, qtd, config?.valor_couvert || 10);
         }}
       />
+
+      <ConfirmationDialog
+        open={!!itemToRemove}
+        onOpenChange={(open) => { if (!open) setItemToRemove(null); }}
+        title="Remover Item"
+        description="Tem certeza que deseja remover este item da comanda? O total da mesa será recalculado."
+        confirmLabel="Sim, Remover"
+        confirmVariant="destructive"
+        icon={Trash2}
+        onConfirm={() => {
+          if (itemToRemove && onRemoveItem) {
+            onRemoveItem(itemToRemove, comanda.comanda_id);
+          }
+          setItemToRemove(null);
+        }}
+      />
+
+      {showAddProduct && (
+        <AddProductModal
+          open={showAddProduct}
+          onOpenChange={setShowAddProduct}
+          comanda={comanda}
+          onAdd={async (...args) => {
+            if (onAddProduct) {
+              await onAddProduct(comanda.comanda_id, ...args);
+            }
+          }}
+        />
+      )}
 
       {/* Couvert prompt — appears before payment when couvert hasn't been added yet */}
       <Dialog open={showCouvertPrompt} onOpenChange={setShowCouvertPrompt}>
