@@ -3,18 +3,27 @@
 import { v2 as cloudinary } from "cloudinary";
 
 // Configuração do Cloudinary
-// As variáveis devem estar no .env.local
-cloudinary.config({
-  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+// É seguro instanciar lazily para que possa ler do ambiente em runtime na Vercel
+function getCloudinary() {
+  if (!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+      throw new Error("Variáveis de ambiente do Cloudinary ausentes.");
+  }
+  
+  cloudinary.config({
+    cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+  return cloudinary;
+}
 
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
 
 export async function uploadImageAction(formData: FormData): Promise<{ url?: string; error?: string }> {
   try {
+    const cdn = getCloudinary();
+    
     const file = formData.get("file") as File;
     if (!file) {
       return { error: "Nenhum arquivo encontrado." };
@@ -34,7 +43,7 @@ export async function uploadImageAction(formData: FormData): Promise<{ url?: str
     const buffer = Buffer.from(arrayBuffer);
 
     const imageUrl = await new Promise<string>((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
+      const uploadStream = cdn.uploader.upload_stream(
         { folder: "estoque_produtos" },
         (error, result) => {
           if (error || !result) {
