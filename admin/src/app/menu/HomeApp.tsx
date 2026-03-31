@@ -258,12 +258,55 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
       const { data } = await supabase.from("configuracoes").select("*").limit(1).single();
       if (data) {
         setConfig(data);
+        const nowSP = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
 
-        // Check promos array for active items (SP timezone)
-        if (data.promocao_ativa && Array.isArray(data.promocoes) && data.promocoes.length > 0) {
-          const nowSP = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+        // ── NEW: Check programacao_semanal for today's entry ──
+        let hasNewPromos = false;
+        if (Array.isArray(data.programacao_semanal) && data.programacao_semanal.length > 0) {
+          const todayStr = nowSP.toISOString().slice(0, 10);
+          const todayEntry = data.programacao_semanal.find((entry: any) => entry.data === todayStr);
 
-          // Separate active vs expired promos
+          if (todayEntry) {
+            const start = todayEntry.inicio ? new Date(todayEntry.inicio) : null;
+            const end = todayEntry.fim ? new Date(todayEntry.fim) : null;
+            const isTimeActive = (!start || nowSP >= start) && (!end || nowSP <= end);
+
+            if (isTimeActive) {
+              // Merge programacao_semanal data into config for consumption
+              const weekPromos = (todayEntry.promocoes || []).filter((p: any) => p.imagem_url || p.titulo);
+              const weekAtracoes = (todayEntry.atracoes || []).filter(Boolean);
+
+              if (weekPromos.length > 0) {
+                // Inject start/end times from the day entry into each promo
+                const promosWithTimes = weekPromos.map((p: any) => ({
+                  ...p,
+                  inicio: todayEntry.inicio,
+                  fim: todayEntry.fim,
+                }));
+                data._weekPromos = promosWithTimes;
+                hasNewPromos = true;
+              }
+
+              if (weekAtracoes.length > 0) {
+                data._weekAtracoes = weekAtracoes;
+                data._weekAtracaoInicio = todayEntry.inicio;
+                data._weekAtracaoFim = todayEntry.fim;
+              }
+
+              setConfig({ ...data });
+            }
+          }
+
+          // Auto-clean expired days
+          const todayClean = nowSP.toISOString().slice(0, 10);
+          const remaining = data.programacao_semanal.filter((entry: any) => entry.data >= todayClean);
+          if (remaining.length < data.programacao_semanal.length) {
+            await supabase.from("configuracoes").update({ programacao_semanal: remaining }).eq("id", "global");
+          }
+        }
+
+        // ── LEGACY: Check old promos array (fallback) ──
+        if (!hasNewPromos && data.promocao_ativa && Array.isArray(data.promocoes) && data.promocoes.length > 0) {
           const activeOnes: any[] = [];
           const hasExpired = data.promocoes.some((p: any) => {
             if (!p.imagem_url) return false;
@@ -271,30 +314,33 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
             const end = p.fim ? new Date(p.fim) : null;
             const isActive = (!start || nowSP >= start) && (!end || nowSP <= end);
             if (isActive) activeOnes.push(p);
-            return end && nowSP > end; // expired
+            return end && nowSP > end;
           });
 
-          // Auto-delete expired promos from the DB
           if (hasExpired) {
-            const remaining = data.promocoes.filter((p: any) => {
+            const rem = data.promocoes.filter((p: any) => {
               const end = p.fim ? new Date(p.fim) : null;
               return !end || nowSP <= end;
             });
             await supabase.from("configuracoes").update({
-              promocoes: remaining,
-              promocao_ativa: remaining.length > 0,
+              promocoes: rem,
+              promocao_ativa: rem.length > 0,
             }).eq("id", "global");
-            // Update local state with cleaned data
-            data.promocoes = remaining;
-            data.promocao_ativa = remaining.length > 0;
+            data.promocoes = rem;
+            data.promocao_ativa = rem.length > 0;
             setConfig({ ...data });
           }
 
-          // Show promo modal if there are active promos right now
           if (activeOnes.length > 0 && !sessionStorage.getItem('promoVisto')) {
             setShowPromo(true);
             sessionStorage.setItem('promoVisto', 'true');
           }
+        }
+
+        // Show promo modal for new system
+        if (hasNewPromos && !sessionStorage.getItem('promoVisto')) {
+          setShowPromo(true);
+          sessionStorage.setItem('promoVisto', 'true');
         }
       }
     }
@@ -444,9 +490,20 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
 
   // Filter active promotions based on current time (SP timezone)
   const activePromos = useMemo(() => {
-    if (!config?.promocao_ativa || !config?.promocoes || !Array.isArray(config.promocoes)) return [];
-    
     const nowSP = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+
+    // ── NEW: Check programacao_semanal promos first ──
+    if (config?._weekPromos && config._weekPromos.length > 0) {
+      return config._weekPromos.filter((promo: any) => {
+        if (!promo.imagem_url && !promo.titulo) return false;
+        const start = promo.inicio ? new Date(promo.inicio) : null;
+        const end = promo.fim ? new Date(promo.fim) : null;
+        return (!start || nowSP >= start) && (!end || nowSP <= end);
+      });
+    }
+
+    // ── LEGACY: fallback to old promos ──
+    if (!config?.promocao_ativa || !config?.promocoes || !Array.isArray(config.promocoes)) return [];
     return config.promocoes.filter((promo: any) => {
       if (!promo.imagem_url) return false;
       const start = promo.inicio ? new Date(promo.inicio) : null;
@@ -511,80 +568,88 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
           </div>
         </div>
 
-        {/* ── Singer Marquee ── */}
-        {config?.cantor_ativo && config?.cantor_nome && (() => {
+        {/* ── Singer Marquee (NEW: reads from programacao_semanal first, fallback to old fields) ── */}
+        {(() => {
           const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-          const start = config.cantor_inicio ? new Date(config.cantor_inicio) : null;
-          const end = config.cantor_fim ? new Date(config.cantor_fim) : null;
-          if ((!start || now >= start) && (!end || now <= end)) {
+          let atracoes: string[] = [];
 
-            const baseAtracoes = (() => {
+          // NEW: Check programacao_semanal atracoes
+          if (config?._weekAtracoes && config._weekAtracoes.length > 0) {
+            const start = config._weekAtracaoInicio ? new Date(config._weekAtracaoInicio) : null;
+            const end = config._weekAtracaoFim ? new Date(config._weekAtracaoFim) : null;
+            if ((!start || now >= start) && (!end || now <= end)) {
+              atracoes = config._weekAtracoes;
+            }
+          }
+
+          // LEGACY: fallback to old cantor fields
+          if (atracoes.length === 0 && config?.cantor_ativo && config?.cantor_nome) {
+            const start = config.cantor_inicio ? new Date(config.cantor_inicio) : null;
+            const end = config.cantor_fim ? new Date(config.cantor_fim) : null;
+            if ((!start || now >= start) && (!end || now <= end)) {
               try {
                 const parsed = JSON.parse(config.cantor_nome);
-                if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-                return [config.cantor_nome];
+                atracoes = Array.isArray(parsed) && parsed.length > 0 ? parsed : [config.cantor_nome];
               } catch {
-                return [config.cantor_nome];
+                atracoes = [config.cantor_nome];
               }
-            })();
+            }
+          }
 
-            // Create a sequence that is guaranteed to be wider than the screen
-            const repeatCount = Math.max(10, Math.ceil(20 / baseAtracoes.length));
-            const sequence = Array(repeatCount).fill(baseAtracoes).flat();
+          if (atracoes.length === 0) return null;
 
-            const textStyle = {
-              fontSize: '12px',
-              fontWeight: '700',
-              letterSpacing: '1px',
-              color: '#D4AF37',
-              textShadow: '0 0 8px rgba(212,175,55,0.2)',
-              whiteSpace: 'nowrap' as const
-            };
+          const repeatCount = Math.max(10, Math.ceil(20 / atracoes.length));
+          const sequence = Array(repeatCount).fill(atracoes).flat();
 
-            return (
+          const textStyle = {
+            fontSize: '12px',
+            fontWeight: '700',
+            letterSpacing: '1px',
+            color: '#D4AF37',
+            textShadow: '0 0 8px rgba(212,175,55,0.2)',
+            whiteSpace: 'nowrap' as const
+          };
+
+          return (
+            <div style={{
+              width: '100vw',
+              marginLeft: '-16px',
+              background: 'linear-gradient(90deg, #111 0%, #000 50%, #111 100%)',
+              overflow: 'hidden',
+              padding: '10px 0',
+              display: 'flex',
+              alignItems: 'center',
+              position: 'relative',
+              zIndex: 25,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.8)',
+              borderTop: '1px solid rgba(212,175,55,0.1)',
+              borderBottom: '1px solid rgba(212,175,55,0.1)',
+              marginBottom: '28px',
+            }}>
+              <style dangerouslySetInnerHTML={{__html: `
+                @keyframes marqueeSeamless { 
+                  0% { transform: translateX(0%); } 
+                  100% { transform: translateX(-50%); } 
+                }
+              `}} />
               <div style={{
-                width: '100vw',
-                marginLeft: '-16px', // To stretch across the padding of home-scroll
-                background: 'linear-gradient(90deg, #111 0%, #000 50%, #111 100%)',
-                overflow: 'hidden',
-                padding: '10px 0',
                 display: 'flex',
-                alignItems: 'center',
-                position: 'relative',
-                zIndex: 25,
-                boxShadow: '0 4px 12px rgba(0,0,0,0.8)',
-                borderTop: '1px solid rgba(212,175,55,0.1)',
-                borderBottom: '1px solid rgba(212,175,55,0.1)',
-                marginBottom: '28px', // Compensates for the search bar's negative margin (-24px)
+                width: 'max-content',
+                animation: 'marqueeSeamless 80s linear infinite',
               }}>
-                <style dangerouslySetInnerHTML={{__html: `
-                  @keyframes marqueeSeamless { 
-                    0% { transform: translateX(0%); } 
-                    100% { transform: translateX(-50%); } 
-                  }
-                `}} />
-                <div style={{
-                  display: 'flex',
-                  width: 'max-content',
-                  animation: 'marqueeSeamless 80s linear infinite',
-                }}>
-                  {/* First Half */}
-                  <div style={{ display: 'flex', gap: '40px', paddingRight: '40px' }}>
-                    {sequence.map((atracao, i) => (
-                      <span key={`a-${i}`} style={textStyle}>{atracao}</span>
-                    ))}
-                  </div>
-                  {/* Second Half (Exact duplicate for seamless loop) */}
-                  <div style={{ display: 'flex', gap: '40px', paddingRight: '40px' }} aria-hidden="true">
-                    {sequence.map((atracao, i) => (
-                      <span key={`b-${i}`} style={textStyle}>{atracao}</span>
-                    ))}
-                  </div>
+                <div style={{ display: 'flex', gap: '40px', paddingRight: '40px' }}>
+                  {sequence.map((atracao, i) => (
+                    <span key={`a-${i}`} style={textStyle}>{atracao}</span>
+                  ))}
+                </div>
+                <div style={{ display: 'flex', gap: '40px', paddingRight: '40px' }} aria-hidden="true">
+                  {sequence.map((atracao, i) => (
+                    <span key={`b-${i}`} style={textStyle}>{atracao}</span>
+                  ))}
                 </div>
               </div>
-            );
-          }
-          return null;
+            </div>
+          );
         })()}
 
         {/* ── Search ── */}
