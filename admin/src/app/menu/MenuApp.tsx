@@ -662,13 +662,29 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
             }
 
             let activePromosList = [];
-            if (configData && configData.promocao_ativa && Array.isArray(configData.promocoes)) {
+            if (configData) {
                 const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
-                activePromosList = configData.promocoes.filter(p => {
-                    const start = p.inicio ? new Date(p.inicio) : null;
-                    const end = p.fim ? new Date(p.fim) : null;
-                    return (!start || now >= start) && (!end || now <= end);
-                });
+                let hasNewPromos = false;
+
+                if (configData.programacao_semanal && Array.isArray(configData.programacao_semanal)) {
+                    const todayActive = configData.programacao_semanal.find(dia => {
+                        const start = new Date(dia.inicio);
+                        const end = new Date(dia.fim);
+                        return now >= start && now <= end && dia.promocoes && dia.promocoes.length > 0;
+                    });
+                    if (todayActive) {
+                        activePromosList = todayActive.promocoes;
+                        hasNewPromos = true;
+                    }
+                }
+
+                if (!hasNewPromos && configData.promocao_ativa && Array.isArray(configData.promocoes)) {
+                    activePromosList = configData.promocoes.filter(p => {
+                        const start = p.inicio ? new Date(p.inicio) : null;
+                        const end = p.fim ? new Date(p.fim) : null;
+                        return (!start || now >= start) && (!end || now <= end);
+                    });
+                }
             }
 
             // Reconstruct the data shape expected by the frontend
