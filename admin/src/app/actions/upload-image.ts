@@ -10,11 +10,24 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+
 export async function uploadImageAction(formData: FormData): Promise<{ url?: string; error?: string }> {
   try {
     const file = formData.get("file") as File;
     if (!file) {
       return { error: "Nenhum arquivo encontrado." };
+    }
+
+    // Security: validate file type
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return { error: "Tipo de arquivo não permitido. Use JPEG, PNG, WebP ou GIF." };
+    }
+
+    // Security: validate file size
+    if (file.size > MAX_SIZE_BYTES) {
+      return { error: "Arquivo muito grande. O tamanho máximo é 5MB." };
     }
 
     const arrayBuffer = await file.arrayBuffer();

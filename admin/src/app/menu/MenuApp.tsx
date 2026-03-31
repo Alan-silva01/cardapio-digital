@@ -402,7 +402,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
         }
     }, [novaPessoaNome, pessoasNaMesa, fetchPessoasNaMesa, isCartPending]);
 
-    // CHECKOUT LOGIC — Creates order in Supabase
+    // CHECKOUT LOGIC — Secure: uses server-side RPC for price validation
     const handleCheckout = async () => {
         if (Object.keys(cart).length === 0 || isCheckingOut) return;
         setIsCheckingOut(true);
@@ -418,43 +418,9 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                 return;
             }
 
-            // 2. Look up mesa_id by token
-            const { data: mesaData, error: mesaError } = await supabase
-                .from('mesas')
-                .select('id, numero')
-                .eq('token', token)
-                .single();
-            if (mesaError || !mesaData) throw new Error(`Mesa correspondente ao QRCode não encontrada.`);
-            const mesaId = mesaData.id;
-            const mesaNum = mesaData.numero;
-
-            // 3. Find or create an open comanda for this mesa
-            let comandaId;
-            const { data: existingComanda } = await supabase
-                .from('comandas')
-                .select('id')
-                .eq('mesa_id', mesaId)
-                .eq('status', 'aberta')
-                .maybeSingle();
-
-            if (existingComanda) {
-                comandaId = existingComanda.id;
-            } else {
-                const { data: newComanda, error: comandaErr } = await supabase
-                    .from('comandas')
-                    .insert({ mesa_id: mesaId, status: 'aberta', qtd_pessoas: 1 })
-                    .select('id')
-                    .single();
-                if (comandaErr) throw comandaErr;
-                comandaId = newComanda.id;
-            }
-
-            // 4. Set final person name for this request
+            // 2. Build secure cart items (only IDs and quantities — prices are validated server-side)
             const nomeFinal = pessoaAtiva || 'Cliente';
-
-            // 5. Calculate total and build itens array
-            let totalVal = 0;
-            const itensList = [];
+            const itensSeguro = [];
 
             Object.entries(cart).forEach(([key, qty]) => {
                 const hasVariation = key.includes('-');
@@ -463,62 +429,42 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                 const pModel = allProductsRef.current.find(p => p.id === pid);
 
                 if (pModel) {
-                    let currentPrice = pModel.price;
                     let varId = null;
-                    let displayVarName = null;
-
                     if (hasVariation && pModel.variations && pModel.variations[varName]) {
-                        currentPrice = pModel.variations[varName].price;
                         varId = pModel.variations[varName].id;
-                        displayVarName = varName;
                     }
 
-                    totalVal += currentPrice * qty;
-
-                    itensList.push({
+                    itensSeguro.push({
                         produto_id: pid,
                         variacao_id: varId,
-                        nome_produto: pModel.name,
-                        nome_variacao: displayVarName,
                         quantidade: qty,
-                        preco_unitario: currentPrice,
-                        preco_total: currentPrice * qty,
                         observacao: itemObservations[key] || null,
                     });
                 }
             });
 
-            // 6. Insert pedido
-            const { data: pedido, error: pedidoErr } = await supabase
-                .from('pedidos')
-                .insert({
-                    comanda_id: comandaId,
-                    numero_mesa: mesaNum,
-                    nome_pessoa: nomeFinal,
-                    status: 'recebido',
-                    total: totalVal,
-                })
-                .select('id')
-                .single();
-            if (pedidoErr) throw pedidoErr;
+            // 3. Call secure server-side checkout function
+            const { data: result, error: rpcError } = await supabase
+                .rpc('criar_pedido_seguro', {
+                    p_mesa_token: token,
+                    p_nome_pessoa: nomeFinal,
+                    p_itens: itensSeguro,
+                });
 
-            // 7. Insert itens_pedido
-            const itensWithPedidoId = itensList.map(item => ({
-                ...item,
-                pedido_id: pedido.id,
-            }));
+            if (rpcError) throw rpcError;
 
-            const { error: itensErr } = await supabase
-                .from('itens_pedido')
-                .insert(itensWithPedidoId);
-            if (itensErr) throw itensErr;
+            // Check for business logic errors returned by the function
+            if (result && result.error) {
+                alert(result.error);
+                setIsCheckingOut(false);
+                return;
+            }
 
-            // 8. Success! Clear cart and show success screen
+            // 4. Success! Clear cart and show success screen
             setCart({});
             setItemObservations({});
-            setCartTab('pedidos'); // Go to history automatically
-            setIsCartOpen(false);   // Wait actually let's keep it open showing history? 
-                                    // For now I'm keeping old behavior: close and show success
+            setCartTab('pedidos');
+            setIsCartOpen(false);
             setOrderSuccess(true);
             setTimeout(() => setOrderSuccess(false), 4000);
 
@@ -633,14 +579,15 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                 setTimeout(() => setContaCooldown(false), 30000);
             }
 
-            // Update mesa on Supabase
-            const updateField = isGarcom ? { chamando_garcom: true } : { solicitando_conta: true };
-            const { error } = await supabase
-                .from('mesas')
-                .update(updateField)
-                .eq('token', token);
+            // Update mesa using secure RPC (only updates service flags)
+            const { data: result, error } = await supabase
+                .rpc('chamar_servico', {
+                    p_mesa_token: token,
+                    p_tipo: isGarcom ? 'garcom' : 'conta',
+                });
 
             if (error) throw error;
+            if (result && result.error) throw new Error(result.error);
 
             if (isGarcom) {
                 setGarcomCalled(true);

@@ -27,17 +27,29 @@ export async function updateSession(request: NextRequest) {
     // NEVER remove this — it keeps sessions alive.
     const { data: { user } } = await supabase.auth.getUser()
 
-    // Not authenticated → redirect to /login (except /login, /register, /auth, and /menu routes)
-    if (
-        !user &&
-        !request.nextUrl.pathname.startsWith('/login') &&
-        !request.nextUrl.pathname.startsWith('/register') &&
-        !request.nextUrl.pathname.startsWith('/auth') &&
-        !request.nextUrl.pathname.startsWith('/menu')
-    ) {
+    // Public routes that don't require authentication
+    const isPublicRoute =
+        request.nextUrl.pathname.startsWith('/login') ||
+        request.nextUrl.pathname.startsWith('/register') ||
+        request.nextUrl.pathname.startsWith('/auth') ||
+        request.nextUrl.pathname.startsWith('/menu')
+
+    // Not authenticated → redirect to /login (except public routes)
+    if (!user && !isPublicRoute) {
         const url = request.nextUrl.clone()
         url.pathname = '/login'
         return NextResponse.redirect(url)
+    }
+
+    // Authenticated user accessing protected (dashboard) routes → verify cargo
+    if (user && !isPublicRoute) {
+        const cargo = user.app_metadata?.cargo
+        if (cargo !== 'dono' && cargo !== 'admin') {
+            // User is authenticated but not authorized for dashboard
+            const url = request.nextUrl.clone()
+            url.pathname = '/login'
+            return NextResponse.redirect(url)
+        }
     }
 
     // Authenticated but accessing /login or /register → redirect to dashboard
