@@ -119,7 +119,10 @@ export function AddProductModal({
 
   const pessoasUnicas = useMemo(() => {
     if (!comanda || !comanda.pessoas) return ["Balcão"];
-    const names = comanda.pessoas.map((p: any) => p.nome);
+    // Exclude 'Couvert' — it's an internal entry, not a selectable person
+    const names = comanda.pessoas
+      .map((p: any) => p.nome)
+      .filter((nome: string) => nome.toLowerCase() !== "couvert");
     if (!names.includes("Balcão")) names.push("Balcão");
     return names;
   }, [comanda]);
@@ -370,7 +373,7 @@ export function AddProductModal({
 
         <Separator />
 
-        <DialogFooter className="px-6 py-4 bg-muted/10 flex-row justify-end space-x-2">
+        <DialogFooter className="px-6 py-5 bg-muted/10 flex-row justify-end gap-3">
           <Button variant="outline" className="h-10 font-bold" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
@@ -380,7 +383,7 @@ export function AddProductModal({
             onClick={handleSubmit}
           >
             {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-            {!submitting && "Confirmar"}
+            {!submitting && "Adicionar à Mesa"}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -220,6 +220,7 @@ export default function PedidosPage() {
   const [selectedComanda, setSelectedComanda] = useState<ComandaAgrupada | null>(null);
   const [config, setConfig] = useState<any>(null);
   const skipNextFetchRef = useRef(false);
+  const skipNextSoundRef = useRef(false);
 
   useEffect(() => {
     supabase.from('configuracoes').select('*').limit(1).single().then(({ data }) => {
@@ -324,10 +325,13 @@ export default function PedidosPage() {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "pedidos" },
         (payload) => {
-          // Don't play sound for couvert — it was added by admin, not a customer order
+          // Don't play sound for couvert or admin-added products
           const isCouvert = payload.new?.nome_pessoa === "Couvert";
-          if (!isCouvert) {
+          if (!isCouvert && !skipNextSoundRef.current) {
             playSound();
+          }
+          if (skipNextSoundRef.current) {
+            skipNextSoundRef.current = false;
           }
           // Skip fetch if couvert handler will do its own fetch after all inserts complete
           if (skipNextFetchRef.current) {
@@ -582,6 +586,9 @@ export default function PedidosPage() {
     observacao: string,
     nomePessoa: string
   ) => {
+    // Suppress notification sound — this is an admin action, not a new customer order
+    skipNextSoundRef.current = true;
+
     const { data, error } = await supabase.rpc("adicionar_item_comanda_admin", {
       p_comanda_id: comandaId,
       p_nome_pessoa: nomePessoa,
@@ -593,6 +600,7 @@ export default function PedidosPage() {
 
     if (error || (data && !data.success)) {
       console.error("Erro ao adicionar produto:", error || data?.message);
+      skipNextSoundRef.current = false; // reset on error
       alert("Erro ao adicionar o produto: " + (error?.message || data?.message));
     } else {
       fetchPedidos();

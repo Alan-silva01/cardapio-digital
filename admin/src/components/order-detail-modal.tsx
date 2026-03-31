@@ -20,6 +20,7 @@ import {
   Ticket,
   Trash2,
   PlusCircle,
+  Plus,
 } from "lucide-react";
 import {
   Dialog,
@@ -524,22 +525,20 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
               >
                 {statusConfig.label}
               </Badge>
+              {onAddProduct && comanda.status !== "entregue" && comanda.status !== "cancelado" && (
+                <button
+                  type="button"
+                  className="w-8 h-8 shrink-0 flex items-center justify-center rounded-lg bg-brand/10 hover:bg-brand/20 border border-brand/20 text-brand transition-colors"
+                  title="Adicionar item à mesa"
+                  onClick={() => {
+                    setAddPessoaName(undefined);
+                    setShowAddProduct(true);
+                  }}
+                >
+                  <PlusCircle className="h-4 w-4" />
+                </button>
+              )}
             </div>
-
-            {onAddProduct && comanda.status !== "entregue" && comanda.status !== "cancelado" && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full mt-1 h-9 text-xs font-bold text-brand bg-brand/5 border-brand/20 hover:bg-brand/10 transition-colors"
-                onClick={() => {
-                  setAddPessoaName(undefined);
-                  setShowAddProduct(true);
-                }}
-              >
-                <PlusCircle className="h-4 w-4 mr-2" /> 
-                Lançar Produto nesta Mesa
-              </Button>
-            )}
 
             {/* Info row */}
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -622,9 +621,10 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
                                 setAddPessoaName(pessoa.nome);
                                 setShowAddProduct(true);
                               }}
-                              className="text-[10px] uppercase font-bold text-brand hover:text-brand/80 hover:bg-brand/10 transition-colors ml-1 flex items-center gap-1 bg-transparent px-1.5 py-0.5 rounded cursor-pointer"
+                              className="h-5 w-5 flex items-center justify-center rounded bg-brand/10 hover:bg-brand/20 text-brand transition-colors ml-1 cursor-pointer shrink-0"
+                              title="Adicionar item a esta comanda"
                             >
-                              <PlusCircle className="h-3 w-3" /> Lançar Produto
+                              <Plus className="h-3 w-3" />
                             </button>
                           )}
                         </div>
