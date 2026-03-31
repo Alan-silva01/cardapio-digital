@@ -1287,3 +1287,8 @@ body.is-pwa .cart-footer {
 .text-white {
   color: #FFFFFF;
 }
+@keyframes pulse-gold-border {
+  0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+  70% { box-shadow: 0 0 0 8px rgba(212, 175, 55, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+}

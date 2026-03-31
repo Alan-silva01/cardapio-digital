@@ -2213,7 +2213,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                         </span>
                                     </div>
                                     <button
-                                        className="checkout-btn"
+                                        className="checkout-btn pulse-checkout-btn"
                                         onClick={() => {
                                         if (!pessoaAtiva) {
                                             setIsPeopleDrawerOpen(true);
@@ -2222,7 +2222,10 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                         handleCheckout();
                                         }}
                                         disabled={Object.keys(cart).length === 0 || isCheckingOut}
-                                        style={{ opacity: (Object.keys(cart).length === 0 || isCheckingOut) ? 0.5 : 1 }}
+                                        style={{ 
+                                            opacity: (Object.keys(cart).length === 0 || isCheckingOut) ? 0.5 : 1,
+                                            animation: (Object.keys(cart).length > 0 && !isCheckingOut) ? 'pulse-gold-border 2s infinite' : 'none'
+                                        }}
                                     >
                                         {isCheckingOut ? (
                                             <><Loader2 size={18} className="animate-spin" style={{ marginRight: '8px' }} /> ENVIANDO...</>
@@ -2236,7 +2239,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                             {cartTab === 'pedidos' && (
                                 <div className="cart-footer" style={{position: 'relative', bottom: 'auto', borderTop: 'none', padding: '0 20px 24px'}}>
                                     <div className="cart-subtotal-row" style={{marginBottom: 0}}>
-                                        <span className="cart-subtotal-label">Total da Conta (Seu Consumo)</span>
+                                        <span className="cart-subtotal-label">Sua Comanda</span>
                                         <span className="cart-subtotal-value">
                                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
                                                 orderHistory.reduce((sum, ped) => sum + ped.total, 0)
@@ -2343,70 +2346,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                             {/* TAB: CARRINHO */}
                             {cartTab === 'carrinho' && (
                                 <>
-                                    {/* UPSELL SECTION */}
-                                    {Object.keys(cart).length > 0 && products.length > 0 && (
-                                        <div className="cart-upsell-container">
-                                            <h4 className="upsell-title">Que tal adicionar?</h4>
-                                            <div className="upsell-scroll">
-                                                <div className="upsell-marquee">
-                                                    {(() => {
-                                                        const availableForUpsell = allProductsRef.current.filter(p => !cart[p.id] && !Object.keys(cart).some(k => k.startsWith(p.id)) && p.id !== currentProduct?.id);
-                                                        
-                                                        // Sort raw list mostly by likes, but not completely to allow interleaving
-                                                        const sortedByLikes = [...availableForUpsell].sort((a, b) => (b.curtidas || 0) - (a.curtidas || 0));
-                                                        
-                                                        // Interleaving approach: we want an alternating pattern of categories
-                                                        // like: Petisco -> Drink -> Cerveja/Combo -> Pastel -> repeat
-                                                        
-                                                        const interleaved = [];
-                                                        const grouped = {
-                                                            petiscos: sortedByLikes.filter(p => p.category === 'Petiscos'),
-                                                            drinks: sortedByLikes.filter(p => p.category === 'Drinks' || p.category === 'Gins'),
-                                                            cervejas: sortedByLikes.filter(p => p.category === 'Cervejas' || p.category === 'Destilados' || p.category === 'Combos'),
-                                                            pasteis: sortedByLikes.filter(p => p.category === 'Pastéis' || p.category === 'Sobremesas'),
-                                                            outros: sortedByLikes.filter(p => !['Petiscos', 'Drinks', 'Gins', 'Cervejas', 'Destilados', 'Combos', 'Pastéis', 'Sobremesas'].includes(p.category))
-                                                        };
-                                                        
-                                                        const maxLoops = Math.max(grouped.petiscos.length, grouped.drinks.length, grouped.cervejas.length, grouped.pasteis.length, grouped.outros.length);
-                                                        
-                                                        for (let i = 0; i < maxLoops; i++) {
-                                                            if (grouped.petiscos[i]) interleaved.push(grouped.petiscos[i]);
-                                                            if (grouped.drinks[i]) interleaved.push(grouped.drinks[i]);
-                                                            if (grouped.pasteis[i]) interleaved.push(grouped.pasteis[i]);
-                                                            if (grouped.cervejas[i]) interleaved.push(grouped.cervejas[i]);
-                                                            if (grouped.outros[i]) interleaved.push(grouped.outros[i]);
-                                                            
-                                                            // We just need around 10-12 items max to keep UI smooth and performant
-                                                            if (interleaved.length >= 10) break;
-                                                        }
 
-                                                        // Fallback just in case everything was empty (edge case)
-                                                        if (interleaved.length === 0) {
-                                                            return sortedByLikes.slice(0, 8);
-                                                        }
-                                                        
-                                                        return interleaved;
-                                                    })().map(p => (
-                                                            <div key={p.id} className="upsell-item" onClick={() => {
-                                                                setCart(prev => ({ ...prev, [p.id]: (prev[p.id] || 0) + 1 }));
-                                                            }}>
-                                                                <div className="upsell-img-box">
-                                                                    <img src={p.imageUrl} alt={p.name} />
-                                                                </div>
-                                                                <div className="upsell-info">
-                                                                    <span className="upsell-name">{p.name}</span>
-                                                                    <span className="upsell-price">
-                                                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.price)}
-                                                                    </span>
-                                                                </div>
-                                                                <div className="upsell-add-icon">+</div>
-                                                            </div>
-                                                        ))
-                                                    }
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
 
                                     {Object.keys(cart).length === 0 ? (
                                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.8, marginTop: '40px' }}>
@@ -2516,6 +2456,70 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                     )}
 
 
+                                    {/* UPSELL SECTION MOVED TO BOTTOM */}
+                                    {Object.keys(cart).length > 0 && products.length > 0 && (
+                                        <div className="cart-upsell-container">
+                                            <h4 className="upsell-title">Que tal adicionar?</h4>
+                                            <div className="upsell-scroll">
+                                                <div className="upsell-marquee">
+                                                    {(() => {
+                                                        const availableForUpsell = allProductsRef.current.filter(p => !cart[p.id] && !Object.keys(cart).some(k => k.startsWith(p.id)) && p.id !== currentProduct?.id);
+                                                        
+                                                        // Sort raw list mostly by likes, but not completely to allow interleaving
+                                                        const sortedByLikes = [...availableForUpsell].sort((a, b) => (b.curtidas || 0) - (a.curtidas || 0));
+                                                        
+                                                        // Interleaving approach: we want an alternating pattern of categories
+                                                        // like: Petisco -> Drink -> Cerveja/Combo -> Pastel -> repeat
+                                                        
+                                                        const interleaved = [];
+                                                        const grouped = {
+                                                            petiscos: sortedByLikes.filter(p => p.category === 'Petiscos'),
+                                                            drinks: sortedByLikes.filter(p => p.category === 'Drinks' || p.category === 'Gins'),
+                                                            cervejas: sortedByLikes.filter(p => p.category === 'Cervejas' || p.category === 'Destilados' || p.category === 'Combos'),
+                                                            pasteis: sortedByLikes.filter(p => p.category === 'Pastéis' || p.category === 'Sobremesas'),
+                                                            outros: sortedByLikes.filter(p => !['Petiscos', 'Drinks', 'Gins', 'Cervejas', 'Destilados', 'Combos', 'Pastéis', 'Sobremesas'].includes(p.category))
+                                                        };
+                                                        
+                                                        const maxLoops = Math.max(grouped.petiscos.length, grouped.drinks.length, grouped.cervejas.length, grouped.pasteis.length, grouped.outros.length);
+                                                        
+                                                        for (let i = 0; i < maxLoops; i++) {
+                                                            if (grouped.petiscos[i]) interleaved.push(grouped.petiscos[i]);
+                                                            if (grouped.drinks[i]) interleaved.push(grouped.drinks[i]);
+                                                            if (grouped.pasteis[i]) interleaved.push(grouped.pasteis[i]);
+                                                            if (grouped.cervejas[i]) interleaved.push(grouped.cervejas[i]);
+                                                            if (grouped.outros[i]) interleaved.push(grouped.outros[i]);
+                                                            
+                                                            // We just need around 10-12 items max to keep UI smooth and performant
+                                                            if (interleaved.length >= 10) break;
+                                                        }
+
+                                                        // Fallback just in case everything was empty (edge case)
+                                                        if (interleaved.length === 0) {
+                                                            return sortedByLikes.slice(0, 8);
+                                                        }
+                                                        
+                                                        return interleaved;
+                                                    })().map(p => (
+                                                            <div key={p.id} className="upsell-item" onClick={() => {
+                                                                setCart(prev => ({ ...prev, [p.id]: (prev[p.id] || 0) + 1 }));
+                                                            }}>
+                                                                <div className="upsell-img-box">
+                                                                    <img src={p.imageUrl} alt={p.name} />
+                                                                </div>
+                                                                <div className="upsell-info">
+                                                                    <span className="upsell-name">{p.name}</span>
+                                                                    <span className="upsell-price">
+                                                                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.price)}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="upsell-add-icon">+</div>
+                                                            </div>
+                                                        ))
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </>
                             )}
 
@@ -2784,6 +2788,11 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                                     setIsCartOpen(true);
                                                     setCartTab('carrinho');
                                                     if (onTabChange) onTabChange('sacola');
+                                                } else if (isCartPending) {
+                                                    setIsCartPending(false);
+                                                    setCartTab('carrinho');
+                                                    setIsCartOpen(true);
+                                                    if (onTabChange) onTabChange('sacola');
                                                 }
                                             }
                                         }}
@@ -2816,6 +2825,11 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                                             setPendingQty(1);
                                                             setIsCartOpen(true);
                                                             setCartTab('carrinho');
+                                                            if (onTabChange) onTabChange('sacola');
+                                                        } else if (isCartPending) {
+                                                            setIsCartPending(false);
+                                                            setCartTab('carrinho');
+                                                            setIsCartOpen(true);
                                                             if (onTabChange) onTabChange('sacola');
                                                         }
                                                     }}
