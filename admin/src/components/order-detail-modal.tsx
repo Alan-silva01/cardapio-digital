@@ -362,6 +362,15 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [personPayConfirm, setPersonPayConfirm] = useState<string | null>(null);
   const [showCoverModal, setShowCoverModal] = useState(false);
+  const [showCouvertPrompt, setShowCouvertPrompt] = useState(false);
+  const [couvertFromPrompt, setCouvertFromPrompt] = useState(false);
+
+  const hasCouvert = useMemo(() => {
+    if (!comanda) return false;
+    return comanda.pessoas.some(p =>
+      p.itens.some(i => i.nome_produto.toLowerCase().includes("couvert"))
+    );
+  }, [comanda]);
 
   const totalItems = useMemo(() => {
     if (!comanda) return 0;
@@ -394,6 +403,23 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
     if (!comanda) return false;
     return comanda.pessoas.length > 0 && comanda.pessoas.every((p) => p.pago);
   }, [comanda]);
+
+  // Open payment modal after couvert is added from the prompt flow
+  React.useEffect(() => {
+    if (couvertFromPrompt && !showCoverModal) {
+      setCouvertFromPrompt(false);
+      const timer = setTimeout(() => setShowPaymentModal(true), 150);
+      return () => clearTimeout(timer);
+    }
+  }, [couvertFromPrompt, showCoverModal]);
+
+  // Clean up states when modal closes
+  React.useEffect(() => {
+    if (!open) {
+      setShowCouvertPrompt(false);
+      setCouvertFromPrompt(false);
+    }
+  }, [open]);
 
   if (!comanda) return null;
 
@@ -635,7 +661,13 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
                   )}
                   <Button
                     className="flex-1 h-9 text-xs bg-brand hover:bg-brand/90 text-white font-semibold min-w-[130px]"
-                    onClick={() => setShowPaymentModal(true)}
+                    onClick={() => {
+                      if (config?.couvert_ativo && !hasCouvert) {
+                        setShowCouvertPrompt(true);
+                      } else {
+                        setShowPaymentModal(true);
+                      }
+                    }}
                     disabled={allPaid || totalPendente <= 0}
                   >
                     <CreditCard className="h-3.5 w-3.5 mr-1 sm:mr-1.5" />
@@ -700,6 +732,48 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
           if (onAddCouvert) onAddCouvert(comanda.comanda_id, qtd, config?.valor_couvert || 10);
         }}
       />
+
+      {/* Couvert prompt — appears before payment when couvert hasn't been added yet */}
+      <Dialog open={showCouvertPrompt} onOpenChange={setShowCouvertPrompt}>
+        <DialogContent className="sm:max-w-[380px]">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-brand/10 flex items-center justify-center shrink-0">
+                <Ticket className="h-4.5 w-4.5 text-brand" />
+              </div>
+              <div>
+                <DialogTitle>Couvert Artístico</DialogTitle>
+                <DialogDescription className="mt-1">
+                  Deseja adicionar o couvert artístico a essa mesa?
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:space-x-0 mt-2">
+            <Button
+              variant="outline"
+              className="h-9 text-xs w-full sm:w-auto"
+              onClick={() => {
+                setShowCouvertPrompt(false);
+                setShowPaymentModal(true);
+              }}
+            >
+              Não, Continuar
+            </Button>
+            <Button
+              className="h-9 text-xs bg-brand hover:bg-brand/90 text-white font-semibold flex-1"
+              onClick={() => {
+                setShowCouvertPrompt(false);
+                setCouvertFromPrompt(true);
+                setShowCoverModal(true);
+              }}
+            >
+              <Ticket className="h-3.5 w-3.5 mr-1" />
+              Sim, Adicionar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 });

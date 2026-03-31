@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { type FormaPagamento } from "@/components/payment-modal";
 import {
   Clock,
@@ -219,6 +219,7 @@ export default function PedidosPage() {
   const { playSound, enabled: soundEnabled, toggleSound } = useNotificationSound();
   const [selectedComanda, setSelectedComanda] = useState<ComandaAgrupada | null>(null);
   const [config, setConfig] = useState<any>(null);
+  const skipNextFetchRef = useRef(false);
 
   useEffect(() => {
     supabase.from('configuracoes').select('*').limit(1).single().then(({ data }) => {
@@ -322,9 +323,18 @@ export default function PedidosPage() {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "pedidos" },
-        () => {
-          playSound();
-          fetchPedidos();
+        (payload) => {
+          // Don't play sound for couvert — it was added by admin, not a customer order
+          const isCouvert = payload.new?.nome_pessoa === "Couvert";
+          if (!isCouvert) {
+            playSound();
+          }
+          // Skip fetch if couvert handler will do its own fetch after all inserts complete
+          if (skipNextFetchRef.current) {
+            skipNextFetchRef.current = false;
+          } else {
+            fetchPedidos();
+          }
         }
       )
       .on(
@@ -472,13 +482,56 @@ export default function PedidosPage() {
 
     const total = quantidade * valorUnitario;
 
+    // ── Optimistic UI update (instant) ──
+    const tempItemId = `couvert-${Date.now()}`;
+    const couvertItem: ItemPedido = {
+      id: tempItemId,
+      quantidade,
+      nome_produto: "Couvert Artístico",
+      nome_variacao: null,
+      preco_unitario: valorUnitario,
+      preco_total: total,
+      servido: true,
+    };
+
+    const addCouvertToComanda = (c: ComandaAgrupada): ComandaAgrupada => {
+      if (c.comanda_id !== comandaId) return c;
+      const existingCouvert = c.pessoas.find(p => p.nome === "Couvert");
+      let updatedPessoas;
+      if (existingCouvert) {
+        updatedPessoas = c.pessoas.map(p =>
+          p.nome === "Couvert"
+            ? { ...p, itens: [...p.itens, couvertItem], subtotal: p.subtotal + total }
+            : p
+        );
+      } else {
+        updatedPessoas = [...c.pessoas, { nome: "Couvert", subtotal: total, itens: [couvertItem], pago: false }];
+      }
+      return { ...c, total: c.total + total, pessoas: updatedPessoas };
+    };
+
+    setColumns(prev => {
+      const updated = { ...prev };
+      for (const key of Object.keys(updated)) {
+        updated[key] = updated[key].map(addCouvertToComanda);
+      }
+      return updated;
+    });
+
+    setSelectedComanda(prev => prev ? addCouvertToComanda(prev) : prev);
+
+    // ── DB operations (background) ──
+    // Skip the Realtime-triggered fetchPedidos to avoid race condition
+    // (itens_pedido might not be inserted yet when Realtime fires)
+    skipNextFetchRef.current = true;
+
     const { data: novoPedido, error: pedidoError } = await supabase
       .from("pedidos")
       .insert({
         comanda_id: comandaId,
         numero_mesa: comanda.numero_mesa,
         nome_pessoa: "Couvert",
-        status: "pronto", // automatically served
+        status: "pronto",
         total: total,
         order_number: comanda.order_number ? `${comanda.order_number}-CV` : "CV",
       })
@@ -487,6 +540,8 @@ export default function PedidosPage() {
 
     if (pedidoError || !novoPedido) {
       console.error("Erro ao inserir pedido de couvert:", pedidoError);
+      skipNextFetchRef.current = false;
+      fetchPedidos(); // rollback optimistic update
       return;
     }
 
@@ -505,7 +560,8 @@ export default function PedidosPage() {
       console.error("Erro ao inserir item de couvert:", itemError);
     }
 
-    fetchPedidos(); // refresh UI
+    // Final sync after ALL inserts are done (real IDs replace temp ones)
+    fetchPedidos();
   };
 
   const clearMesaStatus = async (numero: number, type: 'garcom' | 'conta') => {
