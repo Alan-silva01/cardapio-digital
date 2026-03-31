@@ -612,43 +612,44 @@ body.is-pwa .cart-footer {
 }
 
 .cart-subtotal-label {
-  color: #A1A1AA;
-  font-size: 13px;
-  font-weight: 500;
+  color: #71717A;
+  font-size: 12px;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .cart-subtotal-value {
   color: #FFFFFF;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
   letter-spacing: -0.03em;
 }
 
 .checkout-btn {
   width: 100%;
-  height: 44px;
-  background-color: #333333;
-  color: #FFFFFF;
+  height: 52px;
+  background-color: #FFFFFF;
+  color: #000000;
   border: none;
-  border-radius: 22px;
-  font-size: 13px;
-  font-weight: 700;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.2px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   cursor: pointer;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-  transition: transform 0.2s ease, background-color 0.2s ease;
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
+  transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .checkout-btn:active {
   transform: scale(0.96);
-  background-color: #444444;
+  background-color: #E5E5E5;
+  box-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
 }
 
 /* CART UPSELL STYLES */
@@ -907,10 +908,10 @@ body.is-pwa .cart-footer {
 
 /* --- ORDER HISTORY (Meus Pedidos) (ABSOLUTE DARK) --- */
 .order-history-container {
-  padding: 16px;
+  padding: 12px 16px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 10px;
 }
 
 .order-history-empty {
@@ -929,14 +930,13 @@ body.is-pwa .cart-footer {
 }
 
 .order-card {
-  background: #000000;
-  border: 1px solid #1A1A1A;
-  border-radius: 16px;
-  padding: 18px;
+  background: #0A0A0A;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  gap: 10px;
 }
 
 .order-card-header {
@@ -946,64 +946,69 @@ body.is-pwa .cart-footer {
 }
 
 .order-card-id {
-  color: #A1A1AA;
-  font-size: 12px;
-  font-weight: 500;
+  color: #71717A;
+  font-size: 11px;
+  font-weight: 600;
   text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
 .order-card-time {
-  color: #6B7280;
-  font-size: 12px;
+  color: #52525B;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
 }
 
 .order-card-items {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
 
 .order-card-item-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: #FFFFFF;
-  font-size: 14px;
+  color: #D4D4D8;
+  font-size: 13px;
   font-weight: 500;
 }
 
 .order-card-item-name {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .order-card-item-qty {
   color: var(--accent-gold);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
-  background: rgba(212, 175, 55, 0.1);
-  padding: 2px 8px;
-  border-radius: 6px;
+  background: rgba(212, 175, 55, 0.08);
+  padding: 1px 6px;
+  border-radius: 4px;
+  min-width: 22px;
+  text-align: center;
 }
 
 .order-card-item-obs {
-  color: #9CA3AF;
-  font-size: 12px;
+  color: #71717A;
+  font-size: 11px;
   font-style: italic;
-  padding-left: 20px;
-  margin-top: -4px;
+  padding-left: 28px;
+  margin-top: -2px;
 }
 
 .order-card-total {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 14px;
-  border-top: 1px dashed #1A1A1A;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
   color: #FFFFFF;
-  font-weight: 800;
-  font-size: 15px;
+  font-weight: 700;
+  font-size: 13px;
 }
 
 /* --- ORDER TIMELINE --- */

@@ -2213,7 +2213,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                         </span>
                                     </div>
                                     <button
-                                        className="checkout-btn pulse-checkout-btn"
+                                        className="checkout-btn"
                                         onClick={() => {
                                         if (!pessoaAtiva) {
                                             setIsPeopleDrawerOpen(true);
@@ -2230,7 +2230,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                         {isCheckingOut ? (
                                             <><Loader2 size={18} className="animate-spin" style={{ marginRight: '8px' }} /> ENVIANDO...</>
                                         ) : (
-                                            <span style={{ fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>FINALIZAR PEDIDO</span>
+                                            <>FINALIZAR PEDIDO</>
                                         )}
                                     </button>
                                 </div>
@@ -2239,7 +2239,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                             {cartTab === 'pedidos' && (
                                 <div className="cart-footer" style={{position: 'relative', bottom: 'auto', borderTop: 'none', padding: '0 20px 24px'}}>
                                     <div className="cart-subtotal-row" style={{marginBottom: 0}}>
-                                        <span className="cart-subtotal-label">Sua Comanda</span>
+                                        <span className="cart-subtotal-label">Total da sua comanda</span>
                                         <span className="cart-subtotal-value">
                                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
                                                 orderHistory.reduce((sum, ped) => sum + ped.total, 0)
@@ -2624,7 +2624,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                             {cartTab === 'carrinho' && (
                                 <div className="cart-footer" style={{position: 'relative', bottom: 'auto', borderTop: 'none'}}>
                                     <div className="cart-subtotal-row" style={{marginBottom: '10px'}}>
-                                        <span className="cart-subtotal-label">Sua Comanda</span>
+                                        <span className="cart-subtotal-label">Total do Pedido</span>
                                         <span className="cart-subtotal-value">
                                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
                                                 Object.entries(cart).reduce((sum, [key, qty]) => {
@@ -2652,12 +2652,15 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                         handleCheckout();
                                         }}
                                         disabled={Object.keys(cart).length === 0 || isCheckingOut}
-                                        style={{ opacity: (Object.keys(cart).length === 0 || isCheckingOut) ? 0.5 : 1 }}
+                                        style={{ 
+                                            opacity: (Object.keys(cart).length === 0 || isCheckingOut) ? 0.5 : 1,
+                                            animation: (Object.keys(cart).length > 0 && !isCheckingOut) ? 'pulse-gold-border 2s infinite' : 'none'
+                                        }}
                                     >
                                         {isCheckingOut ? (
                                             <><Loader2 size={18} className="animate-spin" style={{ marginRight: '8px' }} /> ENVIANDO...</>
                                         ) : (
-                                            <span style={{ fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>FINALIZAR PEDIDO</span>
+                                            <>FINALIZAR PEDIDO</>
                                         )}
                                     </button>
                                 </div>
@@ -2666,7 +2669,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                             {cartTab === 'pedidos' && (
                                 <div className="cart-footer" style={{position: 'relative', bottom: 'auto', borderTop: 'none', padding: '0 20px 24px'}}>
                                     <div className="cart-subtotal-row" style={{marginBottom: 0}}>
-                                        <span className="cart-subtotal-label">Total da Conta (Seu Consumo)</span>
+                                        <span className="cart-subtotal-label">Total da sua comanda</span>
                                         <span className="cart-subtotal-value">
                                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
                                                 orderHistory.reduce((sum, ped) => sum + ped.total, 0)
