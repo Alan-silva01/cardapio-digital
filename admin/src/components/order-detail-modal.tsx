@@ -190,7 +190,7 @@ function ItemCheckbox({
           {onRemove && comandaStatus !== "entregue" && comandaStatus !== "cancelado" && (
             <button
               onClick={() => onRemove(item.id)}
-              className="p-1.5 ml-1 text-muted-foreground/30 hover:text-red-500 hover:bg-red-500/10 rounded-md transition-colors opacity-0 group-hover/item:opacity-100 focus:opacity-100"
+              className="p-1.5 ml-1 text-muted-foreground/30 hover:text-red-500 hover:bg-red-500/10 rounded-md transition-colors"
               title="Remover item do pedido"
             >
               <Trash2 className="h-3.5 w-3.5" />

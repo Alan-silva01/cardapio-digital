@@ -158,13 +158,15 @@ function groupPedidosByComanda(pedidos: PedidoRaw[]): ComandaAgrupada[] {
       pessoasMap.set(nome, existing);
     });
 
-    const pessoas = Array.from(pessoasMap.entries()).map(([nome, data]) => ({
-      nome,
-      subtotal: data.subtotal,
-      itens: data.itens,
-      pago: data.allPaid && (data.pedidoCount - data.canceledCount) > 0,
-      cancelado: data.allCanceled && data.pedidoCount > 0,
-    }));
+    const pessoas = Array.from(pessoasMap.entries())
+      .filter(([_, data]) => data.itens.length > 0) // Hide people with no items
+      .map(([nome, data]) => ({
+        nome,
+        subtotal: data.subtotal,
+        itens: data.itens,
+        pago: data.allPaid && (data.pedidoCount - data.canceledCount) > 0,
+        cancelado: data.allCanceled && data.pedidoCount > 0,
+      }));
 
     return {
       comanda_id: group[0].comanda_id,
@@ -178,7 +180,7 @@ function groupPedidosByComanda(pedidos: PedidoRaw[]): ComandaAgrupada[] {
       forma_pagamento: formaPagamento ?? undefined,
       pessoas,
     };
-  });
+  }).filter((group) => group.pessoas.length > 0); // Hide completely empty comandas
 }
 
 function groupByStatus(comandas: ComandaAgrupada[]): ColumnsState {
