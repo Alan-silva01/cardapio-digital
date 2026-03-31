@@ -63,6 +63,7 @@ export default function DashboardPage() {
     const [pedidosOntem, setPedidosOntem] = useState<any[]>([]);
     const [itensPedido, setItensPedido] = useState<any[]>([]);
     const [estoqueBaixo, setEstoqueBaixo] = useState<any[]>([]);
+    const [allProducts, setAllProducts] = useState<any[]>([]);
     // Phase 1: metrics cards (fast queries)
     const [metricsReady, setMetricsReady] = useState(false);
     // Phase 2: charts and lists (heavier queries)
@@ -110,7 +111,7 @@ export default function DashboardPage() {
         setMetricsReady(true);
 
         // PHASE 2: Heavier queries for charts and lists (show after)
-        const [itensRes, estoqueRes] = await Promise.all([
+        const [itensRes, estoqueRes, produtosRes] = await Promise.all([
             supabase
                 .from("itens_pedido")
                 .select(`
@@ -119,7 +120,8 @@ export default function DashboardPage() {
                     nome_produto, 
                     quantidade, 
                     preco_total, 
-                    produtos!inner(
+                    produto_id,
+                    produtos(
                         categoria_id, 
                         categorias(nome), 
                         imagem_url
@@ -138,8 +140,12 @@ export default function DashboardPage() {
                 `)
                 .eq("ativo", true)
                 .neq("estoque", -1),
+            supabase
+                .from("produtos")
+                .select(`id, nome, imagem_url, categoria_id, categorias(nome)`),
         ]);
 
+        if (produtosRes.data) setAllProducts(produtosRes.data);
         if (itensRes.data) setItensPedido(itensRes.data);
 
         if (estoqueRes.data) {
@@ -209,21 +215,50 @@ export default function DashboardPage() {
         });
     }, [pedidosHojeAtivos]);
 
+    // Build a lookup map from product name to product data (for when produto_id is null)
+    const productsByName = useMemo(() => {
+        const map = new Map<string, any>();
+        allProducts.forEach(p => {
+            map.set(p.nome.toLowerCase().trim(), p);
+        });
+        return map;
+    }, [allProducts]);
+
+    const resolveProductData = useCallback((item: any) => {
+        // If the item has a joined produtos relation, use it directly
+        if (item.produtos) {
+            const catArr = item.produtos.categorias;
+            return {
+                categoryName: (Array.isArray(catArr) ? catArr[0]?.nome : catArr?.nome) || "Outros",
+                imgUrl: item.produtos.imagem_url || "",
+            };
+        }
+        // Fallback: match by nome_produto
+        const matched = productsByName.get((item.nome_produto || "").toLowerCase().trim());
+        if (matched) {
+            const catArr = matched.categorias;
+            return {
+                categoryName: (Array.isArray(catArr) ? catArr[0]?.nome : catArr?.nome) || "Outros",
+                imgUrl: matched.imagem_url || "",
+            };
+        }
+        return { categoryName: "Outros", imgUrl: "" };
+    }, [productsByName]);
+
     const topProducts = useMemo(() => {
         const pedidoIds = new Set(pedidosHojeAtivos.map(p => p.id));
         const filteredItems = itensPedido.filter(item => pedidoIds.has(item.pedido_id));
 
         const productMap = new Map<string, { name: string; category: string; qty: number; revenue: number; img: string }>();
         filteredItems.forEach(item => {
-            const catArr = item.produtos?.categorias;
-            const categoryName = Array.isArray(catArr) ? catArr[0]?.nome : catArr?.nome;
+            const { categoryName, imgUrl } = resolveProductData(item);
 
             const existing = productMap.get(item.nome_produto) || { 
                 name: item.nome_produto, 
-                category: categoryName || "Outros",
+                category: categoryName,
                 qty: 0, 
                 revenue: 0,
-                img: item.produtos?.imagem_url || ""
+                img: imgUrl
             };
             existing.qty += item.quantidade;
             existing.revenue += Number(item.preco_total);
@@ -233,7 +268,7 @@ export default function DashboardPage() {
         return Array.from(productMap.values())
             .sort((a, b) => b.qty - a.qty)
             .slice(0, 5);
-    }, [pedidosHojeAtivos, itensPedido]);
+    }, [pedidosHojeAtivos, itensPedido, resolveProductData]);
 
     const categoryData = useMemo(() => {
         const pedidoIds = new Set(pedidos.filter(p => p.status !== "cancelado").map(p => p.id));
@@ -241,10 +276,8 @@ export default function DashboardPage() {
 
         const catMap = new Map<string, number>();
         filteredItems.forEach(item => {
-            const catArr = item.produtos?.categorias;
-            const cat = (Array.isArray(catArr) ? catArr[0]?.nome : catArr?.nome) || "Outros";
-            
-            catMap.set(cat, (catMap.get(cat) || 0) + item.quantidade);
+            const { categoryName } = resolveProductData(item);
+            catMap.set(categoryName, (catMap.get(categoryName) || 0) + item.quantidade);
         });
 
         const arr = Array.from(catMap.entries())
@@ -256,7 +289,7 @@ export default function DashboardPage() {
             .sort((a, b) => b.visitors - a.visitors);
         
         return arr;
-    }, [pedidos, itensPedido]);
+    }, [pedidos, itensPedido, resolveProductData]);
 
     const totalCategories = useMemo(() => categoryData.reduce((acc, curr) => acc + curr.visitors, 0), [categoryData]);
 
