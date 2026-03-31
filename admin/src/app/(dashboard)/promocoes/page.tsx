@@ -235,10 +235,17 @@ export default function ProgramacaoSemanalPage() {
         id: "global",
         programacao_semanal: programacao.map((p) => ({
           ...p,
-          promocoes: p.promocoes.map((pr) => ({
-            ...pr,
-            preco: pr.preco ? parseFloat(pr.preco.toString().replace(",", ".")) : null,
-          })),
+          promocoes: p.promocoes.map((pr) => {
+            let numPrice = null;
+            if (pr.preco) {
+               const parsed = parseFloat(pr.preco.toString().replace(",", "."));
+               if (!isNaN(parsed)) numPrice = parsed;
+            }
+            return {
+              ...pr,
+              preco: numPrice,
+            };
+          }),
         })),
         couvert_ativo: couvertAtivo,
         valor_couvert: couvertValor,
