@@ -12,13 +12,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Loader2, PackagePlus, Plus, Minus, User } from "lucide-react";
+import { Search, Loader2, Plus, Minus, UserCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { Separator } from "@/components/ui/separator";
 
 interface AddProductModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   comanda: any; // The currently selected comanda
+  defaultPessoa?: string; // Optional default person selection
   onAdd: (
     produtoId: string,
     variacaoId: string | null,
@@ -32,6 +34,7 @@ export function AddProductModal({
   open,
   onOpenChange,
   comanda,
+  defaultPessoa,
   onAdd,
 }: AddProductModalProps) {
   const [loadingDb, setLoadingDb] = useState(false);
@@ -47,7 +50,7 @@ export function AddProductModal({
   const [selectedVariacaoId, setSelectedVariacaoId] = useState<string>("");
   const [quantidade, setQuantidade] = useState(1);
   const [observacao, setObservacao] = useState("");
-  const [nomePessoa, setNomePessoa] = useState("Balcão");
+  const [nomePessoa, setNomePessoa] = useState(defaultPessoa || "Balcão");
 
   // Load Data on Mount
   useEffect(() => {
@@ -57,7 +60,7 @@ export function AddProductModal({
     if (open) {
       resetForm();
     }
-  }, [open]);
+  }, [open, defaultPessoa]);
 
   const loadCatalog = async () => {
     setLoadingDb(true);
@@ -84,7 +87,7 @@ export function AddProductModal({
     setSelectedVariacaoId("");
     setQuantidade(1);
     setObservacao("");
-    setNomePessoa("Balcão");
+    setNomePessoa(defaultPessoa || "Balcão");
   };
 
   const filteredProducts = useMemo(() => {
@@ -157,25 +160,25 @@ export function AddProductModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[420px] p-0 flex flex-col overflow-hidden max-h-[90vh]">
-        <DialogHeader className="px-5 pt-5 pb-3">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
-              <PackagePlus className="h-5 w-5 text-emerald-600" />
-            </div>
-            <div>
-              <DialogTitle className="text-lg">Lançar Produto</DialogTitle>
-              <DialogDescription className="text-xs mt-0.5">
-                Mesa {comanda?.numero_mesa ? String(comanda?.numero_mesa).padStart(2, "0") : ""}
-              </DialogDescription>
-            </div>
+      <DialogContent className="sm:max-w-[450px] p-0 flex flex-col overflow-hidden max-h-[90vh]">
+        <DialogHeader className="pt-6 pb-4 px-6 relative flex flex-row items-start justify-between">
+          <div className="flex flex-col gap-1.5">
+            <DialogTitle className="text-xl font-bold tracking-tight">
+              Adicionar Produto
+            </DialogTitle>
+            <DialogDescription className="text-xs uppercase tracking-widest font-medium opacity-60">
+              Mesa {comanda?.numero_mesa ? String(comanda?.numero_mesa).padStart(2, "0") : ""}
+            </DialogDescription>
           </div>
         </DialogHeader>
 
-        <div className="px-5 py-3 flex-1 overflow-y-auto space-y-5">
+        <Separator />
+
+        <div className="px-6 py-4 flex-1 overflow-y-auto w-full">
           {loadingDb ? (
-            <div className="flex justify-center items-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <div className="flex flex-col justify-center items-center py-12 gap-3">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <span className="text-sm font-medium text-muted-foreground animate-pulse">Carregando cardápio...</span>
             </div>
           ) : !selectedProduct ? (
             // SEARCH STATE
@@ -183,7 +186,7 @@ export function AddProductModal({
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  className="pl-9 h-11 bg-muted/40 border-muted-foreground/20 focus-visible:ring-emerald-500"
+                  className="pl-9 h-11 bg-muted/30 border-muted-foreground/20 focus-visible:ring-brand/30 transition-all text-base"
                   placeholder="Pesquise o nome do produto..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -192,22 +195,24 @@ export function AddProductModal({
               </div>
 
               {searchQuery.trim().length > 0 && (
-                <div className="bg-muted/20 border border-border rounded-lg overflow-hidden flex flex-col max-h-[250px]">
+                <div className="bg-card border border-border shadow-xs rounded-xl overflow-hidden flex flex-col max-h-[300px]">
                   {filteredProducts.length === 0 ? (
-                    <div className="p-4 text-center text-sm text-muted-foreground">
+                    <div className="p-6 text-center text-sm text-muted-foreground font-medium">
                       Nenhum produto encontrado.
                     </div>
                   ) : (
                     <ScrollArea className="flex-1">
-                      <div className="divide-y divide-border">
+                      <div className="divide-y divide-border/50">
                         {filteredProducts.map((p) => (
                           <div
                             key={p.id}
-                            className="p-3 hover:bg-muted/50 cursor-pointer flex items-center justify-between transition-colors"
+                            className="p-3.5 hover:bg-muted/40 cursor-pointer flex items-center justify-between transition-colors group"
                             onClick={() => handleSelectProduct(p)}
                           >
-                            <span className="text-sm font-medium">{p.nome}</span>
-                            <Plus className="h-4 w-4 text-muted-foreground opacity-50" />
+                            <span className="text-sm font-bold group-hover:text-brand transition-colors">{p.nome}</span>
+                            <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center group-hover:bg-brand/10 transition-colors">
+                              <Plus className="h-3 w-3 text-muted-foreground group-hover:text-brand" />
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -218,58 +223,96 @@ export function AddProductModal({
             </div>
           ) : (
             // PRODUCT DETAILS STATE
-            <div className="space-y-5 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <div className="space-y-6 animate-in fade-in zoom-in-95 duration-200 w-full mb-2">
               {/* Product Header */}
-              <div className="p-4 bg-muted/30 rounded-xl border border-border flex justify-between items-center">
-                <div className="flex flex-col">
-                  <span className="text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1">
+              <div className="p-4 bg-muted/40 rounded-xl border border-border flex justify-between items-center">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
                     Produto Selecionado
                   </span>
-                  <span className="font-bold text-base">{selectedProduct.nome}</span>
+                  <span className="font-bold text-base leading-tight">{selectedProduct.nome}</span>
                 </div>
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  className="text-xs px-2 h-7"
+                  className="text-xs h-8 font-semibold shrink-0"
                   onClick={() => setSelectedProduct(null)}
                 >
                   Trocar
                 </Button>
               </div>
 
-              {/* Variations */}
+              {/* Variations - Pill Group */}
               {productVariations.length > 1 && (
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Variação/Tamanho
+                <div className="space-y-2.5">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                    Variação/Tamanho <span className="text-red-500">*</span>
                   </label>
-                  <select
-                    className="flex h-11 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
-                    value={selectedVariacaoId}
-                    onChange={(e) => setSelectedVariacaoId(e.target.value)}
-                  >
-                    <option value="" disabled>Selecione...</option>
+                  <div className="flex flex-wrap gap-2">
                     {productVariations.map((v) => (
-                      <option key={v.id} value={v.id}>
-                        {v.nome} — R$ {v.preco.toFixed(2)}
-                      </option>
+                      <button
+                        key={v.id}
+                        type="button"
+                        onClick={() => setSelectedVariacaoId(v.id)}
+                        className={`text-xs font-semibold px-3 py-2 rounded-lg border transition-all ${
+                          selectedVariacaoId === v.id
+                            ? "bg-brand/10 border-brand text-brand ring-1 ring-brand/20 shadow-xs"
+                            : "bg-background border-border text-muted-foreground hover:bg-muted"
+                        }`}
+                      >
+                        {v.nome} <span className="opacity-60 font-normal ml-1">R$ {v.preco.toFixed(2)}</span>
+                      </button>
                     ))}
-                  </select>
+                  </div>
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4">
+              <Separator className="opacity-50" />
+
+              <div className="grid grid-cols-2 gap-5">
+                {/* Cliente / Comanda - Pill Group + Input */}
+                <div className="space-y-3 col-span-2">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                    Adicionar para (Membro da Mesa)
+                  </label>
+                  
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {pessoasUnicas.map((nome: string) => (
+                      <button
+                        key={nome}
+                        type="button"
+                        onClick={() => setNomePessoa(nome)}
+                        className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-all flex items-center gap-1.5 ${
+                          nomePessoa === nome
+                            ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                            : "bg-background border-border text-muted-foreground hover:bg-muted"
+                        }`}
+                      >
+                        <UserCircle className="h-3.5 w-3.5" />
+                        {nome}
+                      </button>
+                    ))}
+                  </div>
+
+                  <Input
+                    value={nomePessoa}
+                    onChange={(e) => setNomePessoa(e.target.value)}
+                    className="h-10 font-medium bg-muted/20"
+                    placeholder="Ou digite um novo nome..."
+                  />
+                </div>
+
                 {/* Quantity */}
                 <div className="space-y-2">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                     Quantidade
                   </label>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1 w-full max-w-[140px]">
                     <Button
                       type="button"
                       variant="outline"
                       size="icon"
-                      className="h-10 w-10 shrink-0"
+                      className="h-10 w-10 shrink-0 rounded-r-none border-r-0"
                       onClick={() => setQuantidade(Math.max(1, quantidade - 1))}
                     >
                       <Minus className="h-4 w-4" />
@@ -278,13 +321,13 @@ export function AddProductModal({
                       type="number"
                       value={quantidade}
                       onChange={(e) => setQuantidade(Math.max(1, parseInt(e.target.value) || 1))}
-                      className="h-10 text-center font-bold"
+                      className="h-10 text-center font-bold font-mono text-base rounded-none border-x-0 bg-muted/10 focus-visible:ring-0"
                     />
                     <Button
                       type="button"
                       variant="outline"
                       size="icon"
-                      className="h-10 w-10 shrink-0"
+                      className="h-10 w-10 shrink-0 rounded-l-none border-l-0"
                       onClick={() => setQuantidade(quantidade + 1)}
                     >
                       <Plus className="h-4 w-4" />
@@ -292,64 +335,52 @@ export function AddProductModal({
                   </div>
                 </div>
 
-                {/* Cliente / Comanda */}
+                {/* Total Preview */}
                 <div className="space-y-2">
-                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Membro da Mesa
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                    Valor a Lançar
                   </label>
-                  <div className="relative">
-                    <User className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground opacity-70" />
-                    <Input
-                      list="pessoas-mesa"
-                      value={nomePessoa}
-                      onChange={(e) => setNomePessoa(e.target.value)}
-                      className="pl-8 h-10 font-medium"
-                      placeholder="Nome do Cliente"
-                    />
-                    <datalist id="pessoas-mesa">
-                      {pessoasUnicas.map((nome: string) => (
-                        <option key={nome} value={nome} />
-                      ))}
-                    </datalist>
+                  <div className="h-10 px-3 bg-muted/40 rounded-md border border-border flex items-center justify-between">
+                    <span className="text-sm font-semibold text-muted-foreground">Total:</span>
+                    <span className="text-base font-bold text-foreground">
+                      R$ {totalCalculated.toFixed(2)}
+                    </span>
                   </div>
                 </div>
               </div>
 
+              <Separator className="opacity-50" />
+
               {/* Observação */}
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  Observação (Opcional)
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                  Observação do Pedido <span className="opacity-50 normal-case font-medium">(Opcional)</span>
                 </label>
                 <Input
                   value={observacao}
                   onChange={(e) => setObservacao(e.target.value)}
-                  placeholder="Ex: Sem gelo, limão à parte..."
-                  className="h-10"
+                  placeholder="Ex: Copo com gelo, sem limão..."
+                  className="h-10 bg-muted/20"
                 />
               </div>
 
-              {/* Total Preview */}
-              <div className="p-3 bg-emerald-500/10 rounded-xl flex items-center justify-between border border-emerald-500/20">
-                <span className="text-sm font-semibold text-emerald-800 dark:text-emerald-400">Total a Lançar:</span>
-                <span className="text-lg font-bold text-emerald-600 dark:text-emerald-500">
-                  R$ {totalCalculated.toFixed(2)}
-                </span>
-              </div>
             </div>
           )}
         </div>
 
-        <DialogFooter className="px-5 py-4 border-t bg-muted/40 gap-2 sm:space-x-0">
-          <Button variant="outline" className="h-10 font-semibold" onClick={() => onOpenChange(false)}>
+        <Separator />
+
+        <DialogFooter className="px-6 py-4 bg-muted/10 flex-row justify-end space-x-2">
+          <Button variant="outline" className="h-10 font-bold" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
           <Button
-            className="h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+            className="h-10 bg-brand hover:bg-brand/90 text-white font-bold px-6 shadow-xs"
             disabled={!selectedProduct || (productVariations.length > 1 && !selectedVariacaoId) || submitting}
             onClick={handleSubmit}
           >
-            {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <PackagePlus className="h-4 w-4 mr-2" />}
-            Confirmar Lançamento
+            {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            {!submitting && "Confirmar"}
           </Button>
         </DialogFooter>
       </DialogContent>

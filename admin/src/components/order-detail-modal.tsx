@@ -391,6 +391,7 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
   const [couvertFromPrompt, setCouvertFromPrompt] = useState(false);
   const [itemToRemove, setItemToRemove] = useState<string | null>(null);
   const [showAddProduct, setShowAddProduct] = useState(false);
+  const [addPessoaName, setAddPessoaName] = useState<string | undefined>(undefined);
 
   const hasCouvert = useMemo(() => {
     if (!comanda) return false;
@@ -525,6 +526,21 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
               </Badge>
             </div>
 
+            {onAddProduct && comanda.status !== "entregue" && comanda.status !== "cancelado" && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full mt-1 h-9 text-xs font-bold text-brand bg-brand/5 border-brand/20 hover:bg-brand/10 transition-colors"
+                onClick={() => {
+                  setAddPessoaName(undefined);
+                  setShowAddProduct(true);
+                }}
+              >
+                <PlusCircle className="h-4 w-4 mr-2" /> 
+                Lançar Produto nesta Mesa
+              </Button>
+            )}
+
             {/* Info row */}
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <div className="flex items-center gap-1.5 bg-muted/50 px-2 py-1 rounded-md">
@@ -599,6 +615,18 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
                           <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
                             {pessoa.itens.reduce((sum, i) => sum + i.quantidade, 0)} itens
                           </span>
+                          {onAddProduct && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAddPessoaName(pessoa.nome);
+                                setShowAddProduct(true);
+                              }}
+                              className="text-[10px] uppercase font-bold text-brand hover:text-brand/80 hover:bg-brand/10 transition-colors ml-1 flex items-center gap-1 bg-transparent px-1.5 py-0.5 rounded cursor-pointer"
+                            >
+                              <PlusCircle className="h-3 w-3" /> Lançar Produto
+                            </button>
+                          )}
                         </div>
                         <div className="flex items-center gap-1">
                           {/* Per-person Print */}
@@ -684,16 +712,6 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
                     >
                       <Ticket className="h-3.5 w-3.5 mr-1" />
                       Add Couvert
-                    </Button>
-                  )}
-                  {onAddProduct && (
-                    <Button
-                      variant="outline"
-                      className="flex-1 max-w-[125px] h-9 px-2 text-xs font-semibold text-emerald-600 border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10 transition-colors shrink-0"
-                      onClick={() => setShowAddProduct(true)}
-                    >
-                      <PlusCircle className="h-3.5 w-3.5 mr-1" />
-                      Add Item
                     </Button>
                   )}
                   <Button
@@ -791,6 +809,7 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
           open={showAddProduct}
           onOpenChange={setShowAddProduct}
           comanda={comanda}
+          defaultPessoa={addPessoaName}
           onAdd={async (...args) => {
             if (onAddProduct) {
               await onAddProduct(comanda.comanda_id, ...args);
