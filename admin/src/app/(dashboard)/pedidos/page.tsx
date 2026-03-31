@@ -159,7 +159,7 @@ function groupPedidosByComanda(pedidos: PedidoRaw[]): ComandaAgrupada[] {
     });
 
     const pessoas = Array.from(pessoasMap.entries())
-      .filter(([_, data]) => data.itens.length > 0) // Hide people with no items
+      .filter(([, data]) => data.itens.length > 0) // Hide people with no items
       .map(([nome, data]) => ({
         nome,
         subtotal: data.subtotal,
