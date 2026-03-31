@@ -39,7 +39,8 @@ export async function saveProductAction(rawData: any, isCreating: boolean, editi
     // Validate data using Zod
     const parsed = productSchema.safeParse(rawData);
     if (!parsed.success) {
-        return { error: "Dados inválidos: " + parsed.error.issues[0].message };
+        const errorDetails = parsed.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join(', ');
+        return { error: `Dados inválidos: ${errorDetails}` };
     }
     const data = parsed.data;
 
