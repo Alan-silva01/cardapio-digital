@@ -2624,7 +2624,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                             {cartTab === 'carrinho' && (
                                 <div className="cart-footer" style={{position: 'relative', bottom: 'auto', borderTop: 'none'}}>
                                     <div className="cart-subtotal-row" style={{marginBottom: '10px'}}>
-                                        <span className="cart-subtotal-label">Total do Pedido</span>
+                                        <span className="cart-subtotal-label">Sua Comanda</span>
                                         <span className="cart-subtotal-value">
                                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
                                                 Object.entries(cart).reduce((sum, [key, qty]) => {
