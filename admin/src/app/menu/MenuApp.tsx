@@ -812,8 +812,26 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                 setProducts(filtered);
             } else if (currentSearch) {
                 const term = currentSearch.toLowerCase().trim();
-                const filtered = enrichedProducts.filter(p => p.name.toLowerCase().includes(term));
-                setProducts(filtered);
+                const termNoSpace = term.replace(/\s+/g, "");
+
+                const matchedProduct = enrichedProducts.find(p => {
+                    if (!p.name) return false;
+                    const n = p.name.toLowerCase();
+                    const nNoSpace = n.replace(/\s+/g, "");
+                    return n.includes(term) || nNoSpace.includes(termNoSpace);
+                });
+
+                if (matchedProduct) {
+                    const targetCat = matchedProduct.category;
+                    const categoryProducts = enrichedProducts.filter(p => p.category === targetCat);
+                    setProducts(categoryProducts);
+
+                    // Add dynamic selection
+                    const targetIdx = categoryProducts.findIndex(p => p.id === matchedProduct.id);
+                    setCurrentIndex(targetIdx !== -1 ? targetIdx : 0);
+                } else {
+                    setProducts(enrichedProducts);
+                }
             } else {
                 setProducts(enrichedProducts);
             }
