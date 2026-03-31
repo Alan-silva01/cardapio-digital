@@ -5,6 +5,7 @@ import { countryFlags } from "@/lib/countryFlags";
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, ShoppingCart, ArrowLeft, Loader2, Heart, Users, User, Droplet, Plus, Minus, Trash2, X, Bell, Receipt, MessageSquare, Clock, ChevronDown, Check, Home, ShoppingBag, ClipboardList } from 'lucide-react';
 import { createClient } from "@/lib/supabase/client";
+const supabase = createClient();
 
 /* ── Bottom Nav Item ── */
 function NavItem({
