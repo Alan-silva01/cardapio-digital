@@ -732,15 +732,15 @@ export default function ProgramacaoSemanalPage() {
 
                         {/* Selected product info */}
                         {selectedProduct && currentPromo?.produto_id === selectedProduct.id && (
-                          <div className="mt-2 p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg">
-                            <p className="text-[11px] text-emerald-700 font-semibold flex items-center gap-1">
+                          <div className="mt-2 p-2.5 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 rounded-lg">
+                            <p className="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-1">
                               ✓ {selectedProduct.nome}
                             </p>
 
                             {selectedProduct.grupo_id_sabor && (
-                              <div className="flex items-center justify-between p-2 mt-1.5 bg-white rounded border border-border/50 shadow-xs">
+                              <div className="flex items-center justify-between p-2 mt-1.5 bg-white dark:bg-background/80 rounded border border-border/50 shadow-xs">
                                 <div>
-                                  <label className="text-[10px] font-semibold">Desconto para toda a linha?</label>
+                                  <label className="text-[10px] font-semibold text-foreground">Desconto para toda a linha?</label>
                                   <p className="text-[9px] text-muted-foreground">Todos sabores da linha</p>
                                 </div>
                                 <Switch
