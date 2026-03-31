@@ -886,7 +886,33 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
             setCurrentIndex(firstMasterIdx !== -1 ? firstMasterIdx : 0);
         } else if (searchProductName) {
             const term = searchProductName.toLowerCase().trim();
-            const filtered = all.filter(p => p.name.toLowerCase().includes(term));
+            const termNoSpace = term.replace(/\s+/g, "");
+
+            // Find direct matches (allow fuzzy matching without spaces)
+            const directlyMatched = all.filter(p => {
+                if (!p.name) return false;
+                const n = p.name.toLowerCase();
+                const nNoSpace = n.replace(/\s+/g, "");
+                return n.includes(term) || nNoSpace.includes(termNoSpace);
+            });
+
+            // Find all unique flavor group IDs from the matched items
+            const matchedGroups = new Set(
+                directlyMatched
+                    .filter(p => p.grupo_id_sabor)
+                    .map(p => p.grupo_id_sabor)
+            );
+
+            // The final list contains the directly matched items PLUS any sibling of a matched group
+            const filtered = all.filter(p => {
+                if (!p.name) return false;
+                const n = p.name.toLowerCase();
+                const nNoSpace = n.replace(/\s+/g, "");
+                const isDirectMatch = n.includes(term) || nNoSpace.includes(termNoSpace);
+                const isSiblingMatch = p.grupo_id_sabor && matchedGroups.has(p.grupo_id_sabor);
+                return isDirectMatch || isSiblingMatch;
+            });
+
             setProducts(filtered);
             const firstMasterIdx = filtered.findIndex((p: any) => isValidMaster(p));
             setCurrentIndex(firstMasterIdx !== -1 ? firstMasterIdx : 0);

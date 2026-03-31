@@ -398,13 +398,22 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
       clearInterval(interval);
     };
   }, []);
-
   // Prefetch MenuApp bundle silently so transition is near-instant
+  const allProductsCache = useRef<any[]>([]);
   useEffect(() => {
     import("./MenuApp");
+    // Pre-fetch all products for ultra-fast, fuzzy client-side search
+    async function fetchSearchDeps() {
+      const { data } = await supabase
+        .from("produtos")
+        .select("id, nome, slug, categoria_id, imagem_url")
+        .eq("disponivel", true);
+      if (data) allProductsCache.current = data;
+    }
+    fetchSearchDeps();
   }, []);
 
-  // Debounced product search
+  // Debounced product search (client-side for better fuzzy matching like 'redbull' -> 'Red Bull')
   const searchProducts = useCallback(async (query: string) => {
     if (query.trim().length < 2) {
       setSearchResults([]);
@@ -413,16 +422,18 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
     }
     setIsSearching(true);
     try {
-      const { data } = await supabase
-        .from("produtos")
-        .select("id, nome, slug, categoria_id, imagem_url")
-        .eq("disponivel", true)
-        .ilike("nome", `%${query.trim()}%`)
-        .limit(8);
+      const q = query.toLowerCase().trim();
+      const qNoSpace = q.replace(/\s+/g, "");
 
-      if (data && data.length > 0) {
+      const matches = allProductsCache.current.filter(p => {
+        const n = String(p.nome || "").toLowerCase();
+        const nNoSpace = n.replace(/\s+/g, "");
+        return n.includes(q) || nNoSpace.includes(qNoSpace);
+      }).slice(0, 8);
+
+      if (matches.length > 0) {
         // Get category names
-        const catIds = [...new Set(data.map((p: any) => p.categoria_id))];
+        const catIds = [...new Set(matches.map((p: any) => p.categoria_id))];
         const { data: cats } = await supabase
           .from("categorias")
           .select("id, nome")
@@ -432,7 +443,7 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
         cats?.forEach((c: any) => { catMap[c.id] = c.nome; });
 
         setSearchResults(
-          data.map((p: any) => ({
+          matches.map((p: any) => ({
             id: p.id,
             nome: p.nome,
             slug: p.slug,
@@ -969,7 +980,7 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
 
               {/* ── Title Header ── */}
               {activePromos[currentPromoIndex]?.titulo && (
-                <div style={{ padding: '18px 24px 0', textAlign: 'center' }}>
+                <div style={{ padding: '18px 44px 0', textAlign: 'center' }}>
                   <h3 style={{ fontSize: '19px', fontWeight: '800', color: '#111827', lineHeight: '1.2', letterSpacing: '-0.3px' }}>
                     {activePromos[currentPromoIndex].titulo}
                   </h3>
