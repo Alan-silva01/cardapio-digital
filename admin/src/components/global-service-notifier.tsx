@@ -4,23 +4,26 @@ import { useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 
 /**
- * HIGH-PERFORMANCE Global Service Notifier
+ * HIGH-PERFORMANCE Global Service Notifier (v2 — Lazy + Background Preload)
  *
- * Uses Web Audio API instead of HTMLAudioElement for guaranteed, instant playback.
+ * Strategy:
+ * 1. On Realtime event → check if AudioBuffer is cached in RAM
+ *    - YES → play instantly from memory (~0.1ms)
+ *    - NO  → play via HTMLAudioElement (fallback) + cache the buffer for next time
+ * 2. Background preload starts AFTER 5s delay, downloads in small batches of 3
+ *    so it never saturates the browser's 6-connection-per-domain limit.
  *
- * How it works:
- * 1. On mount, fetches all audio URLs from `audio_alertas` table
- * 2. Downloads ALL audio files and decodes them into AudioBuffers (kept in RAM)
- * 3. On Realtime event, plays from memory — ZERO network latency
- * 4. AudioContext is unlocked robustly (retries on every interaction until success)
- *
- * Why this is better than `new Audio(url)`:
- * - No network request at play time (already in memory)
- * - No race conditions with browser caching
- * - No CORS issues at play time (decoded at init)
- * - Sub-millisecond playback latency
- * - AudioContext is the browser-recommended way for programmatic audio
+ * This means:
+ * - ZERO impact on initial page load
+ * - First play of an uncached audio uses HTMLAudioElement (works but may have small delay)
+ * - All subsequent plays are instant from memory
+ * - After ~15-30s all audios are in RAM anyway
  */
+
+const BATCH_SIZE = 3;
+const BATCH_DELAY_MS = 800;
+const PRELOAD_START_DELAY_MS = 5000;
+
 export function GlobalServiceNotifier() {
     const audioCtxRef = useRef<AudioContext | null>(null);
     const buffersRef = useRef<Map<string, AudioBuffer>>(new Map());
@@ -31,7 +34,6 @@ export function GlobalServiceNotifier() {
 
     // ── Helpers ──────────────────────────────────────────────────────────
 
-    /** Get or create the singleton AudioContext */
     const getAudioContext = useCallback(() => {
         if (!audioCtxRef.current) {
             audioCtxRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -39,10 +41,9 @@ export function GlobalServiceNotifier() {
         return audioCtxRef.current;
     }, []);
 
-    /** Build a cache key like "1-garcom" */
     const cacheKey = (mesa: number | string, tipo: string) => `${mesa}-${tipo}`;
 
-    /** Download a single audio file and decode it into an AudioBuffer */
+    /** Download + decode a single audio file into an AudioBuffer (silent fail) */
     const fetchAndDecode = useCallback(
         async (url: string): Promise<AudioBuffer | null> => {
             try {
@@ -58,22 +59,31 @@ export function GlobalServiceNotifier() {
         [getAudioContext]
     );
 
-    /** Pre-cache all audio files from the alerts list */
-    const preloadAllAudio = useCallback(
+    /** Background preload: batches of BATCH_SIZE with delays between each batch */
+    const backgroundPreload = useCallback(
         async (alerts: any[]) => {
-            const ctx = getAudioContext();
-            const promises = alerts.map(async (alert) => {
-                const key = cacheKey(alert.mesa_numero, alert.tipo);
-                // Skip if already cached
-                if (buffersRef.current.has(key)) return;
-                const buffer = await fetchAndDecode(alert.audio_url);
-                if (buffer) {
-                    buffersRef.current.set(key, buffer);
+            const uncached = alerts.filter(
+                (a) => !buffersRef.current.has(cacheKey(a.mesa_numero, a.tipo))
+            );
+            if (uncached.length === 0) return;
+
+            for (let i = 0; i < uncached.length; i += BATCH_SIZE) {
+                const batch = uncached.slice(i, i + BATCH_SIZE);
+                await Promise.allSettled(
+                    batch.map(async (alert) => {
+                        const key = cacheKey(alert.mesa_numero, alert.tipo);
+                        if (buffersRef.current.has(key)) return;
+                        const buffer = await fetchAndDecode(alert.audio_url);
+                        if (buffer) buffersRef.current.set(key, buffer);
+                    })
+                );
+                // Wait between batches to avoid saturating connections
+                if (i + BATCH_SIZE < uncached.length) {
+                    await new Promise((r) => setTimeout(r, BATCH_DELAY_MS));
                 }
-            });
-            await Promise.allSettled(promises);
+            }
         },
-        [getAudioContext, fetchAndDecode]
+        [fetchAndDecode]
     );
 
     // ── Robust AudioContext Unlock ──────────────────────────────────────
@@ -83,28 +93,19 @@ export function GlobalServiceNotifier() {
             if (isUnlockedRef.current) return;
             try {
                 const ctx = getAudioContext();
-                // Resume if suspended (browser policy)
-                if (ctx.state === "suspended") {
-                    await ctx.resume();
-                }
-                // Play a silent buffer to fully unlock
+                if (ctx.state === "suspended") await ctx.resume();
                 const silentBuffer = ctx.createBuffer(1, 1, ctx.sampleRate);
                 const source = ctx.createBufferSource();
                 source.buffer = silentBuffer;
                 source.connect(ctx.destination);
                 source.start(0);
                 isUnlockedRef.current = true;
-
-                // Remove listeners once unlocked
                 document.removeEventListener("click", unlock);
                 document.removeEventListener("touchstart", unlock);
                 document.removeEventListener("keydown", unlock);
-            } catch {
-                // Will retry on next interaction
-            }
+            } catch { /* retry on next interaction */ }
         };
 
-        // Listen on multiple events — retry until success (no { once: true })
         document.addEventListener("click", unlock);
         document.addEventListener("touchstart", unlock);
         document.addEventListener("keydown", unlock);
@@ -116,22 +117,21 @@ export function GlobalServiceNotifier() {
         };
     }, [getAudioContext]);
 
-    // ── Fetch Alerts + Initial State + Preload Audio ────────────────────
+    // ── Fetch Alerts + Initial State ────────────────────────────────────
 
     useEffect(() => {
+        let preloadTimer: ReturnType<typeof setTimeout>;
+
         async function fetchAudioAlerts() {
             const { data } = await supabase
                 .from("audio_alertas")
                 .select("mesa_numero, tipo, audio_url");
-            if (data) {
-                alertsRawRef.current = data;
-                // Pre-cache all audio files in background
-                preloadAllAudio(data);
-            }
+            if (data) alertsRawRef.current = data;
+            return data;
         }
 
         async function fetchInitialData() {
-            await fetchAudioAlerts();
+            const audioData = await fetchAudioAlerts();
 
             const { data: mesasData } = await supabase
                 .from("mesas")
@@ -146,102 +146,115 @@ export function GlobalServiceNotifier() {
                 });
                 mesasStateRef.current = state;
             }
+
+            // Start background preload AFTER a delay — zero impact on page load
+            if (audioData && audioData.length > 0) {
+                preloadTimer = setTimeout(() => {
+                    backgroundPreload(audioData);
+                }, PRELOAD_START_DELAY_MS);
+            }
         }
 
         fetchInitialData();
 
-        // Listen to audio_alertas changes (new uploads, etc.)
         const audioChannel = supabase
             .channel("global-audio-alerts")
             .on(
                 "postgres_changes",
                 { event: "*", schema: "public", table: "audio_alertas" },
-                () => {
-                    fetchAudioAlerts();
-                }
+                () => { fetchAudioAlerts(); }
             )
             .subscribe();
 
         return () => {
+            clearTimeout(preloadTimer);
             supabase.removeChannel(audioChannel);
         };
-    }, [preloadAllAudio]);
+    }, [backgroundPreload]);
 
-    // ── Play from Memory ────────────────────────────────────────────────
+    // ── Play Logic ──────────────────────────────────────────────────────
 
-    const playAlert = useCallback(
-        (mesaNumero: number | string, type: "garcom" | "conta") => {
-            const key = cacheKey(mesaNumero, type);
-
-            // Prevent overlapping plays for the same alert
-            if (playingRef.current.has(key)) return;
-
-            const buffer = buffersRef.current.get(key);
-
-            if (!buffer) {
-                // Buffer not cached yet — try to fetch on-demand as fallback
-                const alert = alertsRawRef.current.find(
-                    (a) => String(a.mesa_numero) === String(mesaNumero) && a.tipo === type
-                );
-                if (alert?.audio_url) {
-                    fetchAndDecode(alert.audio_url).then((buf) => {
-                        if (buf) {
-                            buffersRef.current.set(key, buf);
-                            // Retry play after decode
-                            playFromBuffer(key, buf);
-                        }
-                    });
-                }
-                return;
-            }
-
-            playFromBuffer(key, buffer);
-        },
-        [fetchAndDecode]
-    );
-
-    /** Actually play an AudioBuffer through Web Audio API */
+    /** Play from cached AudioBuffer (instant, ~0.1ms) */
     const playFromBuffer = useCallback(
         (key: string, buffer: AudioBuffer) => {
             if (playingRef.current.has(key)) return;
-
             try {
                 const ctx = getAudioContext();
-
-                // Ensure context is running
-                if (ctx.state === "suspended") {
-                    ctx.resume();
-                }
+                if (ctx.state === "suspended") ctx.resume();
 
                 const source = ctx.createBufferSource();
                 source.buffer = buffer;
-
-                // Gain node for volume control
                 const gainNode = ctx.createGain();
                 gainNode.gain.value = 1.0;
-
                 source.connect(gainNode);
                 gainNode.connect(ctx.destination);
 
                 playingRef.current.add(key);
-
                 source.onended = () => {
                     playingRef.current.delete(key);
                     source.disconnect();
                     gainNode.disconnect();
                 };
-
-                // Fallback timeout (in case onended never fires)
-                setTimeout(() => {
-                    playingRef.current.delete(key);
-                }, 15000);
-
+                setTimeout(() => playingRef.current.delete(key), 15000);
                 source.start(0);
             } catch {
                 playingRef.current.delete(key);
             }
         },
         [getAudioContext]
+    );
+
+    /** Fallback: play via HTMLAudioElement when buffer isn't cached yet */
+    const playFallback = useCallback(
+        (key: string, url: string) => {
+            if (playingRef.current.has(key)) return;
+            try {
+                const audio = new Audio(url);
+                audio.volume = 1.0;
+                playingRef.current.add(key);
+
+                audio.addEventListener("ended", () => {
+                    playingRef.current.delete(key);
+                }, { once: true });
+
+                setTimeout(() => playingRef.current.delete(key), 15000);
+
+                audio.play().catch(() => {
+                    playingRef.current.delete(key);
+                });
+
+                // Cache the buffer in background for next time
+                fetchAndDecode(url).then((buf) => {
+                    if (buf) buffersRef.current.set(key, buf);
+                });
+            } catch {
+                playingRef.current.delete(key);
+            }
+        },
+        [fetchAndDecode]
+    );
+
+    const playAlert = useCallback(
+        (mesaNumero: number | string, type: "garcom" | "conta") => {
+            const key = cacheKey(mesaNumero, type);
+            if (playingRef.current.has(key)) return;
+
+            const buffer = buffersRef.current.get(key);
+            if (buffer) {
+                // ✅ Cached — instant play from memory
+                playFromBuffer(key, buffer);
+                return;
+            }
+
+            // ⚡ Not cached yet — use HTMLAudioElement fallback + cache for next time
+            const alert = alertsRawRef.current.find(
+                (a) => String(a.mesa_numero) === String(mesaNumero) && a.tipo === type
+            );
+            if (alert?.audio_url) {
+                playFallback(key, alert.audio_url);
+            }
+        },
+        [playFromBuffer, playFallback]
     );
 
     // ── Realtime Listener ───────────────────────────────────────────────
@@ -259,17 +272,13 @@ export function GlobalServiceNotifier() {
                         conta: false,
                     };
 
-                    // Garçom: play only if transitioned false → true
                     if (newMesa.chamando_garcom && !prevState.garcom) {
                         playAlert(newMesa.numero, "garcom");
                     }
-
-                    // Conta: play only if transitioned false → true
                     if (newMesa.solicitando_conta && !prevState.conta) {
                         playAlert(newMesa.numero, "conta");
                     }
 
-                    // Update local state tracker
                     mesasStateRef.current[newMesa.numero] = {
                         garcom: !!newMesa.chamando_garcom,
                         conta: !!newMesa.solicitando_conta,
