@@ -17,8 +17,11 @@ export function GlobalOrderNotifier() {
             .on(
                 "postgres_changes",
                 { event: "INSERT", schema: "public", table: "pedidos" },
-                () => {
-                    playSound();
+                (payload: any) => {
+                    const isCouvert = payload.new?.nome_pessoa === "Couvert";
+                    if (!isCouvert) {
+                        playSound();
+                    }
                 }
             )
             .subscribe();
