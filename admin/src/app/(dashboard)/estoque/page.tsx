@@ -54,6 +54,7 @@ import {
     Star,
     Trash2,
     AlertTriangle,
+    X,
 } from "lucide-react";
 import { uploadImageAction } from "@/app/actions/upload-image";
 import { saveProductAction, deleteProductAction } from "@/app/actions/product-actions";
@@ -475,7 +476,7 @@ function EditProductModal({
 
                 <div className="px-6 py-5 space-y-4 max-h-[70vh] overflow-y-auto">
                     {/* Product image preview and upload */}
-                    <div className="flex justify-center">
+                    <div className="flex justify-center relative w-max mx-auto">
                         <Label 
                             htmlFor="image-upload"
                             className={cn(
@@ -542,6 +543,20 @@ function EditProductModal({
                                 </div>
                             )}
                         </Label>
+                        {imagemUrl && !uploadingImage && (
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setImagemUrl("");
+                                }}
+                                className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 shadow-sm hover:scale-110 transition-transform z-20"
+                                title="Remover imagem principal"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
+                        )}
                     </div>
 
                     <div className="space-y-1.5">
@@ -765,6 +780,7 @@ function EditProductModal({
                         <p className="text-[10.5px] font-bold text-foreground uppercase tracking-widest mb-3 flex items-center gap-2"><Tag className="h-3.5 w-3.5"/> Dados Específicos Desta Variação</p>
                         
                         <div className="flex gap-4">
+                            <div className="relative w-max h-max">
                             <Label 
                                 htmlFor="var-image-upload"
                                 className={cn(
@@ -815,6 +831,21 @@ function EditProductModal({
                                     </div>
                                 )}
                             </Label>
+                            {varImagemUrl && !uploadingVarImage && (
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        setVarImagemUrl("");
+                                    }}
+                                    className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 shadow-sm hover:scale-110 transition-transform z-20"
+                                    title="Remover imagem da variação"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                            )}
+                            </div>
 
                             <div className="flex-1 space-y-1.5 pt-1">
                                 <Label className="text-xs font-medium text-muted-foreground">Descrição Exclusiva da Variação (Opcional)</Label>
