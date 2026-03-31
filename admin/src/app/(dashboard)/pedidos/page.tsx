@@ -480,11 +480,18 @@ export default function PedidosPage() {
     }
   };
 
-  const handleAddCouvert = async (comandaId: string, quantidade: number, valorUnitario: number) => {
+  const handleAddCouvert = async (
+    comandaId: string,
+    quantidade: number,
+    valorUnitario: number,
+    nomePessoa?: string,
+  ) => {
     const comanda = Object.values(columns).flat().find(c => c.comanda_id === comandaId);
     if (!comanda) return;
 
     const total = quantidade * valorUnitario;
+    // Use person's name if targeting a specific comanda, otherwise global "Couvert"
+    const targetPessoa = nomePessoa || "Couvert";
 
     // ── Optimistic UI update (instant) ──
     const tempItemId = `couvert-${Date.now()}`;
@@ -500,16 +507,16 @@ export default function PedidosPage() {
 
     const addCouvertToComanda = (c: ComandaAgrupada): ComandaAgrupada => {
       if (c.comanda_id !== comandaId) return c;
-      const existingCouvert = c.pessoas.find(p => p.nome === "Couvert");
+      const existingPessoa = c.pessoas.find(p => p.nome === targetPessoa);
       let updatedPessoas;
-      if (existingCouvert) {
+      if (existingPessoa) {
         updatedPessoas = c.pessoas.map(p =>
-          p.nome === "Couvert"
+          p.nome === targetPessoa
             ? { ...p, itens: [...p.itens, couvertItem], subtotal: p.subtotal + total }
             : p
         );
       } else {
-        updatedPessoas = [...c.pessoas, { nome: "Couvert", subtotal: total, itens: [couvertItem], pago: false }];
+        updatedPessoas = [...c.pessoas, { nome: targetPessoa, subtotal: total, itens: [couvertItem], pago: false }];
       }
       return { ...c, total: c.total + total, pessoas: updatedPessoas };
     };
@@ -525,34 +532,66 @@ export default function PedidosPage() {
     setSelectedComanda(prev => prev ? addCouvertToComanda(prev) : prev);
 
     // ── DB operations (background) ──
-    // Skip the Realtime-triggered fetchPedidos to avoid race condition
-    // (itens_pedido might not be inserted yet when Realtime fires)
+    // Suppress Realtime sound + skip fetch to avoid race condition
     skipNextFetchRef.current = true;
+    skipNextSoundRef.current = true;
 
-    const { data: novoPedido, error: pedidoError } = await supabase
-      .from("pedidos")
-      .insert({
-        comanda_id: comandaId,
-        numero_mesa: comanda.numero_mesa,
-        nome_pessoa: "Couvert",
-        status: "pronto",
-        total: total,
-        order_number: comanda.order_number ? `${comanda.order_number}-CV` : "CV",
-      })
-      .select("id")
-      .single();
+    // When targeting a specific person: find their active pedido and insert item there.
+    // When global "Couvert": create a new pedido under the "Couvert" pessoa.
+    let pedidoId: string | null = null;
 
-    if (pedidoError || !novoPedido) {
-      console.error("Erro ao inserir pedido de couvert:", pedidoError);
-      skipNextFetchRef.current = false;
-      fetchPedidos(); // rollback optimistic update
-      return;
+    if (nomePessoa) {
+      // Try to find an existing active (non-entregue) pedido for this person in this comanda
+      const { data: existingPedido } = await supabase
+        .from("pedidos")
+        .select("id")
+        .eq("comanda_id", comandaId)
+        .eq("nome_pessoa", nomePessoa)
+        .neq("status", "entregue")
+        .neq("status", "cancelado")
+        .order("criado_em", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (existingPedido) {
+        pedidoId = existingPedido.id;
+        // Update the pedido total
+        await supabase
+          .from("pedidos")
+          .update({ total: comanda.pessoas.find(p => p.nome === nomePessoa)!.subtotal + total })
+          .eq("id", pedidoId);
+      }
+    }
+
+    if (!pedidoId) {
+      // Create a new pedido (global couvert or person has no active pedido)
+      const { data: novoPedido, error: pedidoError } = await supabase
+        .from("pedidos")
+        .insert({
+          comanda_id: comandaId,
+          numero_mesa: comanda.numero_mesa,
+          nome_pessoa: targetPessoa,
+          status: "pronto",
+          total: total,
+          order_number: comanda.order_number ? `${comanda.order_number}-CV` : "CV",
+        })
+        .select("id")
+        .single();
+
+      if (pedidoError || !novoPedido) {
+        console.error("Erro ao inserir pedido de couvert:", pedidoError);
+        skipNextFetchRef.current = false;
+        skipNextSoundRef.current = false;
+        fetchPedidos();
+        return;
+      }
+      pedidoId = novoPedido.id;
     }
 
     const { error: itemError } = await supabase
       .from("itens_pedido")
       .insert({
-        pedido_id: novoPedido.id,
+        pedido_id: pedidoId,
         nome_produto: "Couvert Artístico",
         quantidade: quantidade,
         preco_unitario: valorUnitario,

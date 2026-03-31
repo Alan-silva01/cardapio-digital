@@ -88,7 +88,7 @@ interface OrderDetailModalProps {
   mesasStatus?: Record<number, { garcom: boolean; conta: boolean }>;
   onClearService?: (mesa: number, type: 'garcom' | 'conta') => void;
   config?: any;
-  onAddCouvert?: (comandaId: string, quantidade: number, valorUnitario: number) => void;
+  onAddCouvert?: (comandaId: string, quantidade: number, valorUnitario: number, nomePessoa?: string) => void;
   onRemoveItem?: (itemId: string, comandaId: string) => void;
   onAddProduct?: (
     comandaId: string,
@@ -294,11 +294,13 @@ function CouvertModal({
   open,
   onOpenChange,
   valorCouvert,
+  nomePessoa,
   onConfirm
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   valorCouvert: number;
+  nomePessoa?: string;
   onConfirm: (quantidade: number) => void;
 }) {
   const [qtd, setQtd] = React.useState(1);
@@ -306,6 +308,8 @@ function CouvertModal({
   React.useEffect(() => {
     if (open) setQtd(1);
   }, [open]);
+
+  const isPessoaSpecific = !!nomePessoa;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -316,9 +320,15 @@ function CouvertModal({
               <Ticket className="h-6 w-6" />
             </div>
             <div>
-              <DialogTitle>Lançar Couvert Artístico</DialogTitle>
+              <DialogTitle>
+                {isPessoaSpecific
+                  ? `Couvert para ${nomePessoa}`
+                  : "Lançar Couvert Artístico"}
+              </DialogTitle>
               <DialogDescription className="mt-1">
-                Quantidade de pessoas na mesa
+                {isPessoaSpecific
+                  ? `Quantas pessoas na comanda de ${nomePessoa}?`
+                  : "Quantidade de pessoas na mesa"}
               </DialogDescription>
             </div>
           </div>
@@ -326,18 +336,26 @@ function CouvertModal({
         
         <div className="py-2">
           <div className="bg-muted/30 p-4 rounded-xl space-y-3">
+            {isPessoaSpecific && (
+              <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-medium">
+                <span className="bg-brand/10 text-brand px-2 py-0.5 rounded-full font-semibold">{nomePessoa}</span>
+              </div>
+            )}
             <div className="space-y-2">
-              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Pessoas na Mesa</label>
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                {isPessoaSpecific ? "Qt. Couvert" : "Pessoas na Mesa"}
+              </label>
               <Input 
                 type="number" 
                 value={qtd} 
                 onChange={(e) => setQtd(Math.max(1, parseInt(e.target.value) || 1))}
                 min={1}
                 className="h-10 text-center font-bold text-lg"
+                autoFocus
               />
             </div>
             <div className="flex items-center justify-between text-sm mt-3 border-t border-border/50 pt-3">
-              <span className="text-muted-foreground text-xs">Valor por pessoa:</span>
+              <span className="text-muted-foreground text-xs">Valor por couvert:</span>
               <span className="font-semibold text-xs">R$ {valorCouvert.toFixed(2)}</span>
             </div>
             <div className="flex items-center justify-between">
@@ -358,7 +376,7 @@ function CouvertModal({
               onOpenChange(false);
             }}
           >
-            Adicionar à Mesa
+            {isPessoaSpecific ? `Lançar na Comanda` : "Adicionar à Mesa"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -393,6 +411,7 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
   const [itemToRemove, setItemToRemove] = useState<string | null>(null);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [addPessoaName, setAddPessoaName] = useState<string | undefined>(undefined);
+  const [couvertTargetPerson, setCouvertTargetPerson] = useState<string | null>(null);
 
   const hasCouvert = useMemo(() => {
     if (!comanda) return false;
@@ -629,6 +648,20 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
                           )}
                         </div>
                         <div className="flex items-center gap-1">
+                          {/* Per-person Couvert */}
+                          {config?.couvert_ativo && onAddCouvert && (
+                            <button
+                              type="button"
+                              className="p-1.5 rounded-md text-muted-foreground/50 hover:text-brand hover:bg-brand/10 transition-colors"
+                              title={`Adicionar couvert a ${pessoa.nome}`}
+                              onClick={() => {
+                                setCouvertTargetPerson(pessoa.nome);
+                                setShowCoverModal(true);
+                              }}
+                            >
+                              <Ticket className="h-3.5 w-3.5" />
+                            </button>
+                          )}
                           {/* Per-person Print */}
                           <button
                             type="button"
@@ -781,10 +814,21 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
 
       <CouvertModal
         open={showCoverModal}
-        onOpenChange={setShowCoverModal}
+        onOpenChange={(open) => {
+          setShowCoverModal(open);
+          if (!open) setCouvertTargetPerson(null);
+        }}
         valorCouvert={config?.valor_couvert || 10}
+        nomePessoa={couvertTargetPerson ?? undefined}
         onConfirm={(qtd) => {
-          if (onAddCouvert) onAddCouvert(comanda.comanda_id, qtd, config?.valor_couvert || 10);
+          if (onAddCouvert) {
+            onAddCouvert(
+              comanda.comanda_id,
+              qtd,
+              config?.valor_couvert || 10,
+              couvertTargetPerson ?? undefined
+            );
+          }
         }}
       />
 
