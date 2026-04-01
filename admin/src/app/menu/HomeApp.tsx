@@ -126,7 +126,8 @@ const CATEGORIES: CategoryDef[] = [
     itemCount: 11,
     subs: [
       { id: "bebidas-agua", label: "Água & Refri", icon: GlassWater, dbCategories: ["Bebidas"], subcategoria: ["Água & Refri", "Refrigerantes & Águas"] },
-      { id: "bebidas-sucos", label: "Sucos", icon: Citrus, dbCategories: ["Bebidas"], subcategoria: "Sucos" },
+      { id: "bebidas-sucos-copo", label: "Copo 300ml", icon: Citrus, dbCategories: ["Bebidas"], subcategoria: "Copo" },
+      { id: "bebidas-sucos-jarra", label: "Jarra 1500ml", icon: GlassWater, dbCategories: ["Bebidas"], subcategoria: "Jarra" },
       { id: "bebidas-energetico", label: "Energéticos", icon: Zap, dbCategories: ["Bebidas"], subcategoria: "Energéticos" },
       { id: "bebidas-zero", label: "Zero Álcool", icon: Ban, dbCategories: ["Cervejas"], subcategoria: ["Zero Álcool", "Cerveja Zero"] },
     ],
