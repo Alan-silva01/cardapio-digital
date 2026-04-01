@@ -400,21 +400,30 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
   }, []);
   // Prefetch MenuApp bundle silently so transition is near-instant
   const allProductsCache = useRef<any[]>([]);
+  const catMapCache = useRef<Record<string, string>>({});
   useEffect(() => {
     import("./MenuApp");
-    // Pre-fetch all products for ultra-fast, fuzzy client-side search
+    // Pre-fetch all products + categories for ultra-fast fuzzy search
     async function fetchSearchDeps() {
-      const { data } = await supabase
-        .from("produtos")
-        .select("id, nome, slug, categoria_id, imagem_url")
-        .eq("disponivel", true);
-      if (data) allProductsCache.current = data;
+      const [prodRes, catRes] = await Promise.all([
+        supabase
+          .from("produtos")
+          .select("id, nome, slug, categoria_id, imagem_url, subcategoria")
+          .eq("disponivel", true),
+        supabase.from("categorias").select("id, nome"),
+      ]);
+      if (prodRes.data) allProductsCache.current = prodRes.data;
+      if (catRes.data) {
+        const map: Record<string, string> = {};
+        catRes.data.forEach((c: any) => { map[c.id] = c.nome; });
+        catMapCache.current = map;
+      }
     }
     fetchSearchDeps();
   }, []);
 
-  // Debounced product search (client-side for better fuzzy matching like 'redbull' -> 'Red Bull')
-  const searchProducts = useCallback(async (query: string) => {
+  // Debounced product search — matches nome, subcategoria e categoria (ex: "Sucos", "Energéticos")
+  const searchProducts = useCallback((query: string) => {
     if (query.trim().length < 2) {
       setSearchResults([]);
       setIsSearching(false);
@@ -426,34 +435,29 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
       const qNoSpace = q.replace(/\s+/g, "");
 
       const matches = allProductsCache.current.filter(p => {
-        const n = String(p.nome || "").toLowerCase();
-        const nNoSpace = n.replace(/\s+/g, "");
-        return n.includes(q) || nNoSpace.includes(qNoSpace);
-      }).slice(0, 8);
+        const nome      = String(p.nome         || "").toLowerCase();
+        const sub       = String(p.subcategoria || "").toLowerCase();
+        const catNome   = String(catMapCache.current[p.categoria_id] || "").toLowerCase();
+        const nNoSpace  = nome.replace(/\s+/g, "");
+        const sNoSpace  = sub.replace(/\s+/g, "");
+        const cNoSpace  = catNome.replace(/\s+/g, "");
 
-      if (matches.length > 0) {
-        // Get category names
-        const catIds = [...new Set(matches.map((p: any) => p.categoria_id))];
-        const { data: cats } = await supabase
-          .from("categorias")
-          .select("id, nome")
-          .in("id", catIds);
-
-        const catMap: Record<string, string> = {};
-        cats?.forEach((c: any) => { catMap[c.id] = c.nome; });
-
-        setSearchResults(
-          matches.map((p: any) => ({
-            id: p.id,
-            nome: p.nome,
-            slug: p.slug,
-            categoria: catMap[p.categoria_id] || "",
-            imagem_url: p.imagem_url,
-          }))
+        return (
+          nome.includes(q)    || nNoSpace.includes(qNoSpace) ||
+          sub.includes(q)     || sNoSpace.includes(qNoSpace) ||
+          catNome.includes(q) || cNoSpace.includes(qNoSpace)
         );
-      } else {
-        setSearchResults([]);
-      }
+      }).slice(0, 10);
+
+      setSearchResults(
+        matches.map((p: any) => ({
+          id: p.id,
+          nome: p.nome,
+          slug: p.slug,
+          categoria: catMapCache.current[p.categoria_id] || "",
+          imagem_url: p.imagem_url,
+        }))
+      );
     } catch {
       setSearchResults([]);
     }
