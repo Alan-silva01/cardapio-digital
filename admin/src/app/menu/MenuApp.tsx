@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { countryFlags } from "@/lib/countryFlags";
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, ShoppingCart, ArrowLeft, Loader2, Heart, Users, User, Droplet, Plus, Minus, Trash2, X, Bell, Receipt, MessageSquare, Clock, ChevronDown, Check, Home, ShoppingBag, ClipboardList } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ShoppingCart, ArrowLeft, Loader2, Heart, Users, User, Store, Droplet, Plus, Minus, Trash2, X, Bell, Receipt, MessageSquare, Clock, ChevronDown, Check, Home, ShoppingBag, ClipboardList } from 'lucide-react';
 import { createClient } from "@/lib/supabase/client";
 const supabase = createClient();
 
@@ -129,6 +129,8 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
     const [isCheckingOut, setIsCheckingOut] = useState(false); // Loading state for checkout
     const [orderSuccess, setOrderSuccess] = useState(false); // Success screen after order
     const [config, setConfig] = useState(null);
+    const [horarios, setHorarios] = useState([]);
+
     const [showPromo, setShowPromo] = useState(false);
     const cartIconRef = useRef(null);
     const heroTitleRef = useRef(null);
@@ -604,21 +606,29 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
     };
     const fetchMenu = useCallback(async (isInitial = false) => {
         try {
-            const [
-                { data: catData, error: catError },
-                { data: prodData, error: prodError },
-                { data: varData, error: varError },
-                { data: wineData, error: wineError },
-                { data: configData, error: configError }
-            ] = await Promise.all([
+            const results = await Promise.all([
+                supabase.from('tipos_vinho').select('tipo, imagem_taca_url'),
                 supabase.from('categorias').select('id, nome, icone').eq('ativo', true),
                 supabase.from('produtos')
                     .select('id, categoria_id, nome, slug, descricao, imagem_url, disponivel, ordem, pais_origem, volume_ml, teor_alcolico, serve_pessoas, rating, curtidas, tipo_vinho, ml_taca, subcategoria, grupo_id_sabor, nome_curto_sabor, is_master_sabor')
                     .order('ordem', { ascending: true }),
                 supabase.from('variacoes_produto').select('*').eq('ativo', true).order('ordem', { ascending: true }),
-                supabase.from('tipos_vinho').select('tipo, imagem_taca_url'),
-                supabase.from('configuracoes').select('*').limit(1).single()
+                supabase.from('configuracoes').select('*').limit(1).single(),
+                supabase.from('horarios_funcionamento').select('*')
             ]);
+
+            const wineData = results[0].data;
+            const wineError = results[0].error;
+            const catData = results[1].data;
+            const catError = results[1].error;
+            const prodData = results[2].data;
+            const prodError = results[2].error;
+            const varData = results[3].data;
+            const varError = results[3].error;
+            const configData = results[4].data;
+            const configError = results[4].error;
+            const horariosData = results[5].data;
+            const horariosError = results[5].error;
 
             if (catError) throw catError;
             if (prodError) throw prodError;
@@ -651,6 +661,10 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                         }
                     }
                 }
+            }
+
+            if (horariosData) {
+                setHorarios(horariosData);
             }
 
             let glassMapToPreload = null;
@@ -951,6 +965,8 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
             .on('postgres_changes', { event: '*', schema: 'public', table: 'variacoes_produto' }, debouncedFetch)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'categorias' }, debouncedFetch)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'tipos_vinho' }, debouncedFetch)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'configuracoes' }, debouncedFetch)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'horarios_funcionamento' }, debouncedFetch)
             .subscribe();
 
         return () => {
@@ -972,6 +988,11 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
         checkMode();
         window.matchMedia('(display-mode: standalone)').addEventListener('change', checkMode);
     }, []);
+
+
+
+
+
 
     // Apply dark theme to body ONLY when MenuApp is active
     useEffect(() => {
@@ -2860,6 +2881,8 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                     </motion.div>
                 )}
             </AnimatePresence>
+
+
         </motion.div>
     );
 };
