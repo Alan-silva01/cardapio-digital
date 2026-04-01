@@ -36,7 +36,7 @@ export default function MenuLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className={`${playfair.variable}`} data-menu-app>
+    <div className={`${playfair.variable} w-full h-full`} data-menu-app>
       {children}
     </div>
   );
