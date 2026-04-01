@@ -476,7 +476,14 @@ function EditProductModal({
 
                 <div className="px-6 py-5 space-y-4 max-h-[70vh] overflow-y-auto">
                     {/* Product image preview and upload */}
-                    <div className="flex justify-center relative w-max mx-auto">
+                    <div className="flex flex-col items-center justify-center relative w-full mx-auto mb-2">
+                        <Label className="text-xs font-bold text-muted-foreground uppercase text-center mb-2">
+                            Imagem Geral do Produto
+                            <span className="block text-[10px] font-medium text-amber-600 bg-amber-50 px-2 py-0.5 mt-1 rounded dark:bg-amber-900/30 dark:text-amber-400">
+                                Atenção: Altera a foto principal (afeta todos os tamanhos)
+                            </span>
+                        </Label>
+                        <div className="flex justify-center relative w-max mx-auto mt-1">
                         <Label 
                             htmlFor="image-upload"
                             className={cn(
@@ -557,6 +564,7 @@ function EditProductModal({
                                 <X className="h-4 w-4" />
                             </button>
                         )}
+                        </div>
                     </div>
 
                     <div className="space-y-1.5">
@@ -777,7 +785,14 @@ function EditProductModal({
 
                     {/* Variação upload específico */}
                     <div className="pt-4 border-t border-border/50 pb-2">
-                        <p className="text-[10.5px] font-bold text-foreground uppercase tracking-widest mb-3 flex items-center gap-2"><Tag className="h-3.5 w-3.5"/> Dados Específicos Desta Variação</p>
+                        <div className="mb-3">
+                            <p className="text-[10.5px] font-bold text-foreground uppercase tracking-widest flex items-center gap-2">
+                                <Tag className="h-3.5 w-3.5"/> Imagem & Dados Específicos Desta Variação
+                            </p>
+                            <p className="text-[10px] text-muted-foreground mt-1 bg-muted/50 p-1.5 rounded border border-border/50 leading-relaxed">
+                                Use esta opção se quiser que este tamanho (Copo, Jarra, etc) tenha uma <strong>foto ou descrição diferente</strong> da geral.
+                            </p>
+                        </div>
                         
                         <div className="flex gap-4">
                             <div className="relative w-max h-max">

@@ -2380,8 +2380,14 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                             let displayVarName = null;
 
                                             if (hasVariation && pModel.variations && pModel.variations[varName]) {
-                                                itemPrice = pModel.variations[varName].price;
+                                                const varData = pModel.variations[varName];
+                                                itemPrice = varData.price;
                                                 displayVarName = varName;
+                                                
+                                                if (varData.imagem_url && varData.imagem_url.trim() !== '') {
+                                                    itemImage = varData.imagem_url;
+                                                }
+
                                                 const isTaca = varName.toLowerCase().includes('taça') || varName.toLowerCase().includes('taca');
                                                 if (pModel.tipo_vinho && isTaca && wineGlassImages[pModel.tipo_vinho]) {
                                                     itemImage = wineGlassImages[pModel.tipo_vinho];
