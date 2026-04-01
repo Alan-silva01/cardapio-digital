@@ -412,7 +412,8 @@ function EditProductModal({
             setDescricao(item.descricao || "");
             setPreco(item.preco.toFixed(2));
             setEstoque(item.estoque === -1 ? "-1" : String(item.estoque));
-            setImagemUrl(item.imagem_url || "");
+            const isVariation = item.variacao_nome && item.variacao_nome !== "Única";
+            setImagemUrl(isVariation ? (item.var_imagem_url || item.imagem_url || "") : (item.imagem_url || ""));
             setVarImagemUrl(item.var_imagem_url || "");
             setVarDescricao(item.var_descricao || "");
             setCategoriaId(item.categoria_id || "");
@@ -434,13 +435,17 @@ function EditProductModal({
     async function handleSave() {
         setSaving(true);
         try {
+            const isVariation = item?.variacao_nome && item.variacao_nome !== "Única";
+            const finalParentImagemUrl = isVariation ? (item?.imagem_url || "") : imagemUrl;
+            const finalVarImagemUrl = isVariation ? imagemUrl : varImagemUrl;
+
             await onSave({
                 nome,
                 descricao,
                 preco: parseFloat(preco),
                 estoque: parseInt(estoque),
-                imagem_url: imagemUrl,
-                var_imagem_url: varImagemUrl,
+                imagem_url: finalParentImagemUrl,
+                var_imagem_url: finalVarImagemUrl,
                 var_descricao: varDescricao,
                 categoria_id: categoriaId && !categoriaNova ? categoriaId : null,
                 categoria_nova: categoriaNova || null,
@@ -476,14 +481,7 @@ function EditProductModal({
 
                 <div className="px-6 py-5 space-y-4 max-h-[70vh] overflow-y-auto">
                     {/* Product image preview and upload */}
-                    <div className="flex flex-col items-center justify-center relative w-full mx-auto mb-2">
-                        <Label className="text-xs font-bold text-muted-foreground uppercase text-center mb-2">
-                            Imagem Geral do Produto
-                            <span className="block text-[10px] font-medium text-amber-600 bg-amber-50 px-2 py-0.5 mt-1 rounded dark:bg-amber-900/30 dark:text-amber-400">
-                                Atenção: Altera a foto principal (afeta todos os tamanhos)
-                            </span>
-                        </Label>
-                        <div className="flex justify-center relative w-max mx-auto mt-1">
+                    <div className="flex justify-center relative w-max mx-auto">
                         <Label 
                             htmlFor="image-upload"
                             className={cn(
@@ -564,7 +562,6 @@ function EditProductModal({
                                 <X className="h-4 w-4" />
                             </button>
                         )}
-                        </div>
                     </div>
 
                     <div className="space-y-1.5">
@@ -784,15 +781,8 @@ function EditProductModal({
                     </div>
 
                     {/* Variação upload específico */}
-                    <div className="pt-4 border-t border-border/50 pb-2">
-                        <div className="mb-3">
-                            <p className="text-[10.5px] font-bold text-foreground uppercase tracking-widest flex items-center gap-2">
-                                <Tag className="h-3.5 w-3.5"/> Imagem & Dados Específicos Desta Variação
-                            </p>
-                            <p className="text-[10px] text-muted-foreground mt-1 bg-muted/50 p-1.5 rounded border border-border/50 leading-relaxed">
-                                Use esta opção se quiser que este tamanho (Copo, Jarra, etc) tenha uma <strong>foto ou descrição diferente</strong> da geral.
-                            </p>
-                        </div>
+                    <div className="hidden pt-4 border-t border-border/50 pb-2">
+                        <p className="text-[10.5px] font-bold text-foreground uppercase tracking-widest mb-3 flex items-center gap-2"><Tag className="h-3.5 w-3.5"/> Dados Específicos Desta Variação</p>
                         
                         <div className="flex gap-4">
                             <div className="relative w-max h-max">
@@ -1530,10 +1520,10 @@ function EstoqueContent() {
                                             <HoverCard>
                                                 <HoverCardTrigger>
                                                     <div className="w-10 aspect-[5/6] relative rounded-md overflow-hidden bg-muted/50 border cursor-pointer group">
-                                                        {item.imagem_url ? (
+                                                        {(item.var_imagem_url || item.imagem_url) ? (
                                                             <>
                                                                 <Image
-                                                                    src={item.imagem_url}
+                                                                    src={(item.var_imagem_url || item.imagem_url) as string}
                                                                     alt={item.produto_nome}
                                                                     fill
                                                                     priority={idx < 10}
@@ -1557,11 +1547,11 @@ function EstoqueContent() {
                                                         )}
                                                     </div>
                                                 </HoverCardTrigger>
-                                                {item.imagem_url && (
+                                                {(item.var_imagem_url || item.imagem_url) && (
                                                     <HoverCardContent side="right" className="w-64 p-0 rounded-xl overflow-hidden border bg-card shadow-2xl flex flex-col z-50">
                                                         <div className="relative w-full aspect-[5/6] bg-muted/50">
                                                             <Image
-                                                                src={item.imagem_url}
+                                                                src={(item.var_imagem_url || item.imagem_url) as string}
                                                                 alt={item.produto_nome}
                                                                 fill
                                                                 priority={idx < 10}
