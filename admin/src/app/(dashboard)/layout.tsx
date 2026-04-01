@@ -16,7 +16,22 @@ export default function DashboardLayout({
 }) {
     return (
         <div className="flex flex-col h-screen bg-background text-foreground overflow-hidden">
-            <Toaster theme="dark" position="bottom-right" richColors />
+            <Toaster 
+                theme="dark" 
+                position="top-center" 
+                toastOptions={{
+                    style: {
+                        background: 'rgba(0, 0, 0, 0.8)',
+                        backdropFilter: 'blur(10px)',
+                        WebkitBackdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: '24px',
+                        color: 'white',
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+                    },
+                    className: 'font-sans font-medium',
+                }}
+            />
             {/* Global sound listener for new orders - works on ALL pages */}
             <GlobalOrderNotifier />
             {/* Global sound and visual listener for table service calls */}
