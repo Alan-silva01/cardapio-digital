@@ -158,7 +158,7 @@ export default function MenuPage() {
   const nextOpeningText = statusInfo?.next_change_at;
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen w-full">
       <AnimatePresence mode="wait">
         {view === "home" ? (
           <motion.div
