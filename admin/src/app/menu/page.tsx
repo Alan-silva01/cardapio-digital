@@ -82,25 +82,40 @@ export default function MenuPage() {
     // Initial check
     checkStatus();
 
+    let debounceTimer: NodeJS.Timeout | null = null;
+    const debouncedCheck = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      // Wait 1.5s to ensure DB replica is fully updated before reading
+      debounceTimer = setTimeout(() => {
+        checkStatus();
+      }, 1500);
+    };
+
     // Realtime subscription
     const configChannel = supabase
-      .channel('menu-blocking')
+      .channel('menu-blocking-status')
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'configuracoes' },
-        () => checkStatus()
+        () => {
+          debouncedCheck();
+        }
       )
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'horarios_funcionamento' },
-        () => checkStatus()
+        () => {
+          debouncedCheck();
+        }
       )
-      .subscribe();
+      .subscribe((status) => {
+      });
 
     // Polling every 60s as fallback/clock update
     checkInterval.current = setInterval(checkStatus, 60000);
 
     return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
       if (checkInterval.current) clearInterval(checkInterval.current);
       supabase.removeChannel(configChannel);
     };
