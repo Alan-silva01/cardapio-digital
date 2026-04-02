@@ -35,6 +35,15 @@ walkthrough.md
 # Patches and temp files
 *.patch
 
+# One-shot scripts and temp data (prevent accidental commits)
+*.py
+*.cjs
+*_update.json
+*_clean.json
+*_batches.sql
+test_*.js
+query_*.js
+
 # Large reference images (keep local, don't version)
 docs/*.PNG
 
