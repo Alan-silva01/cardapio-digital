@@ -208,37 +208,45 @@ export default function MenuPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[99999] flex items-center justify-center p-4 text-center"
+            className="fixed inset-0 z-[99999] flex items-center justify-center text-center"
             style={{ 
-              backgroundColor: "rgba(0, 0, 0, 0.7)",
-              backdropFilter: "blur(10px)",
-              WebkitBackdropFilter: "blur(10px)"
+              backgroundColor: "rgba(0,0,0,0.85)",
+              backdropFilter: "blur(24px)",
+              WebkitBackdropFilter: "blur(24px)",
+              padding: "20px"
             }}
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 15 }}
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 15 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              className="relative bg-[#09090b] border border-white/10 rounded-[24px] px-6 py-14 sm:px-10 sm:py-16 w-[90%] max-w-[420px] text-center flex flex-col items-center shadow-2xl"
+              className="relative bg-[#0a0a0a] border border-white/10 rounded-[36px] flex flex-col items-center justify-center shadow-[0_30px_60px_-15px_rgba(0,0,0,1)]"
+              style={{
+                width: "90%",
+                maxWidth: "380px",
+                minHeight: "400px",
+                padding: "60px 30px",
+                boxShadow: "0 0 0 1px rgba(255,255,255,0.03) inset"
+              }}
             >
-              <div className="mb-8">
-                <Store className="w-14 h-14 text-white/90" strokeWidth={1} />
+              <div style={{ marginBottom: "32px", display: "flex", justifyContent: "center" }}>
+                <Store color="rgba(255,255,255,0.9)" size={64} strokeWidth={1} />
               </div>
               
-              <h2 className="text-[26px] font-semibold text-white tracking-tight mb-4">
+              <h2 className="font-semibold text-white tracking-tight" style={{ fontSize: "28px", marginBottom: "16px", lineHeight: "1.1" }}>
                 {statusInfo?.message === "Fechado temporariamente" ? "Fechado" : "Estamos Fechados"}
               </h2>
               
-              <p className="text-[16px] text-neutral-400 leading-relaxed mb-10 px-2 font-medium">
+              <p className="font-medium text-neutral-400" style={{ fontSize: "16px", lineHeight: "1.6", marginBottom: "0px", marginInline: "10px" }}>
                 {statusInfo?.message || "Nosso estabelecimento encontra-se fechado no momento. Agradecemos a compreensão."}
               </p>
 
               {nextOpeningText && (
-                <div className="w-full py-4 px-4 bg-white/5 border border-white/5 rounded-[16px] flex items-center justify-center gap-3">
+                <div className="w-full bg-white/5 border border-white/5 flex items-center justify-center gap-3" style={{ marginTop: "40px", padding: "18px", borderRadius: "18px" }}>
                   <Clock className="w-5 h-5 text-neutral-400" />
-                  <span className="text-[15px] font-medium text-neutral-300">
-                    Abriremos {nextOpeningText}
+                  <span className="font-medium text-neutral-300" style={{ fontSize: "15px" }}>
+                    Voltamos {nextOpeningText}
                   </span>
                 </div>
               )}
