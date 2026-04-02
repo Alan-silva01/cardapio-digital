@@ -111,8 +111,8 @@ export default function MenuPage() {
       .subscribe((status) => {
       });
 
-    // Polling every 60s as fallback/clock update
-    checkInterval.current = setInterval(checkStatus, 60000);
+    // Polling every 5s as fallback/clock update (more aggressive to guarantee real-time sync)
+    checkInterval.current = setInterval(checkStatus, 5000);
 
     return () => {
       if (debounceTimer) clearTimeout(debounceTimer);
@@ -210,36 +210,58 @@ export default function MenuPage() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[99999] flex items-center justify-center p-6 text-center"
             style={{ 
-              backgroundColor: "rgba(0, 0, 0, 0.4)",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)"
+              backgroundColor: "rgba(10, 10, 10, 0.75)",
+              backdropFilter: "blur(24px) saturate(1.5)",
+              WebkitBackdropFilter: "blur(24px) saturate(1.5)"
             }}
           >
+            {/* Glow effect behind the card */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="w-[300px] h-[300px] bg-red-500/10 rounded-full blur-[80px]" />
+            </div>
+
             <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              initial={{ scale: 0.9, opacity: 0, y: 30 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              className="bg-black/60 border border-white/10 p-10 rounded-[40px] shadow-2xl max-w-sm w-full"
+              exit={{ scale: 0.9, opacity: 0, y: 30 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="relative bg-[#111] overflow-hidden p-10 rounded-[32px] max-w-sm w-full shadow-2xl"
+              style={{
+                border: "1px solid rgba(255,255,255,0.05)",
+                boxShadow: "0 25px 50px -12px rgba(0,0,0,1), 0 0 0 1px rgba(255,255,255,0.03) inset"
+              }}
             >
-              <div className="inline-flex p-4 rounded-full bg-white/5 mb-6">
-                <Store className="w-10 h-10 text-white/50" />
-              </div>
+              {/* Subtle top glare */}
+              <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
               
-              <h2 className="text-2xl font-bold text-white mb-3">
-                {statusInfo?.message === "Fechado temporariamente" ? "Fechado para Pedidos" : "Estamos Fechados"}
+              <motion.div 
+                animate={{ scale: [1, 1.05, 1], opacity: [0.8, 1, 0.8] }} 
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="inline-flex p-5 rounded-[24px] bg-red-500/10 mb-8 border border-red-500/20"
+              >
+                <Store className="w-12 h-12 text-red-400" strokeWidth={1.5} />
+              </motion.div>
+              
+              <h2 className="text-2xl font-semibold text-white tracking-tight mb-4 text-balance">
+                {statusInfo?.message === "Fechado temporariamente" ? "Fechado Temporariamente" : "Estamos Fechados"}
               </h2>
               
-              <p className="text-gray-400 mb-8 leading-relaxed">
-                {statusInfo?.message || "Nosso estabelecimento encontra-se fechado no momento. Voltaremos em breve!"}
+              <p className="text-gray-400 text-[15px] mb-8 leading-relaxed font-normal text-balance px-2">
+                {statusInfo?.message || "Nosso estabelecimento encontra-se fechado no momento. Agradecemos a compreensão."}
               </p>
 
               {nextOpeningText && (
-                <div className="py-3 px-6 bg-white/5 rounded-2xl inline-flex items-center gap-3 border border-white/5">
-                  <Clock className="w-4 h-4 text-accent-gold" />
-                  <span className="text-sm font-medium text-white/90">
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="py-3.5 px-6 bg-white/[0.03] rounded-2xl w-full flex items-center justify-center gap-3 border border-white/[0.05]"
+                >
+                  <Clock className="w-4 h-4 text-[#CBA365]" />
+                  <span className="text-[15px] font-medium tracking-wide text-white/90">
                     Abriremos {nextOpeningText}
                   </span>
-                </div>
+                </motion.div>
               )}
             </motion.div>
           </motion.div>
