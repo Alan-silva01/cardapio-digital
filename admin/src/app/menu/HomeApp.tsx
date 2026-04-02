@@ -418,8 +418,39 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
         catRes.data.forEach((c: any) => { map[c.id] = c.nome; });
         catMapCache.current = map;
       }
+
+      // ── CAMADA 1: Persist to global cache for MenuApp instant mount ──
+      if (prodRes.data && catRes.data) {
+        (window as any).__menuDataCache = {
+          products: prodRes.data,
+          catMap: catMapCache.current,
+          timestamp: Date.now(),
+        };
+      }
     }
     fetchSearchDeps();
+  }, []);
+
+  // ── CAMADA 2: Preload category images before transition ──
+  const preloadCategoryImages = useCallback((dbCategories: string[]) => {
+    const products = allProductsCache.current;
+    const catMap = catMapCache.current;
+    if (!products.length || !Object.keys(catMap).length) return;
+
+    const catNamesLower = dbCategories.map(c => c.toLowerCase().trim());
+    const matching = products.filter(p => {
+      const catName = catMap[p.categoria_id];
+      return catName && catNamesLower.includes(catName.toLowerCase().trim());
+    });
+
+    // Preload first 6 images using optimized Cloudinary URL
+    matching.slice(0, 6).forEach(p => {
+      if (p.imagem_url && p.imagem_url.includes('res.cloudinary.com')) {
+        const optimized = p.imagem_url.replace('/upload/', '/upload/f_auto,q_auto,w_300/');
+        const img = new Image();
+        img.src = optimized;
+      }
+    });
   }, []);
 
   // Debounced product search — matches nome, subcategoria e categoria (ex: "Sucos", "Energéticos")
@@ -486,6 +517,9 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
 
   const handleCategoryTap = (cat: CategoryDef) => {
     if (cat.subs.length === 0) {
+      // Preload images before navigating
+      const dbCats = (cat.subs.length > 0 ? cat.subs.flatMap(s => s.dbCategories) : [cat.label]);
+      preloadCategoryImages(dbCats);
       onCategorySelect?.(cat.id);
     } else {
       setOpenSheet(cat);
@@ -494,6 +528,8 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
 
   const handleSubSelect = (sub: SubCategory) => {
     setOpenSheet(null);
+    // Preload images before navigating
+    preloadCategoryImages(sub.dbCategories);
     const subCatStr = Array.isArray(sub.subcategoria) ? sub.subcategoria[0] : sub.subcategoria;
     onCategorySelect?.(sub.id, sub.dbCategories, subCatStr);
   };
