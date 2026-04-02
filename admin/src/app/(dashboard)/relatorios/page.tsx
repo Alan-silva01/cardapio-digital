@@ -162,8 +162,8 @@ export default function RelatoriosPage() {
         .neq("estoque", -1)
     ]);
 
-    if (pedidosRes.data) setPedidos(pedidosRes.data);
-    if (itensRes.data) setItensPedido(itensRes.data);
+    if (pedidosRes.data) setPedidos(pedidosRes.data as unknown as PedidoRow[]);
+    if (itensRes.data) setItensPedido(itensRes.data as unknown as ItemPedidoRow[]);
     
     if (estoqueRes.data) {
       const lowStock = (estoqueRes.data as any[]).filter(item => item.estoque <= item.estoque_minimo);
@@ -192,13 +192,13 @@ export default function RelatoriosPage() {
       .limit(1);
 
     if (data && data.length > 0) {
-      setSearchResult(data[0]);
+      setSearchResult(data[0] as unknown as PedidoRow);
       // Fetch items for this pedido
       const { data: items } = await supabase
         .from("itens_pedido")
         .select("id, pedido_id, nome_produto, nome_variacao, quantidade, preco_unitario, preco_total")
         .eq("pedido_id", data[0].id);
-      setSearchItems(items || []);
+      setSearchItems((items || []) as unknown as ItemPedidoRow[]);
     } else {
       setSearchNotFound(true);
     }

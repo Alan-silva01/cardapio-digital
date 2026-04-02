@@ -32,6 +32,22 @@ interface DayProgram {
   promocoes: DayPromo[];
 }
 
+interface DBProduct {
+  id: string;
+  nome: string;
+  subcategoria: string | null;
+  grupo_id_sabor: string | null;
+  imagem_url: string | null;
+  categorias: { nome: string } | null;
+}
+
+interface DBVariant {
+  id: string;
+  produto_id: string;
+  nome: string;
+  preco: number;
+}
+
 // ─── Constants ───
 const DAY_NAMES_SHORT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 const DAY_NAMES_FULL = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
@@ -131,12 +147,12 @@ export default function ProgramacaoSemanalPage() {
   const [uploading, setUploading] = useState(false);
   const [productSearch, setProductSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [selectedProduct, setSelectedProduct] = useState<DBProduct | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Product data
-  const [produtos, setProdutos] = useState<any[]>([]);
-  const [variacoes, setVariacoes] = useState<any[]>([]);
+  const [produtos, setProdutos] = useState<DBProduct[]>([]);
+  const [variacoes, setVariacoes] = useState<DBVariant[]>([]);
 
   // Couvert (global)
   const [couvertAtivo, setCouvertAtivo] = useState(false);
@@ -194,10 +210,10 @@ export default function ProgramacaoSemanalPage() {
         setCouvertAtivo(data.couvert_ativo || false);
         setCouvertValor(data.valor_couvert || 10.0);
 
-        let prog: DayProgram[] = Array.isArray(data.programacao_semanal) ? data.programacao_semanal : [];
+        let prog: DayProgram[] = Array.isArray(data.programacao_semanal) ? (data.programacao_semanal as unknown as DayProgram[]) : [];
 
         // Format dates to local
-        prog = prog.map((p: any) => ({
+        prog = prog.map((p) => ({
           ...p,
           inicio: p.inicio?.includes("T") ? (p.inicio.includes("Z") || p.inicio.includes("+") ? formatToLocal(p.inicio) : p.inicio) : p.inicio,
           fim: p.fim?.includes("T") ? (p.fim.includes("Z") || p.fim.includes("+") ? formatToLocal(p.fim) : p.fim) : p.fim,
@@ -209,6 +225,7 @@ export default function ProgramacaoSemanalPage() {
         const todayStr = formatDateStr(new Date());
         const cleaned = prog.filter((p) => p.data >= todayStr);
         if (cleaned.length < prog.length) {
+          // @ts-expect-error JSON type mismatch
           await supabase.from("configuracoes").update({ programacao_semanal: cleaned }).eq("id", "global");
         }
 
@@ -676,14 +693,14 @@ export default function ProgramacaoSemanalPage() {
                         {/* Search dropdown */}
                         {showDropdown && productSearch.trim().length > 0 && (() => {
                           const q = productSearch.trim().toLowerCase();
-                          const filtered = produtos.filter((p: any) =>
+                          const filtered = produtos.filter((p) =>
                             (p.nome || "").toLowerCase().includes(q) ||
                             (p.subcategoria || "").toLowerCase().includes(q) ||
                             (p.categorias?.nome || "").toLowerCase().includes(q)
                           );
                           return filtered.length > 0 ? (
                             <div className="mt-1 border rounded-xl bg-card shadow-lg overflow-hidden max-h-52 overflow-y-auto z-50 relative">
-                              {filtered.map((p: any) => (
+                              {filtered.map((p) => (
                                 <button
                                   key={p.id}
                                   onClick={() => {
@@ -751,7 +768,7 @@ export default function ProgramacaoSemanalPage() {
                             )}
 
                             {(!selectedProduct.grupo_id_sabor || !currentPromo?.aplicar_grupo) && (() => {
-                              const productVars = variacoes.filter((v: any) => v.produto_id === selectedProduct.id);
+                              const productVars = variacoes.filter((v) => v.produto_id === selectedProduct.id);
                               if (productVars.length > 1) {
                                 return (
                                   <div className="mt-1.5">
@@ -762,7 +779,7 @@ export default function ProgramacaoSemanalPage() {
                                       onChange={(e) => updatePromo("variacao_id", e.target.value === "" ? null : e.target.value)}
                                     >
                                       <option value="">Todas variações</option>
-                                      {productVars.map((v: any) => (
+                                      {productVars.map((v) => (
                                         <option key={v.id} value={v.id}>{v.nome} - R$ {v.preco}</option>
                                       ))}
                                     </select>

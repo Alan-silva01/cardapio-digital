@@ -1,4 +1,5 @@
 // @ts-nocheck
+
 "use client";
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { countryFlags } from "@/lib/countryFlags";
@@ -252,13 +253,13 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
     const [novaPessoaNome, setNovaPessoaNome] = useState('');
     const [isAddMode, setIsAddMode] = useState(false);
     const [isCartPending, setIsCartPending] = useState(false);
-    const [pendingProductToAdd, setPendingProductToAdd] = useState<any>(null);
+    const [pendingProductToAdd, setPendingProductToAdd] = useState<Record<string, any>>(null);
 
     // CART TABS & HISTORY
     const [cartTab, setCartTab] = useState('carrinho'); // 'carrinho' | 'pedidos'
     const [itemObservations, setItemObservations] = useState({}); // { cartKey: 'sem cebola' }
     const [obsOpenFor, setObsOpenFor] = useState(null); // which cart item has obs input open
-    const [orderHistory, setOrderHistory] = useState<any[]>([]);
+    const [orderHistory, setOrderHistory] = useState<Record<string, any>[]>([]);
     const [isFetchingHistory, setIsFetchingHistory] = useState(false);
 
     // SERVICE BUTTONS
@@ -699,7 +700,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
     const fetchMenu = useCallback(async (isInitial = false) => {
         try {
             // ── FULL DATA CACHE: Skip ALL queries if enriched data already exists ──
-            const fullCache = (window as any).__menuFullCache;
+            const fullCache = (window as unknown as Record<string, any>).__menuFullCache;
             if (isInitial && fullCache && (Date.now() - fullCache.timestamp < 120000)) {
                 // Use cached enriched data directly — zero Supabase queries!
                 allProductsRef.current = fullCache.enrichedProducts;
@@ -744,7 +745,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
             }
 
             // ── CAMADA 1: Use cached data from HomeApp for instant first render ──
-            const globalCache = (window as any).__menuDataCache;
+            const globalCache = (window as unknown as Record<string, any>).__menuDataCache;
             let catData, prodData, varData, wineData, configData;
             let catError = null, prodError = null, varError = null, wineError = null, configError = null;
 
@@ -886,7 +887,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                         };
                     });
                     
-                    const firstVariation = Object.values(varsDict)[0] as any;
+                    const firstVariation = Object.values(varsDict)[0] as Record<string, any>;
                     defaultPrice = firstVariation.price;
                     defaultOriginalPrice = firstVariation.originalPrice;
                 }
@@ -1000,7 +1001,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
             }
             
             // ── Save full enriched data to cache for instant subsequent navigations ──
-            (window as any).__menuFullCache = {
+            (window as unknown as Record<string, any>).__menuFullCache = {
                 enrichedProducts: allProductsRef.current,
                 config: configData || null,
                 wineGlassImages: glassMapToPreload || null,
@@ -1033,14 +1034,14 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
 
     // Helper functions for pagination and initial product selection
     // DYNAMIC: uses grupo_id_sabor from DB instead of hardcoded slug checks
-    const getPrefix = useCallback((prod: any) => {
+    const getPrefix = useCallback((prod: Record<string, any>) => {
         if (!prod) return null;
         // If the product has a DB-driven flavor group, use that as the prefix key
         if (prod.grupo_id_sabor) return prod.grupo_id_sabor;
         return null;
     }, []);
 
-    const isValidMaster = useCallback((prod: any) => {
+    const isValidMaster = useCallback((prod: Record<string, any>) => {
         if (!prod) return false;
         // If DB marks this product as part of a flavor group but NOT the master, hide it from the main listing
         if (prod.grupo_id_sabor && !prod.is_master_sabor) return false;
@@ -1071,7 +1072,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                 );
             }
             setProducts(filtered);
-            const firstMasterIdx = filtered.findIndex((p: any) => isValidMaster(p));
+            const firstMasterIdx = filtered.findIndex((p: Record<string, any>) => isValidMaster(p));
             setCurrentIndex(firstMasterIdx !== -1 ? firstMasterIdx : 0);
         } else if (searchProductName) {
             const term = searchProductName.toLowerCase().trim();
@@ -1102,7 +1103,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
             }
         } else {
             setProducts(all);
-            const firstMasterIdx = all.findIndex((p: any) => isValidMaster(p));
+            const firstMasterIdx = all.findIndex((p: Record<string, any>) => isValidMaster(p));
             setCurrentIndex(firstMasterIdx !== -1 ? firstMasterIdx : 0);
         }
         setIsFiltering(false);
@@ -1248,7 +1249,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
     }, [currentIndex]);
 
     const variants = {
-        enter: ({ direction, isFood, isIce, isSkolBeats, isRedBull, isRefri, isInternalSpin, isWineSpin }: any) => {
+        enter: ({ direction, isFood, isIce, isSkolBeats, isRedBull, isRefri, isInternalSpin, isWineSpin }: Record<string, any>) => {
             const isCircular = isFood || ((isIce || isSkolBeats || isRedBull || isRefri) && isInternalSpin) || isWineSpin;
             return {
                 x: direction > 0 ? (isCircular ? 80 : 30) : (isCircular ? -80 : -30),
@@ -1264,7 +1265,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
             rotate: 0,
             opacity: 1,
         },
-        exit: ({ direction, isFood, isIce, isSkolBeats, isRedBull, isRefri, isInternalSpin, isWineSpin }: any) => {
+        exit: ({ direction, isFood, isIce, isSkolBeats, isRedBull, isRefri, isInternalSpin, isWineSpin }: Record<string, any>) => {
             const isCircular = isFood || ((isIce || isSkolBeats || isRedBull || isRefri) && isInternalSpin) || isWineSpin;
             return {
                 zIndex: 0,

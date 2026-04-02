@@ -70,19 +70,22 @@ export default function MesasPage() {
 
           totalVal = tablePedidos.reduce((acc, p) => acc + Number(p.total || 0), 0);
 
-          const earliestDate = tablePedidos.reduce((earliest, p) => 
-            p.criado_em < earliest.criado_em ? p : earliest, 
-            tablePedidos[0]
-          ).criado_em;
+          const validPedidos = tablePedidos.filter(p => p.criado_em !== null);
+          if (validPedidos.length > 0) {
+              const earliestDate = validPedidos.reduce((earliest, p) => 
+                p.criado_em! < earliest.criado_em! ? p : earliest, 
+                validPedidos[0]
+              ).criado_em;
 
-          const diffMs = Date.now() - new Date(earliestDate).getTime();
-          const diffMin = Math.floor(diffMs / 60000);
-          if (diffMin < 1) tempo = "agora";
-          else if (diffMin < 60) tempo = `${diffMin}m`;
-          else {
-            const hours = Math.floor(diffMin / 60);
-            const mins = diffMin % 60;
-            tempo = `${hours}h${mins > 0 ? `${mins}m` : ""}`;
+              const diffMs = Date.now() - new Date(earliestDate!).getTime();
+              const diffMin = Math.floor(diffMs / 60000);
+              if (diffMin < 1) tempo = "agora";
+              else if (diffMin < 60) tempo = `${diffMin}m`;
+              else {
+                const hours = Math.floor(diffMin / 60);
+                const mins = diffMin % 60;
+                tempo = `${hours}h${mins > 0 ? `${mins}m` : ""}`;
+              }
           }
         }
 

@@ -94,8 +94,8 @@ export default function DashboardPage() {
 
         const allPedidos = pedidos7dRes.data || [];
         setPedidos(allPedidos);
-        setPedidosHoje(allPedidos.filter(p => p.criado_em >= todayStart));
-        setPedidosOntem(allPedidos.filter(p => p.criado_em >= yesterdayStart && p.criado_em <= yesterdayEnd));
+        setPedidosHoje(allPedidos.filter(p => p.criado_em && p.criado_em >= todayStart));
+        setPedidosOntem(allPedidos.filter(p => p.criado_em && p.criado_em >= yesterdayStart && p.criado_em <= yesterdayEnd));
 
         if (activeMesasRes.data) {
             const initialCalls = activeMesasRes.data.flatMap(mesa => {
@@ -203,6 +203,7 @@ export default function DashboardPage() {
         });
 
         pedidosHojeAtivos.forEach(p => {
+            if (!p.criado_em) return;
             const hour = format(parseISO(p.criado_em), "HH");
             if (hourMap[hour] !== undefined) {
                 hourMap[hour]++;

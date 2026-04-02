@@ -249,7 +249,7 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
   const searchRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const [cartCount, setCartCount] = useState(0);
-  const [config, setConfig] = useState<any>(null);
+  const [config, setConfig] = useState<Record<string, any> | null>(null);
   const [showPromo, setShowPromo] = useState(false);
 
   // Fetch global settings (promo, singer, couvert)
@@ -262,9 +262,22 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
 
         // ── NEW: Check programacao_semanal for today's entry ──
         let hasNewPromos = false;
-        if (Array.isArray(data.programacao_semanal) && data.programacao_semanal.length > 0) {
+        const progSemanal = data.programacao_semanal as unknown as Array<{
+          data: string;
+          inicio?: string;
+          fim?: string;
+          atracoes?: string[];
+          promocoes?: Array<{
+             imagem_url?: string;
+             titulo?: string;
+             inicio?: string;
+             fim?: string;
+          }>;
+        }>;
+
+        if (Array.isArray(progSemanal) && progSemanal.length > 0) {
           const todayStr = nowSP.toISOString().slice(0, 10);
-          const todayEntry = data.programacao_semanal.find((entry: any) => entry.data === todayStr);
+          const todayEntry = progSemanal.find((entry) => entry.data === todayStr);
 
           if (todayEntry) {
             const start = todayEntry.inicio ? new Date(todayEntry.inicio) : null;
@@ -273,42 +286,46 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
 
             if (isTimeActive) {
               // Merge programacao_semanal data into config for consumption
-              const weekPromos = (todayEntry.promocoes || []).filter((p: any) => p.imagem_url || p.titulo);
+              const weekPromos = (todayEntry.promocoes || []).filter((p) => p.imagem_url || p.titulo);
               const weekAtracoes = (todayEntry.atracoes || []).filter(Boolean);
+
+              const configObj: Record<string, any> = { ...data };
 
               if (weekPromos.length > 0) {
                 // Inject start/end times from the day entry into each promo
-                const promosWithTimes = weekPromos.map((p: any) => ({
+                const promosWithTimes = weekPromos.map((p) => ({
                   ...p,
                   inicio: todayEntry.inicio,
                   fim: todayEntry.fim,
                 }));
-                data._weekPromos = promosWithTimes;
+                configObj._weekPromos = promosWithTimes;
                 hasNewPromos = true;
               }
 
               if (weekAtracoes.length > 0) {
-                data._weekAtracoes = weekAtracoes;
-                data._weekAtracaoInicio = todayEntry.inicio;
-                data._weekAtracaoFim = todayEntry.fim;
+                configObj._weekAtracoes = weekAtracoes;
+                configObj._weekAtracaoInicio = todayEntry.inicio;
+                configObj._weekAtracaoFim = todayEntry.fim;
               }
 
-              setConfig({ ...data });
+              setConfig(configObj);
             }
           }
 
           // Auto-clean expired days
           const todayClean = nowSP.toISOString().slice(0, 10);
-          const remaining = data.programacao_semanal.filter((entry: any) => entry.data >= todayClean);
-          if (remaining.length < data.programacao_semanal.length) {
-            await supabase.from("configuracoes").update({ programacao_semanal: remaining }).eq("id", "global");
+          const remaining = progSemanal.filter((entry) => entry.data >= todayClean);
+          if (remaining.length < progSemanal.length) {
+            // @ts-expect-error JSON compatibility from strictly typed array
+            await supabase.from("configuracoes").update({ programacao_semanal: remaining as unknown }).eq("id", "global");
           }
         }
 
         // ── LEGACY: Check old promos array (fallback) ──
-        if (!hasNewPromos && data.promocao_ativa && Array.isArray(data.promocoes) && data.promocoes.length > 0) {
+        const configPromocoes = data.promocoes as unknown as Array<{ imagem_url?: string; inicio?: string; fim?: string; }>;
+        if (!hasNewPromos && data.promocao_ativa && Array.isArray(configPromocoes) && configPromocoes.length > 0) {
           const activeOnes: any[] = [];
-          const hasExpired = data.promocoes.some((p: any) => {
+          const hasExpired = configPromocoes.some((p) => {
             if (!p.imagem_url) return false;
             const start = p.inicio ? new Date(p.inicio) : null;
             const end = p.fim ? new Date(p.fim) : null;
@@ -318,7 +335,7 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
           });
 
           if (hasExpired) {
-            const rem = data.promocoes.filter((p: any) => {
+            const rem = configPromocoes.filter((p) => {
               const end = p.fim ? new Date(p.fim) : null;
               return !end || nowSP <= end;
             });
@@ -412,10 +429,10 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
           .eq("disponivel", true),
         supabase.from("categorias").select("id, nome"),
       ]);
-      if (prodRes.data) allProductsCache.current = prodRes.data;
+      if (prodRes.data) allProductsCache.current = prodRes.data as unknown as any[];
       if (catRes.data) {
         const map: Record<string, string> = {};
-        catRes.data.forEach((c: any) => { map[c.id] = c.nome; });
+        catRes.data.forEach((c) => { map[c.id] = c.nome; });
         catMapCache.current = map;
       }
 

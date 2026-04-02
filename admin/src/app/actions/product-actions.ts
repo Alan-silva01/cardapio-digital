@@ -47,9 +47,16 @@ export async function saveProductAction(rawData: any, isCreating: boolean, editi
     let finalCatId = data.categoria_id;
 
     if (data.categoria_nova) {
+        const generatedCatSlug = data.categoria_nova
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/(^-|-$)/g, "");
+
         const { data: newCat, error: catError } = await supabase
             .from("categorias")
-            .insert({ nome: data.categoria_nova, ativo: true })
+            .insert({ nome: data.categoria_nova, ativo: true, slug: generatedCatSlug })
             .select("id")
             .single();
         if (newCat) finalCatId = newCat.id;
@@ -102,8 +109,8 @@ export async function saveProductAction(rawData: any, isCreating: boolean, editi
             .insert({
                 produto_id: newProd.id,
                 nome: "Única",
-                preco: data.preco,
-                estoque: data.estoque,
+                preco: data.preco || 0,
+                estoque: data.estoque || 0,
                 imagem_url: data.var_imagem_url || "",
                 descricao: data.var_descricao || "",
                 ativo: true
@@ -139,8 +146,8 @@ export async function saveProductAction(rawData: any, isCreating: boolean, editi
         const { error: varError } = await supabase
             .from("variacoes_produto")
             .update({
-                preco: data.preco,
-                estoque: data.estoque,
+                preco: data.preco || 0,
+                estoque: data.estoque || 0,
                 imagem_url: data.var_imagem_url,
                 descricao: data.var_descricao
             })

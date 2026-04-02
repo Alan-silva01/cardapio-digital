@@ -462,9 +462,10 @@ function EditProductModal({
                 is_master_sabor: isMasterSabor,
             });
             onClose();
-        } catch (err: any) {
-            console.error("Erro ao salvar:", err);
-            alert("Erro ao salvar: " + (err.message || "Verifique os dados e tente novamente."));
+        } catch (err) {
+            const error = err as Error;
+            console.error("Erro ao salvar:", error);
+            alert("Erro ao salvar: " + (error.message || "Verifique os dados e tente novamente."));
         } finally {
             setSaving(false);
         }
@@ -962,7 +963,7 @@ function EstoqueContent() {
         isOpen: boolean;
         whiskeyName: string;
         whiskeyId: string;
-        combos: { id: string; nome: string; disponivel: boolean }[];
+        combos: { id: string; nome: string; disponivel: boolean | null }[];
         targetStatus: boolean;
         isToggling: boolean;
     }>({
@@ -983,7 +984,7 @@ function EstoqueContent() {
             .from("tipos_vinho")
             .select("tipo, imagem_taca_url");
 
-        const wineGlassMap = new Map((wineTypesData || []).map((tw: any) => [tw.tipo, tw.imagem_taca_url]));
+        const wineGlassMap = new Map((wineTypesData || []).map(tw => [tw.tipo, tw.imagem_taca_url]));
 
         const { data, error } = await supabase
             .from("variacoes_produto")
@@ -1028,40 +1029,42 @@ function EstoqueContent() {
             return;
         }
 
-        const mapped: StockItem[] = (data || []).map((v: any) => {
-            let finalImageUrl = v.produtos.imagem_url;
+        const mapped: StockItem[] = (data || []).map((v) => {
+            let finalImageUrl: string | null = (v.produtos as unknown as { imagem_url: string | null }).imagem_url;
             if (v.imagem_url && v.imagem_url.trim() !== '') {
                 finalImageUrl = v.imagem_url;
-            } else if (v.nome === "Taça" && v.produtos.tipo_vinho && wineGlassMap.has(v.produtos.tipo_vinho)) {
-                finalImageUrl = wineGlassMap.get(v.produtos.tipo_vinho);
+            } else if (v.nome === "Taça" && (v.produtos as unknown as { tipo_vinho: string | null }).tipo_vinho && wineGlassMap.has((v.produtos as unknown as { tipo_vinho: string | null }).tipo_vinho!)) {
+                finalImageUrl = wineGlassMap.get((v.produtos as unknown as { tipo_vinho: string | null }).tipo_vinho!) || null;
             }
+
+            const prod = v.produtos as unknown as any;
 
             return {
                 variacao_id: v.id,
                 variacao_nome: v.nome,
                 preco: Number(v.preco),
-                estoque: v.estoque,
-                estoque_minimo: v.estoque_minimo,
-                produto_id: v.produtos.id,
-                produto_nome: v.produtos.nome,
+                estoque: v.estoque ?? 0,
+                estoque_minimo: v.estoque_minimo ?? 0,
+                produto_id: prod.id,
+                produto_nome: prod.nome,
                 imagem_url: finalImageUrl,
                 var_imagem_url: v.imagem_url,
                 var_descricao: v.descricao,
-                disponivel: v.produtos.disponivel,
-                categoria_id: v.produtos.categoria_id,
-                categoria_nome: v.produtos.categorias?.nome || "Sem Categoria",
-                tipo_vinho: v.produtos.tipo_vinho,
-                pais_origem: v.produtos.pais_origem,
-                descricao: v.produtos.descricao,
-                teor_alcolico: v.produtos.teor_alcolico,
-                volume_ml: v.produtos.volume_ml,
-                serve_pessoas: v.produtos.serve_pessoas,
-                ml_taca: v.produtos.ml_taca,
-                subcategoria: v.produtos.subcategoria,
-                rating: v.produtos.rating,
-                grupo_id_sabor: v.produtos.grupo_id_sabor || null,
-                nome_curto_sabor: v.produtos.nome_curto_sabor || null,
-                is_master_sabor: v.produtos.is_master_sabor || false,
+                disponivel: prod.disponivel ?? false,
+                categoria_id: prod.categoria_id,
+                categoria_nome: prod.categorias?.nome || "Sem Categoria",
+                tipo_vinho: prod.tipo_vinho,
+                pais_origem: prod.pais_origem,
+                descricao: prod.descricao,
+                teor_alcolico: prod.teor_alcolico,
+                volume_ml: prod.volume_ml,
+                serve_pessoas: prod.serve_pessoas,
+                ml_taca: prod.ml_taca,
+                subcategoria: prod.subcategoria,
+                rating: prod.rating,
+                grupo_id_sabor: prod.grupo_id_sabor || null,
+                nome_curto_sabor: prod.nome_curto_sabor || null,
+                is_master_sabor: prod.is_master_sabor || false,
             };
         });
 
@@ -1316,9 +1319,10 @@ function EstoqueContent() {
                 setItemToDelete(null);
                 await fetchStock();
             }
-        } catch (err: any) {
-            console.error("Erro ao excluir produto:", err);
-            alert("Erro ao excluir: " + (err.message || "Tente novamente."));
+        } catch (err) {
+            const error = err as Error;
+            console.error("Erro ao excluir produto:", error);
+            alert("Erro ao excluir: " + (error.message || "Tente novamente."));
         } finally {
             setIsDeleting(false);
         }

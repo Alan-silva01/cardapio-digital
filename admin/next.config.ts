@@ -1,10 +1,6 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-    typescript: {
-        // Allow the untyped menu JSX port to build successfully
-        ignoreBuildErrors: true,
-    },
     experimental: {
         serverActions: {
             bodySizeLimit: '5mb',

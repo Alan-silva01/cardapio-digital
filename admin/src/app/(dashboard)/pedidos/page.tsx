@@ -306,7 +306,7 @@ export default function PedidosPage() {
     if (mesasData) {
       const statuses: Record<number, { garcom: boolean, conta: boolean }> = {};
       mesasData.forEach((m) => {
-        statuses[m.numero] = { garcom: m.chamando_garcom, conta: m.solicitando_conta };
+        statuses[m.numero] = { garcom: m.chamando_garcom || false, conta: m.solicitando_conta || false };
       });
       setMesasStatus(statuses);
     }
@@ -611,9 +611,10 @@ export default function PedidosPage() {
 
   const handleRemoveItem = async (itemId: string, comandaId: string) => {
     const { data, error } = await supabase.rpc("remover_item_comanda", { p_item_id: itemId });
-    if (error || (data && !data.success)) {
-      console.error("Erro ao remover item:", error || data?.message);
-      alert("Erro ao remover o item: " + (error?.message || data?.message));
+    const rd = data as Record<string, any>;
+    if (error || (rd && !rd.success)) {
+      console.error("Erro ao remover item:", error || rd?.message);
+      alert("Erro ao remover o item: " + (error?.message || rd?.message));
     } else {
       fetchPedidos();
     }
@@ -634,15 +635,17 @@ export default function PedidosPage() {
       p_comanda_id: comandaId,
       p_nome_pessoa: nomePessoa,
       p_produto_id: produtoId,
-      p_variacao_id: variacaoId,
+      p_variacao_id: variacaoId as string,
       p_quantidade: quantidade,
       p_observacao: observacao,
     });
 
-    if (error || (data && !data.success)) {
-      console.error("Erro ao adicionar produto:", error || data?.message);
+    const rd = data as Record<string, any>;
+
+    if (error || (rd && !rd.success)) {
+      console.error("Erro ao adicionar produto:", error || rd?.message);
       skipNextSoundRef.current = false; // reset on error
-      alert("Erro ao adicionar o produto: " + (error?.message || data?.message));
+      alert("Erro ao adicionar o produto: " + (error?.message || rd?.message));
     } else {
       fetchPedidos();
     }
@@ -744,7 +747,7 @@ export default function PedidosPage() {
     // DB: update all pedidos matching this comanda + person to 'entregue'
     const { error } = await supabase
       .from("pedidos")
-      .update({ status: "entregue", forma_pagamento: forma })
+      .update({ status: "entregue", forma_pagamento: forma as unknown as null })
       .eq("comanda_id", comandaId)
       .eq("nome_pessoa", nomePessoa);
 
@@ -803,7 +806,7 @@ export default function PedidosPage() {
     // DB: update all pedidos in this comanda to 'entregue'
     const { error } = await supabase
       .from("pedidos")
-      .update({ status: "entregue", forma_pagamento: forma })
+      .update({ status: "entregue", forma_pagamento: forma as unknown as null })
       .eq("comanda_id", comandaId);
 
     if (error) {
