@@ -210,9 +210,9 @@ export default function MenuPage() {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[99999] flex items-center justify-center p-4 text-center"
             style={{ 
-              backgroundColor: "rgba(0, 0, 0, 0.6)",
-              backdropFilter: "blur(12px)",
-              WebkitBackdropFilter: "blur(12px)"
+              backgroundColor: "rgba(0, 0, 0, 0.7)",
+              backdropFilter: "blur(10px)",
+              WebkitBackdropFilter: "blur(10px)"
             }}
           >
             <motion.div
@@ -220,27 +220,24 @@ export default function MenuPage() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 15 }}
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              className="relative bg-[#0a0a0a] border border-white/10 rounded-2xl p-6 md:p-8 w-full max-w-[340px] text-center flex flex-col items-center justify-center shadow-2xl"
-              style={{
-                boxShadow: "0 20px 40px -10px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.03) inset"
-              }}
+              className="relative bg-[#09090b] border border-white/10 rounded-xl p-8 sm:p-10 w-[90%] max-w-[400px] text-center flex flex-col items-center shadow-2xl"
             >
-              <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-5">
-                <Store className="w-5 h-5 text-neutral-400" strokeWidth={1.5} />
+              <div className="mb-6">
+                <Store className="w-12 h-12 text-white/90" strokeWidth={1} />
               </div>
               
-              <h2 className="text-xl font-semibold text-neutral-100 tracking-tight mb-2">
-                {statusInfo?.message === "Fechado temporariamente" ? "Fechado Temporariamente" : "Estamos Fechados"}
+              <h2 className="text-[22px] font-semibold text-white tracking-tight mb-3">
+                {statusInfo?.message === "Fechado temporariamente" ? "Fechado" : "Estamos Fechados"}
               </h2>
               
-              <p className="text-[14px] text-neutral-400 leading-relaxed mb-6 px-1">
+              <p className="text-[15px] text-neutral-400 leading-relaxed mb-8 px-2 font-medium">
                 {statusInfo?.message || "Nosso estabelecimento encontra-se fechado no momento. Agradecemos a compreensão."}
               </p>
 
               {nextOpeningText && (
-                <div className="w-full py-3 px-4 bg-white/[0.03] border border-white/5 rounded-xl flex items-center justify-center gap-2">
+                <div className="w-full py-4 px-4 bg-white/5 border border-white/5 rounded-lg flex items-center justify-center gap-2">
                   <Clock className="w-4 h-4 text-neutral-400" />
-                  <span className="text-[13px] font-medium text-neutral-300">
+                  <span className="text-[14px] font-medium text-neutral-300">
                     Abriremos {nextOpeningText}
                   </span>
                 </div>
