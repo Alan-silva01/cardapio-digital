@@ -1249,8 +1249,8 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
     }, [currentIndex]);
 
     const variants = {
-        enter: ({ direction, isFood, isIce, isSkolBeats, isRedBull, isRefri, isInternalSpin, isWineSpin }: Record<string, any>) => {
-            const isCircular = isFood || ((isIce || isSkolBeats || isRedBull || isRefri) && isInternalSpin) || isWineSpin;
+        enter: ({ direction, isFood, isInternalSpin }: Record<string, any>) => {
+            const isCircular = isFood || isInternalSpin;
             return {
                 x: direction > 0 ? (isCircular ? 80 : 30) : (isCircular ? -80 : -30),
                 y: isCircular ? 30 : 0,
@@ -1265,8 +1265,8 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
             rotate: 0,
             opacity: 1,
         },
-        exit: ({ direction, isFood, isIce, isSkolBeats, isRedBull, isRefri, isInternalSpin, isWineSpin }: Record<string, any>) => {
-            const isCircular = isFood || ((isIce || isSkolBeats || isRedBull || isRefri) && isInternalSpin) || isWineSpin;
+        exit: ({ direction, isFood, isInternalSpin }: Record<string, any>) => {
+            const isCircular = isFood || isInternalSpin;
             return {
                 zIndex: 0,
                 x: direction < 0 ? (isCircular ? 80 : 30) : (isCircular ? -80 : -30),
@@ -1417,10 +1417,10 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
 
             {/* ANIMATED HERO SECTION */}
             <div className="hero">
-                <AnimatePresence initial={false} custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-'), isSkolBeats: currentProduct?.slug?.startsWith('skol-beats-'), isRedBull: currentProduct?.slug?.startsWith('red-bull-'), isRefri: currentProduct?.slug?.startsWith('refri-') || currentProduct?.slug?.startsWith('refri220-') || currentProduct?.slug?.startsWith('suco1l-'), isInternalSpin, isWineSpin: isInternalSpin && currentProduct?.category && /vinho|combo/.test(currentProduct?.category?.toLowerCase()) }}>
+                <AnimatePresence initial={false} custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isInternalSpin }}>
                     <motion.div
                         key={`${currentProduct.id}-${selectedVariation || ''}`}
-                        custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isIce: currentProduct?.slug?.startsWith('ice-'), isSkolBeats: currentProduct?.slug?.startsWith('skol-beats-'), isRedBull: currentProduct?.slug?.startsWith('red-bull-'), isRefri: currentProduct?.slug?.startsWith('refri-') || currentProduct?.slug?.startsWith('refri220-') || currentProduct?.slug?.startsWith('suco1l-'), isInternalSpin, isWineSpin: isInternalSpin && currentProduct?.category && /vinho|combo/.test(currentProduct?.category?.toLowerCase()) }}
+                        custom={{ direction, isFood: currentProduct?.category === 'Petiscos', isInternalSpin }}
                         variants={variants}
                         initial="enter"
                         animate="center"
