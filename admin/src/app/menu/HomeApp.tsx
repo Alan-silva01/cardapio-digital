@@ -443,10 +443,10 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
       return catName && catNamesLower.includes(catName.toLowerCase().trim());
     });
 
-    // Preload first 6 images using optimized Cloudinary URL
+    // Preload first 6 images using optimized Cloudinary URL (AVIF for smallest size)
     matching.slice(0, 6).forEach(p => {
       if (p.imagem_url && p.imagem_url.includes('res.cloudinary.com')) {
-        const optimized = p.imagem_url.replace('/upload/', '/upload/f_auto,q_auto,w_300/');
+        const optimized = p.imagem_url.replace('/upload/', '/upload/f_avif,q_auto,w_300/');
         const img = new Image();
         img.src = optimized;
       }

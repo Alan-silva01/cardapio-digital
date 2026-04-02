@@ -68,19 +68,20 @@ function NavItem({
 }
 
 // Cloudinary URL optimizer: injects format/quality/width transforms
+// Uses AVIF for ~50% smaller files vs WebP (all modern browsers support it)
 const optimizeCloudinaryUrl = (url, width = 300) => {
     if (!url || !url.includes('res.cloudinary.com')) return url;
-    // Avoid double-transform: if already has /upload/f_auto or similar, skip
-    if (url.includes('/upload/f_auto') || url.includes('/upload/q_auto') || url.includes('/upload/w_')) return url;
-    return url.replace('/upload/', `/upload/f_auto,q_auto,w_${width}/`);
+    // Avoid double-transform: if already has transforms, skip
+    if (url.includes('/upload/f_') || url.includes('/upload/q_') || url.includes('/upload/w_')) return url;
+    return url.replace('/upload/', `/upload/f_avif,q_auto,w_${width}/`);
 };
 
-// LQIP: Generate ultra-tiny blur placeholder URL from Cloudinary (≈600 bytes)
+// LQIP: Generate ultra-tiny blur placeholder URL from Cloudinary (≈400 bytes with AVIF)
 const getLqipUrl = (url) => {
     if (!url || !url.includes('res.cloudinary.com')) return null;
     // Strip existing transforms and add tiny blur
     const clean = url.replace(/\/upload\/[^/]*\//, '/upload/');
-    return clean.replace('/upload/', '/upload/f_auto,q_auto:low,w_30,e_blur:800/');
+    return clean.replace('/upload/', '/upload/f_avif,q_auto:low,w_30,e_blur:800/');
 };
 
 // HEART BURST PARTICLE COMPONENT
@@ -683,6 +684,51 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
     };
     const fetchMenu = useCallback(async (isInitial = false) => {
         try {
+            // ── FULL DATA CACHE: Skip ALL queries if enriched data already exists ──
+            const fullCache = (window as any).__menuFullCache;
+            if (isInitial && fullCache && (Date.now() - fullCache.timestamp < 120000)) {
+                // Use cached enriched data directly — zero Supabase queries!
+                allProductsRef.current = fullCache.enrichedProducts;
+                if (fullCache.config) setConfig(fullCache.config);
+                if (fullCache.wineGlassImages) setWineGlassImages(fullCache.wineGlassImages);
+
+                const currentFilters = prevFilterRef.current.filterCategories;
+                const currentSubcat = prevFilterRef.current.filterSubcategoria;
+                const currentSearch = prevFilterRef.current.searchProductName;
+
+                if (currentFilters && currentFilters.length > 0) {
+                    const sanitizedFilters = currentFilters.map(f => f.normalize("NFC").toLowerCase().trim());
+                    let filtered = fullCache.enrichedProducts.filter(p => p.category && sanitizedFilters.includes(p.category.normalize("NFC").toLowerCase().trim()));
+                    if (currentSubcat) {
+                        const targetSubs = Array.isArray(currentSubcat)
+                            ? currentSubcat.map(s => s.normalize("NFC").toLowerCase().trim())
+                            : [currentSubcat.normalize("NFC").toLowerCase().trim()];
+                        filtered = filtered.filter(p => p.subcategoria && targetSubs.includes(p.subcategoria.normalize("NFC").toLowerCase().trim()));
+                    }
+                    setProducts(filtered);
+                } else if (currentSearch) {
+                    const term = currentSearch.toLowerCase().trim();
+                    const termNoSpace = term.replace(/\s+/g, "");
+                    const matchedProduct = fullCache.enrichedProducts.find(p => {
+                        if (!p.name) return false;
+                        const n = p.name.toLowerCase();
+                        return n.includes(term) || n.replace(/\s+/g, "").includes(termNoSpace);
+                    });
+                    if (matchedProduct) {
+                        const categoryProducts = fullCache.enrichedProducts.filter(p => p.category === matchedProduct.category);
+                        setProducts(categoryProducts);
+                        const targetIdx = categoryProducts.findIndex(p => p.id === matchedProduct.id);
+                        setCurrentIndex(targetIdx !== -1 ? targetIdx : 0);
+                    } else {
+                        setProducts(fullCache.enrichedProducts);
+                    }
+                } else {
+                    setProducts(fullCache.enrichedProducts);
+                }
+                setLoading(false);
+                return; // Fully served from cache!
+            }
+
             // ── CAMADA 1: Use cached data from HomeApp for instant first render ──
             const globalCache = (window as any).__menuDataCache;
             let catData, prodData, varData, wineData, configData;
@@ -939,6 +985,14 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                 setProducts(enrichedProducts);
             }
             
+            // ── Save full enriched data to cache for instant subsequent navigations ──
+            (window as any).__menuFullCache = {
+                enrichedProducts: allProductsRef.current,
+                config: configData || null,
+                wineGlassImages: glassMapToPreload || null,
+                timestamp: Date.now(),
+            };
+
         } catch (error) {
             console.error('Error fetching menu from Supabase:', error);
         } finally {
