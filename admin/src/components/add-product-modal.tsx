@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, Loader2, Plus, Minus, UserCircle } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { Separator } from "@/components/ui/separator";
 
 interface AddProductModalProps {
@@ -37,6 +37,7 @@ export function AddProductModal({
   defaultPessoa,
   onAdd,
 }: AddProductModalProps) {
+  const supabase = useMemo(() => createClient(), []);
   const [loadingDb, setLoadingDb] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 

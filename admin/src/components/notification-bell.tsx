@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, UtensilsCrossed, HandHelping, Receipt, X, ArrowRight } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -32,6 +32,7 @@ const TYPE_META: Record<NotificationType, { icon: React.ElementType; color: stri
 
 export function NotificationBell() {
     const router = useRouter();
+    const supabase = useMemo(() => createClient(), []);
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [open, setOpen] = useState(false);
     const mesasStateRef = useRef<Record<number, { garcom: boolean; conta: boolean }>>({});
@@ -59,8 +60,8 @@ export function NotificationBell() {
             .on(
                 "postgres_changes",
                 { event: "INSERT", schema: "public", table: "pedidos" },
-                (payload) => {
-                    const mesa = payload.new?.mesa_numero ?? payload.new?.mesa ?? "?";
+                (payload: { new: Record<string, unknown> }) => {
+                    const mesa = (payload.new?.mesa_numero ?? payload.new?.mesa ?? "?") as string | number;
                     addNotification({
                         type: "pedido",
                         label: `Novo pedido na Mesa ${mesa}`,
@@ -70,7 +71,7 @@ export function NotificationBell() {
             )
             .subscribe();
         return () => { supabase.removeChannel(channel); };
-    }, [addNotification]);
+    }, [supabase, addNotification]);
 
     // Listen for table service calls (mesas UPDATE)
     useEffect(() => {
@@ -79,8 +80,8 @@ export function NotificationBell() {
             .on(
                 "postgres_changes",
                 { event: "UPDATE", schema: "public", table: "mesas" },
-                (payload) => {
-                    const mesa = payload.new;
+                (payload: { new: Record<string, unknown> }) => {
+                    const mesa = payload.new as { numero: number; chamando_garcom: boolean; solicitando_conta: boolean };
                     const prev = mesasStateRef.current[mesa.numero] || { garcom: false, conta: false };
 
                     if (mesa.chamando_garcom && !prev.garcom) {
@@ -106,7 +107,7 @@ export function NotificationBell() {
             )
             .subscribe();
         return () => { supabase.removeChannel(channel); };
-    }, [addNotification]);
+    }, [supabase, addNotification]);
 
     const unreadCount = notifications.filter((n) => !n.read).length;
 

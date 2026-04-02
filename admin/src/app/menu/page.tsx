@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase/client";
 import { Store, Clock, Loader2 } from "lucide-react";
 
 const HomeApp = dynamic(() => import("./HomeApp"), {
@@ -54,6 +54,7 @@ const pageTransition = {
 };
 
 export default function MenuPage() {
+  const supabase = useMemo(() => createClient(), []);
   const [view, setView] = useState<"home" | "menu">("home");
   const [activeTab, setActiveTab] = useState<"menu" | "sacola" | "pedidos">("menu");
   const [filterCategories, setFilterCategories] = useState<string[] | null>(null);

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { useEffect, useMemo } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { useNotificationSound } from "@/hooks/useNotificationSound";
 
 /**
@@ -10,6 +10,7 @@ import { useNotificationSound } from "@/hooks/useNotificationSound";
  */
 export function GlobalOrderNotifier() {
     const { playSound } = useNotificationSound();
+    const supabase = useMemo(() => createClient(), []);
 
     useEffect(() => {
         const channel = supabase
@@ -17,7 +18,7 @@ export function GlobalOrderNotifier() {
             .on(
                 "postgres_changes",
                 { event: "INSERT", schema: "public", table: "pedidos" },
-                (payload: any) => {
+                (payload: { new: { nome_pessoa?: string } }) => {
                     const isCouvert = payload.new?.nome_pessoa === "Couvert";
                     if (!isCouvert) {
                         playSound();
@@ -29,7 +30,7 @@ export function GlobalOrderNotifier() {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [playSound]);
+    }, [supabase, playSound]);
 
     // Renders nothing — purely a side-effect component
     return null;

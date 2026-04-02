@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
+import { useEffect, useRef, useCallback, useMemo } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 /**
  * HIGH-PERFORMANCE Global Service Notifier (v2 — Lazy + Background Preload)
@@ -24,13 +24,26 @@ const BATCH_SIZE = 3;
 const BATCH_DELAY_MS = 800;
 const PRELOAD_START_DELAY_MS = 5000;
 
+interface AudioAlert {
+    mesa_numero: number;
+    tipo: string;
+    audio_url: string;
+}
+
+interface MesaRow {
+    numero: number;
+    chamando_garcom: boolean;
+    solicitando_conta: boolean;
+}
+
 export function GlobalServiceNotifier() {
+    const supabase = useMemo(() => createClient(), []);
     const audioCtxRef = useRef<AudioContext | null>(null);
     const buffersRef = useRef<Map<string, AudioBuffer>>(new Map());
     const isUnlockedRef = useRef(false);
     const playingRef = useRef<Set<string>>(new Set());
     const mesasStateRef = useRef<Record<number, { garcom: boolean; conta: boolean }>>({});
-    const alertsRawRef = useRef<any[]>([]);
+    const alertsRawRef = useRef<AudioAlert[]>([]);
 
     // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -61,7 +74,7 @@ export function GlobalServiceNotifier() {
 
     /** Background preload: batches of BATCH_SIZE with delays between each batch */
     const backgroundPreload = useCallback(
-        async (alerts: any[]) => {
+        async (alerts: AudioAlert[]) => {
             const uncached = alerts.filter(
                 (a) => !buffersRef.current.has(cacheKey(a.mesa_numero, a.tipo))
             );
@@ -138,7 +151,7 @@ export function GlobalServiceNotifier() {
                 .select("numero, chamando_garcom, solicitando_conta");
             if (mesasData) {
                 const state: Record<number, { garcom: boolean; conta: boolean }> = {};
-                mesasData.forEach((m) => {
+                (mesasData as MesaRow[]).forEach((m) => {
                     state[m.numero] = {
                         garcom: !!m.chamando_garcom,
                         conta: !!m.solicitando_conta,
@@ -170,7 +183,7 @@ export function GlobalServiceNotifier() {
             clearTimeout(preloadTimer);
             supabase.removeChannel(audioChannel);
         };
-    }, [backgroundPreload]);
+    }, [supabase, backgroundPreload]);
 
     // ── Play Logic ──────────────────────────────────────────────────────
 
@@ -265,8 +278,8 @@ export function GlobalServiceNotifier() {
             .on(
                 "postgres_changes",
                 { event: "UPDATE", schema: "public", table: "mesas" },
-                (payload) => {
-                    const newMesa = payload.new;
+                (payload: { new: Record<string, unknown> }) => {
+                    const newMesa = payload.new as unknown as MesaRow;
                     const prevState = mesasStateRef.current[newMesa.numero] || {
                         garcom: false,
                         conta: false,
@@ -290,7 +303,7 @@ export function GlobalServiceNotifier() {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [playAlert]);
+    }, [supabase, playAlert]);
 
     return null;
 }
