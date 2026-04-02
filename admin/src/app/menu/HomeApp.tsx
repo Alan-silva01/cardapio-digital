@@ -992,23 +992,25 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
                     onClick={prevPromo}
                     style={{
                       position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)',
-                      width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.9)',
+                      width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.95)',
                       boxShadow: '0 4px 12px rgba(0,0,0,0.15)', border: 'none', display: 'flex',
-                      alignItems: 'center', justifyContent: 'center', zIndex: 20, cursor: 'pointer'
+                      alignItems: 'center', justifyContent: 'center', zIndex: 20, cursor: 'pointer',
+                      color: '#111827'
                     }}
                   >
-                    <ChevronRight size={20} style={{ transform: 'rotate(180deg)' }} />
+                    <ChevronRight size={24} color="#111827" style={{ transform: 'rotate(180deg)' }} />
                   </button>
                   <button
                     onClick={nextPromo}
                     style={{
                       position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)',
-                      width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.9)',
+                      width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.95)',
                       boxShadow: '0 4px 12px rgba(0,0,0,0.15)', border: 'none', display: 'flex',
-                      alignItems: 'center', justifyContent: 'center', zIndex: 20, cursor: 'pointer'
+                      alignItems: 'center', justifyContent: 'center', zIndex: 20, cursor: 'pointer',
+                      color: '#111827'
                     }}
                   >
-                    <ChevronRight size={20} />
+                    <ChevronRight size={24} color="#111827" />
                   </button>
                 </>
               )}
