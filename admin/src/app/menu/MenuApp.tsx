@@ -182,7 +182,7 @@ const OptimizedImage = ({ src, alt, style = {}, isUnavailable = false }: { src: 
 };
 
 
-const App = ({ filterCategories = null, filterSubcategoria = null, searchProductName = null, onBack = null, isActive = true, activeTab = 'menu', onTabChange = null }) => {
+const App = ({ filterCategories = null, filterSubcategoria = null, searchProductName = null, onBack = null, isActive = true, activeTab = 'menu', onTabChange = null, isClosed = false }) => {
     const [products, setProducts] = useState([]);
     const allProductsRef = useRef([]);
     const [loading, setLoading] = useState(true);
@@ -279,6 +279,16 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
             setIsCartOpen(false);
         }
     }, [activeTab]);
+
+    // REACT TO ESTABLISHMENT CLOSED
+    useEffect(() => {
+        if (isClosed) {
+            setIsCartOpen(false);
+            setIsPeopleDrawerOpen(false);
+            setObsOpenFor(null);
+            setIsCartPending(false);
+        }
+    }, [isClosed]);
 
     // PERSIST PERSON ON DEVICE
     useEffect(() => {
@@ -485,6 +495,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
 
     // CHECKOUT LOGIC — Secure: uses server-side RPC for price validation
     const handleCheckout = async () => {
+        if (isClosed) return;
         if (Object.keys(cart).length === 0 || isCheckingOut) return;
         setIsCheckingOut(true);
 
@@ -538,6 +549,9 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
             if (result && result.error) {
                 alert(result.error);
                 setIsCheckingOut(false);
+                if (result.closed) {
+                    setIsCartOpen(false);
+                }
                 return;
             }
 

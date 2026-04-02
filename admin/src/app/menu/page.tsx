@@ -195,6 +195,7 @@ export default function MenuPage() {
               onBack={handleBackToHome}
               activeTab={activeTab}
               onTabChange={handleTabChange}
+              isClosed={isClosed}
             />
           </motion.div>
         )}
