@@ -113,17 +113,28 @@ const HeartParticle = ({ x, y, onComplete }) => {
 
 // OPTIMIZED IMAGE: Shows blur placeholder instantly, then fades in full image
 const OptimizedImage = ({ src, alt, style = {}, isUnavailable = false }: { src: string; alt: string; style?: React.CSSProperties; isUnavailable?: boolean }) => {
-    const [loaded, setLoaded] = useState(false);
+    // Check browser cache synchronously to avoid flash for cached images
+    const [loaded, setLoaded] = useState(() => {
+        if (typeof window === 'undefined') return false;
+        const probe = new window.Image();
+        probe.src = src;
+        return probe.complete && probe.naturalWidth > 0;
+    });
     const lqip = getLqipUrl(src);
-    const imgRef = useRef<HTMLImageElement>(null);
+    const prevSrc = useRef(src);
 
-    useEffect(() => {
-        setLoaded(false);
-        // Check if image is already cached by browser
-        if (imgRef.current?.complete && imgRef.current?.naturalWidth > 0) {
-            setLoaded(true);
+    // Only reset loaded state when src actually changes
+    if (src !== prevSrc.current) {
+        prevSrc.current = src;
+        // Synchronous cache check for new src
+        const probe = new window.Image();
+        probe.src = src;
+        if (probe.complete && probe.naturalWidth > 0) {
+            if (!loaded) setLoaded(true);
+        } else {
+            if (loaded) setLoaded(false);
         }
-    }, [src]);
+    }
 
     return (
         <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}>
@@ -148,20 +159,19 @@ const OptimizedImage = ({ src, alt, style = {}, isUnavailable = false }: { src: 
             )}
             {/* Full-res image — fades in when loaded */}
             <img
-                ref={imgRef}
                 src={src}
                 alt={alt}
                 loading="eager"
                 decoding="async"
                 fetchPriority="high"
-                onLoad={() => setLoaded(true)}
+                onLoad={() => { if (!loaded) setLoaded(true); }}
                 style={{
                     maxHeight: '90%',
                     width: 'auto',
                     objectFit: 'contain',
                     zIndex: 2,
                     opacity: loaded ? 1 : 0,
-                    transition: 'opacity 0.25s ease-in-out, filter 0.3s ease',
+                    transition: 'opacity 0.2s ease-in',
                     filter: isUnavailable ? 'blur(1.5px) grayscale(0.4)' : 'none',
                     ...style,
                 }}
@@ -679,8 +689,11 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
             let catError = null, prodError = null, varError = null, wineError = null, configError = null;
 
             if (isInitial && globalCache && (Date.now() - globalCache.timestamp < 60000)) {
-                // Partial cache hit — we have products & categories, fetch the rest quickly
-                const [varRes, wineRes, configRes] = await Promise.all([
+                // Partial cache hit — fetch products + rest ALL in parallel (single roundtrip)
+                const [prodRes, varRes, wineRes, configRes] = await Promise.all([
+                    supabase.from('produtos')
+                        .select('id, categoria_id, nome, slug, descricao, imagem_url, disponivel, ordem, pais_origem, volume_ml, teor_alcolico, serve_pessoas, rating, curtidas, tipo_vinho, ml_taca, subcategoria, grupo_id_sabor, nome_curto_sabor, is_master_sabor')
+                        .order('ordem', { ascending: true }),
                     supabase.from('variacoes_produto').select('*').eq('ativo', true).order('ordem', { ascending: true }),
                     supabase.from('tipos_vinho').select('tipo, imagem_taca_url'),
                     supabase.from('configuracoes').select('*').limit(1).single()
@@ -688,11 +701,6 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
 
                 // Build catData from cached catMap
                 catData = Object.entries(globalCache.catMap).map(([id, nome]) => ({ id, nome, icone: null }));
-                // Fetch full product data (cache only had partial columns for search)
-                const prodRes = await supabase.from('produtos')
-                    .select('id, categoria_id, nome, slug, descricao, imagem_url, disponivel, ordem, pais_origem, volume_ml, teor_alcolico, serve_pessoas, rating, curtidas, tipo_vinho, ml_taca, subcategoria, grupo_id_sabor, nome_curto_sabor, is_master_sabor')
-                    .order('ordem', { ascending: true });
-
                 prodData = prodRes.data; prodError = prodRes.error;
                 varData = varRes.data; varError = varRes.error;
                 wineData = wineRes.data; wineError = wineRes.error;

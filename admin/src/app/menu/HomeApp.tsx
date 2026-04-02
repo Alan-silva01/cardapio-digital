@@ -515,13 +515,23 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
       )
     : CATEGORIES;
 
+  // DB category names by macro-category ID (mirrors page.tsx CATEGORY_MAP)
+  const PRELOAD_MAP: Record<string, string[]> = {
+    cervejas: ["Cervejas"], drinks: ["Drinks", "Gins"],
+    destilados: ["Destilados", "Whiskeys", "Vodkas", "Combos"], vinhos: ["Vinhos"],
+    "nao-alcoolicos": ["Bebidas"], petiscos: ["Petiscos", "Pastéis"],
+    grelha: ["Espetinhos", "Pratos & Executivos", "Guarnições"],
+    sobremesas: ["Sobremesas"], diversos: ["Diversos"], danos: ["Danos"],
+  };
+
   const handleCategoryTap = (cat: CategoryDef) => {
     if (cat.subs.length === 0) {
-      // Preload images before navigating
-      const dbCats = (cat.subs.length > 0 ? cat.subs.flatMap(s => s.dbCategories) : [cat.label]);
-      preloadCategoryImages(dbCats);
+      // Preload with correct DB names
+      preloadCategoryImages(PRELOAD_MAP[cat.id] || [cat.label]);
       onCategorySelect?.(cat.id);
     } else {
+      // Preload the full macro-category images even before sub-selection
+      preloadCategoryImages(PRELOAD_MAP[cat.id] || cat.subs.flatMap(s => s.dbCategories));
       setOpenSheet(cat);
     }
   };
