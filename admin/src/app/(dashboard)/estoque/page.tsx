@@ -171,6 +171,7 @@ interface StockItem {
     var_imagem_url: string | null;
     var_descricao: string | null;
     disponivel: boolean;
+    visivel_app: boolean;
     categoria_id: string | null;
     categoria_nome: string;
     tipo_vinho: string | null;
@@ -199,6 +200,7 @@ const NEW_PRODUCT_TEMPLATE: StockItem = {
     var_imagem_url: null,
     var_descricao: null,
     disponivel: true,
+    visivel_app: true,
     categoria_id: null,
     categoria_nome: "",
     tipo_vinho: null,
@@ -1002,6 +1004,7 @@ function EstoqueContent() {
                     nome,
                     imagem_url,
                     disponivel,
+                    visivel_app,
                     tipo_vinho,
                     pais_origem,
                     descricao,
@@ -1051,6 +1054,7 @@ function EstoqueContent() {
                 var_imagem_url: v.imagem_url,
                 var_descricao: v.descricao,
                 disponivel: prod.disponivel ?? false,
+                visivel_app: prod.visivel_app ?? true,
                 categoria_id: prod.categoria_id,
                 categoria_nome: prod.categorias?.nome || "Sem Categoria",
                 tipo_vinho: prod.tipo_vinho,
@@ -1232,7 +1236,7 @@ function EstoqueContent() {
             .eq("id", produtoId);
 
         if (error) {
-            console.error("Erro ao toggle disponibilidade:", error);
+            console.error("Erro ao toggle esgotado:", error);
             fetchStock();
         }
     }
@@ -1271,6 +1275,23 @@ function EstoqueContent() {
         }
     }
 
+    // Toggle visivel_app (show/hide product completely in app menu)
+    async function toggleVisivelApp(produtoId: string, current: boolean) {
+        const newValue = !current;
+        setItems(prev => prev.map(i =>
+            i.produto_id === produtoId ? { ...i, visivel_app: newValue } : i
+        ));
+
+        const { error } = await supabase
+            .from("produtos")
+            .update({ visivel_app: newValue })
+            .eq("id", produtoId);
+
+        if (error) {
+            console.error("Erro ao toggle visibilidade no app:", error);
+            fetchStock();
+        }
+    }
 
     // Save edit or create
     async function handleSaveEdit(data: {
@@ -1348,13 +1369,13 @@ function EstoqueContent() {
                 <DropdownMenu>
                     <DropdownMenuTrigger 
                         className={cn(
-                            "h-full w-full rounded-none flex items-center gap-1.5 px-3 text-[11px] font-semibold text-muted-foreground hover:bg-muted/50 data-[state=open]:bg-muted/50 uppercase outline-none focus:outline-none", 
+                            "h-full w-full rounded-none flex items-center gap-1 px-2 text-[10px] font-semibold text-muted-foreground hover:bg-muted/50 data-[state=open]:bg-muted/50 uppercase outline-none focus:outline-none", 
                             centered ? "justify-center" : "justify-start"
                         )}
                     >
                         {title}
                         {activeCount > 0 && <span className="rounded bg-primary px-1 text-[9px] text-primary-foreground">{activeCount}</span>}
-                        <ChevronDown className="h-3 w-3 opacity-50" />
+                        <ChevronDown className="h-2.5 w-2.5 opacity-50" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align={centered ? "center" : "start"} className="w-[180px] max-h-[300px] overflow-y-auto">
                         <DropdownMenuCheckboxItem
@@ -1475,27 +1496,28 @@ function EstoqueContent() {
             </div>
 
             {/* Table */}
-            <div className="rounded-lg border overflow-hidden bg-card">
-                <Table>
+            <div className="rounded-lg border overflow-x-auto bg-card">
+                <Table className="min-w-[1100px]">
                     <TableHeader>
                         <TableRow className="hover:bg-transparent border-border">
-                            <TableHead className="w-[50px] text-muted-foreground text-[11px] font-semibold uppercase"></TableHead>
-                            <TableHead className="text-muted-foreground text-[11px] font-semibold uppercase">Produto</TableHead>
-                            <FilterHeader title="Variação" column="variacao" options={allVariacoes} centered />
-                            <FilterHeader title="Categoria" column="categoria" options={categories} />
-                            <FilterHeader title="Subcategoria" column="subcategoria" options={allSubcategorias} />
+                            <TableHead className="w-[40px] text-muted-foreground text-[10px] font-semibold uppercase px-2"></TableHead>
+                            <TableHead className="text-muted-foreground text-[10px] font-semibold uppercase px-2">Produto</TableHead>
+                            <FilterHeader title="Var." column="variacao" options={allVariacoes} centered />
+                            <FilterHeader title="Cat." column="categoria" options={categories} />
+                            <FilterHeader title="Subcat." column="subcategoria" options={allSubcategorias} />
                             <FilterHeader title="Origem" column="origem" options={allOrigins} />
-                            <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">Estoque</TableHead>
+                            <TableHead className="text-center text-muted-foreground text-[10px] font-semibold uppercase w-[60px] px-1">Estq.</TableHead>
                             <FilterHeader title="Status" column="status" options={allStatus} centered />
-                            <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">App</TableHead>
-                            <TableHead className="text-muted-foreground text-[11px] font-semibold uppercase">Preço</TableHead>
-                            <TableHead className="text-center text-muted-foreground text-[11px] font-semibold uppercase">Ação</TableHead>
+                            <TableHead className="text-center text-muted-foreground text-[10px] font-semibold uppercase w-[52px] px-1">Esgot.</TableHead>
+                            <TableHead className="text-muted-foreground text-[10px] font-semibold uppercase px-2">Preço</TableHead>
+                            <TableHead className="text-center text-muted-foreground text-[10px] font-semibold uppercase w-[44px] px-1">App</TableHead>
+                            <TableHead className="text-center text-muted-foreground text-[10px] font-semibold uppercase w-[80px] px-1">Ação</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {filtered.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={11} className="text-center text-muted-foreground py-12">
+                                <TableCell colSpan={12} className="text-center text-muted-foreground py-12">
                                     Nenhum produto encontrado
                                 </TableCell>
                             </TableRow>
@@ -1520,10 +1542,10 @@ function EstoqueContent() {
                                         )}
                                     >
                                         {/* Thumbnail */}
-                                        <TableCell className="py-2">
+                                        <TableCell className="py-1.5 px-2">
                                             <HoverCard>
                                                 <HoverCardTrigger>
-                                                    <div className="w-10 aspect-[5/6] relative rounded-md overflow-hidden bg-muted/50 border cursor-pointer group">
+                                                    <div className="w-9 aspect-[5/6] relative rounded-md overflow-hidden bg-muted/50 border cursor-pointer group">
                                                         {(item.var_imagem_url || item.imagem_url) ? (
                                                             <>
                                                                 <Image
@@ -1578,56 +1600,56 @@ function EstoqueContent() {
                                             </HoverCard>
                                         </TableCell>
 
-                                        <TableCell>
-                                            <div className="font-semibold text-foreground text-sm">{item.produto_nome}</div>
+                                        <TableCell className="px-2">
+                                            <div className="font-semibold text-foreground text-[13px] leading-tight">{item.produto_nome}</div>
                                         </TableCell>
-                                        <TableCell className="text-center text-muted-foreground text-sm">
+                                        <TableCell className="text-center text-muted-foreground text-[12px] px-1">
                                             {displayVariacao}
                                         </TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline" className="text-[10px] font-medium bg-muted border text-muted-foreground rounded-md px-2 py-0.5">
+                                        <TableCell className="px-1">
+                                            <Badge variant="outline" className="text-[9px] font-medium bg-muted border text-muted-foreground rounded-md px-1.5 py-0.5">
                                                 {item.categoria_nome}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell className="px-1">
                                             {item.subcategoria ? (
-                                                <span className="text-[11px] font-medium text-muted-foreground">
+                                                <span className="text-[10px] font-medium text-muted-foreground">
                                                     {item.subcategoria.replace(/long\s*neck/i, 'Long Neck')}
                                                 </span>
                                             ) : (
-                                                <span className="text-[11px] text-muted-foreground/40">—</span>
+                                                <span className="text-[10px] text-muted-foreground/40">—</span>
                                             )}
                                         </TableCell>
 
                                         {/* Origin with flag */}
-                                        <TableCell>
+                                        <TableCell className="px-1">
                                             {item.pais_origem ? (
-                                                <div className="flex items-center gap-1.5">
+                                                <div className="flex items-center gap-1">
                                                     {flagUrl && (
                                                         <img
                                                             src={flagUrl}
                                                             alt={item.pais_origem}
-                                                            width={16}
-                                                            height={10}
+                                                            width={14}
+                                                            height={9}
                                                             className="rounded-[2px] object-cover"
                                                             loading="eager"
                                                             decoding="async"
                                                         />
                                                     )}
-                                                    <span className="text-[11px] text-muted-foreground">{item.pais_origem}</span>
+                                                    <span className="text-[10px] text-muted-foreground">{item.pais_origem}</span>
                                                 </div>
                                             ) : (
-                                                <span className="text-[11px] text-muted-foreground/40">—</span>
+                                                <span className="text-[10px] text-muted-foreground/40">—</span>
                                             )}
                                         </TableCell>
 
-                                        <TableCell className="text-center">
-                                            <div className="inline-flex items-center justify-center min-w-[3rem]">
+                                        <TableCell className="text-center px-1">
+                                            <div className="inline-flex items-center justify-center">
                                                 {item.estoque === -1 ? (
-                                                    <Infinity className="h-4 w-4 text-muted-foreground" />
+                                                    <Infinity className="h-3.5 w-3.5 text-muted-foreground" />
                                                 ) : (
                                                     <span className={cn(
-                                                        "font-mono text-[13px] font-medium",
+                                                        "font-mono text-[12px] font-medium",
                                                         item.estoque === 0 ? "text-red-400" :
                                                             item.estoque <= item.estoque_minimo ? "text-amber-400" : "text-foreground"
                                                     )}>
@@ -1637,12 +1659,12 @@ function EstoqueContent() {
                                             </div>
                                         </TableCell>
 
-                                        <TableCell className="text-center">
+                                        <TableCell className="text-center px-1">
                                             <div className="flex justify-center">
                                                 <Badge
                                                     variant="outline"
                                                     className={cn(
-                                                        "text-[10px] uppercase font-medium tracking-wider px-2 py-0.5 rounded-full border",
+                                                        "text-[9px] uppercase font-medium tracking-wider px-1.5 py-0.5 rounded-full border",
                                                         status.color
                                                     )}
                                                 >
@@ -1651,68 +1673,93 @@ function EstoqueContent() {
                                             </div>
                                         </TableCell>
 
-                                        {/* Availability Toggle */}
-                                        <TableCell className="text-center">
+                                        {/* Esgotado Toggle (marks as out of stock with blur in app) */}
+                                        <TableCell className="text-center px-1">
                                             <div className="flex justify-center">
                                                 <button
                                                     onClick={() => toggleDisponivel(item.produto_id, item.disponivel)}
                                                     className={cn(
-                                                        "relative inline-flex h-4 w-7 cursor-pointer items-center rounded-full transition-colors focus:outline-hidden",
-                                                        item.disponivel ? "bg-emerald-500/80" : "bg-muted-foreground/30"
+                                                        "relative inline-flex h-3.5 w-6 cursor-pointer items-center rounded-full transition-colors focus:outline-hidden",
+                                                        item.disponivel ? "bg-emerald-500/80" : "bg-red-500/80"
                                                     )}
                                                     role="switch"
-                                                    aria-checked={item.disponivel}
+                                                    aria-checked={!item.disponivel}
+                                                    title={item.disponivel ? "Marcar como esgotado" : "Desmarcar esgotado"}
                                                 >
-                                                    <span className="sr-only">Toggle disponibilidade</span>
+                                                    <span className="sr-only">Toggle esgotado</span>
                                                     <span
                                                         className={cn(
-                                                            "inline-block h-3 w-3 transform rounded-full bg-white transition-transform",
-                                                            item.disponivel ? "translate-x-3.5" : "translate-x-0.5"
+                                                            "inline-block h-2.5 w-2.5 transform rounded-full bg-white transition-transform",
+                                                            item.disponivel ? "translate-x-3" : "translate-x-0.5"
                                                         )}
                                                     />
                                                 </button>
                                             </div>
                                         </TableCell>
 
-                                        <TableCell className="font-mono text-sm text-muted-foreground">
+                                        <TableCell className="font-mono text-[12px] text-muted-foreground px-2 whitespace-nowrap">
                                             R$ {item.preco.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                                         </TableCell>
 
-                                        <TableCell className="text-center">
-                                            <div className="flex items-center justify-center gap-1">
+                                        {/* App Visibility Toggle (hides product completely from app menu) */}
+                                        <TableCell className="text-center px-1">
+                                            <div className="flex justify-center">
+                                                <button
+                                                    onClick={() => toggleVisivelApp(item.produto_id, item.visivel_app)}
+                                                    className={cn(
+                                                        "relative inline-flex h-3.5 w-6 cursor-pointer items-center rounded-full transition-colors focus:outline-hidden",
+                                                        item.visivel_app ? "bg-emerald-500/80" : "bg-muted-foreground/30"
+                                                    )}
+                                                    role="switch"
+                                                    aria-checked={item.visivel_app}
+                                                    title={item.visivel_app ? "Visível no app — clique para esconder" : "Escondido do app — clique para mostrar"}
+                                                >
+                                                    <span className="sr-only">Toggle visibilidade no app</span>
+                                                    <span
+                                                        className={cn(
+                                                            "inline-block h-2.5 w-2.5 transform rounded-full bg-white transition-transform",
+                                                            item.visivel_app ? "translate-x-3" : "translate-x-0.5"
+                                                        )}
+                                                    />
+                                                </button>
+                                            </div>
+                                        </TableCell>
+
+                                        <TableCell className="text-center px-1">
+                                            <div className="flex items-center justify-center gap-0.5">
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
+                                                    className="h-6 w-6 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
                                                     onClick={() => adjustStock(item.variacao_id, -1)}
                                                     disabled={isUpdating || item.estoque <= 0}
                                                 >
-                                                    <Minus className="h-3 w-3" />
+                                                    <Minus className="h-2.5 w-2.5" />
                                                 </Button>
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
+                                                    className="h-6 w-6 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
                                                     onClick={() => adjustStock(item.variacao_id, 1)}
                                                     disabled={isUpdating || item.estoque === -1}
                                                 >
-                                                    <Plus className="h-3 w-3" />
+                                                    <Plus className="h-2.5 w-2.5" />
                                                 </Button>
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-7 w-7 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
+                                                    className="h-6 w-6 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted"
                                                     onClick={() => setEditingItem(item)}
                                                 >
-                                                    <Pencil className="h-3 w-3" />
+                                                    <Pencil className="h-2.5 w-2.5" />
                                                 </Button>
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-7 w-7 rounded-full text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
+                                                    className="h-6 w-6 rounded-full text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
                                                     onClick={() => setItemToDelete(item)}
                                                 >
-                                                    <Trash2 className="h-3 w-3" />
+                                                    <Trash2 className="h-2.5 w-2.5" />
                                                 </Button>
                                             </div>
                                         </TableCell>

@@ -753,7 +753,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                 // Partial cache hit — fetch products + rest ALL in parallel (single roundtrip)
                 const [prodRes, varRes, wineRes, configRes] = await Promise.all([
                     supabase.from('produtos')
-                        .select('id, categoria_id, nome, slug, descricao, imagem_url, disponivel, ordem, pais_origem, volume_ml, teor_alcolico, serve_pessoas, rating, curtidas, tipo_vinho, ml_taca, subcategoria, grupo_id_sabor, nome_curto_sabor, is_master_sabor')
+                        .select('id, categoria_id, nome, slug, descricao, imagem_url, disponivel, visivel_app, ordem, pais_origem, volume_ml, teor_alcolico, serve_pessoas, rating, curtidas, tipo_vinho, ml_taca, subcategoria, grupo_id_sabor, nome_curto_sabor, is_master_sabor')
                         .order('ordem', { ascending: true }),
                     supabase.from('variacoes_produto').select('*').eq('ativo', true).order('ordem', { ascending: true }),
                     supabase.from('tipos_vinho').select('tipo, imagem_taca_url'),
@@ -771,7 +771,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                 const results = await Promise.all([
                     supabase.from('categorias').select('id, nome, icone').eq('ativo', true),
                     supabase.from('produtos')
-                        .select('id, categoria_id, nome, slug, descricao, imagem_url, disponivel, ordem, pais_origem, volume_ml, teor_alcolico, serve_pessoas, rating, curtidas, tipo_vinho, ml_taca, subcategoria, grupo_id_sabor, nome_curto_sabor, is_master_sabor')
+                        .select('id, categoria_id, nome, slug, descricao, imagem_url, disponivel, visivel_app, ordem, pais_origem, volume_ml, teor_alcolico, serve_pessoas, rating, curtidas, tipo_vinho, ml_taca, subcategoria, grupo_id_sabor, nome_curto_sabor, is_master_sabor')
                         .order('ordem', { ascending: true }),
                     supabase.from('variacoes_produto').select('*').eq('ativo', true).order('ordem', { ascending: true }),
                     supabase.from('tipos_vinho').select('tipo, imagem_taca_url'),
@@ -917,6 +917,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                     tipo_vinho: p.tipo_vinho || null,
                     ml_taca: p.ml_taca || 200,
                     disponivel: p.disponivel,
+                    visivel_app: p.visivel_app ?? true,
                     ordem: p.ordem || 0,
                     // Dynamic flavor group fields
                     grupo_id_sabor: p.grupo_id_sabor || null,
@@ -925,14 +926,17 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                 };
             });
 
-            enrichedProducts.sort((a, b) => {
+            // Filter out products that are not visible in the app
+            const visibleProducts = enrichedProducts.filter(p => p.visivel_app !== false);
+
+            visibleProducts.sort((a, b) => {
                 if (a.ordem !== b.ordem) return a.ordem - b.ordem;
                 return a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' });
             });
 
             // Preload only on initial load
             if (isInitial) {
-                enrichedProducts.slice(0, 3).forEach(p => {
+                visibleProducts.slice(0, 3).forEach(p => {
                     if (p.imageUrl) {
                         const img = new Image();
                         img.src = p.imageUrl;
@@ -951,7 +955,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
             }
 
             // Store all products in ref for reactive filtering
-            allProductsRef.current = enrichedProducts;
+            allProductsRef.current = visibleProducts;
             
             // Wait! fetchMenu has an empty dependency array, so we MUST read from prevFilterRef
             // to avoid React stale closure bugs when resolving async.
