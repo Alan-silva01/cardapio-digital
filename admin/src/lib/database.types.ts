@@ -619,6 +619,7 @@ export type Database = {
           tempo_preparo_min: number | null
           teor_alcolico: number | null
           tipo_vinho: string | null
+          visivel_app: boolean | null
           volume_ml: number | null
           whiskey_base_id: string | null
         }
@@ -645,6 +646,7 @@ export type Database = {
           tempo_preparo_min?: number | null
           teor_alcolico?: number | null
           tipo_vinho?: string | null
+          visivel_app?: boolean | null
           volume_ml?: number | null
           whiskey_base_id?: string | null
         }
@@ -671,6 +673,7 @@ export type Database = {
           tempo_preparo_min?: number | null
           teor_alcolico?: number | null
           tipo_vinho?: string | null
+          visivel_app?: boolean | null
           volume_ml?: number | null
           whiskey_base_id?: string | null
         }
