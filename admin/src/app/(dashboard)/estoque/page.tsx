@@ -1362,10 +1362,10 @@ function EstoqueContent() {
         ];
     }, [counts.total, categories, items]);
 
-    const FilterHeader = ({ title, column, options, centered }: { title: string, column: keyof typeof columnFilters, options: string[], centered?: boolean }) => {
+    const FilterHeader = ({ title, column, options, centered, headClassName }: { title: string, column: keyof typeof columnFilters, options: string[], centered?: boolean, headClassName?: string }) => {
         const activeCount = columnFilters[column].size;
         return (
-            <TableHead className="p-0 h-10 align-middle">
+            <TableHead className={cn("p-0 h-10 align-middle", headClassName)}>
                 <DropdownMenu>
                     <DropdownMenuTrigger 
                         className={cn(
@@ -1375,7 +1375,7 @@ function EstoqueContent() {
                     >
                         {title}
                         {activeCount > 0 && <span className="rounded bg-primary px-1 text-[9px] text-primary-foreground">{activeCount}</span>}
-                        <ChevronDown className="h-2.5 w-2.5 opacity-50" />
+                        <ChevronDown className="h-2.5 w-2.5 opacity-50 shrink-0" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align={centered ? "center" : "start"} className="w-[180px] max-h-[300px] overflow-y-auto">
                         <DropdownMenuCheckboxItem
@@ -1497,21 +1497,21 @@ function EstoqueContent() {
 
             {/* Table */}
             <div className="rounded-lg border overflow-x-auto bg-card">
-                <Table className="min-w-[1100px]">
+                <Table className="table-fixed w-full">
                     <TableHeader>
                         <TableRow className="hover:bg-transparent border-border">
-                            <TableHead className="w-[40px] text-muted-foreground text-[10px] font-semibold uppercase px-2"></TableHead>
-                            <TableHead className="text-muted-foreground text-[10px] font-semibold uppercase px-2">Produto</TableHead>
-                            <FilterHeader title="Var." column="variacao" options={allVariacoes} centered />
-                            <FilterHeader title="Cat." column="categoria" options={categories} />
-                            <FilterHeader title="Subcat." column="subcategoria" options={allSubcategorias} />
-                            <FilterHeader title="Origem" column="origem" options={allOrigins} />
-                            <TableHead className="text-center text-muted-foreground text-[10px] font-semibold uppercase w-[60px] px-1">Estq.</TableHead>
-                            <FilterHeader title="Status" column="status" options={allStatus} centered />
-                            <TableHead className="text-center text-muted-foreground text-[10px] font-semibold uppercase w-[52px] px-1">Esgot.</TableHead>
-                            <TableHead className="text-muted-foreground text-[10px] font-semibold uppercase px-2">Preço</TableHead>
-                            <TableHead className="text-center text-muted-foreground text-[10px] font-semibold uppercase w-[44px] px-1">App</TableHead>
-                            <TableHead className="text-center text-muted-foreground text-[10px] font-semibold uppercase w-[80px] px-1">Ação</TableHead>
+                            <TableHead className="w-[42px] text-muted-foreground text-[10px] font-semibold uppercase px-1"></TableHead>
+                            <TableHead className="w-[15%] text-muted-foreground text-[10px] font-semibold uppercase px-2">Produto</TableHead>
+                            <FilterHeader title="Variação" column="variacao" options={allVariacoes} centered headClassName="w-[7%]" />
+                            <FilterHeader title="Categoria" column="categoria" options={categories} headClassName="w-[9%]" />
+                            <FilterHeader title="Subcategoria" column="subcategoria" options={allSubcategorias} headClassName="w-[10%]" />
+                            <FilterHeader title="Origem" column="origem" options={allOrigins} headClassName="w-[8%]" />
+                            <TableHead className="text-center text-muted-foreground text-[10px] font-semibold uppercase w-[5%] px-1">Estoque</TableHead>
+                            <FilterHeader title="Status" column="status" options={allStatus} centered headClassName="w-[6%]" />
+                            <TableHead className="text-center text-muted-foreground text-[10px] font-semibold uppercase w-[5%] px-1">Esgotado</TableHead>
+                            <TableHead className="text-muted-foreground text-[10px] font-semibold uppercase w-[8%] px-2">Preço</TableHead>
+                            <TableHead className="text-center text-muted-foreground text-[10px] font-semibold uppercase w-[5%] px-1">Menu</TableHead>
+                            <TableHead className="text-center text-muted-foreground text-[10px] font-semibold uppercase w-[9%] px-1">Ação</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -1600,20 +1600,20 @@ function EstoqueContent() {
                                             </HoverCard>
                                         </TableCell>
 
-                                        <TableCell className="px-2">
-                                            <div className="font-semibold text-foreground text-[13px] leading-tight">{item.produto_nome}</div>
+                                        <TableCell className="px-2 overflow-hidden">
+                                            <div className="font-semibold text-foreground text-[13px] leading-tight truncate">{item.produto_nome}</div>
                                         </TableCell>
-                                        <TableCell className="text-center text-muted-foreground text-[12px] px-1">
-                                            {displayVariacao}
+                                        <TableCell className="text-center text-muted-foreground text-[12px] px-1 overflow-hidden">
+                                            <span className="truncate block">{displayVariacao}</span>
                                         </TableCell>
-                                        <TableCell className="px-1">
-                                            <Badge variant="outline" className="text-[9px] font-medium bg-muted border text-muted-foreground rounded-md px-1.5 py-0.5">
+                                        <TableCell className="px-1 overflow-hidden">
+                                            <Badge variant="outline" className="text-[9px] font-medium bg-muted border text-muted-foreground rounded-md px-1.5 py-0.5 max-w-full truncate">
                                                 {item.categoria_nome}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell className="px-1">
+                                        <TableCell className="px-1 overflow-hidden">
                                             {item.subcategoria ? (
-                                                <span className="text-[10px] font-medium text-muted-foreground">
+                                                <span className="text-[10px] font-medium text-muted-foreground truncate block">
                                                     {item.subcategoria.replace(/long\s*neck/i, 'Long Neck')}
                                                 </span>
                                             ) : (
@@ -1622,21 +1622,21 @@ function EstoqueContent() {
                                         </TableCell>
 
                                         {/* Origin with flag */}
-                                        <TableCell className="px-1">
+                                        <TableCell className="px-1 overflow-hidden">
                                             {item.pais_origem ? (
-                                                <div className="flex items-center gap-1">
+                                                <div className="flex items-center gap-1 min-w-0">
                                                     {flagUrl && (
                                                         <img
                                                             src={flagUrl}
                                                             alt={item.pais_origem}
                                                             width={14}
                                                             height={9}
-                                                            className="rounded-[2px] object-cover"
+                                                            className="rounded-[2px] object-cover shrink-0"
                                                             loading="eager"
                                                             decoding="async"
                                                         />
                                                     )}
-                                                    <span className="text-[10px] text-muted-foreground">{item.pais_origem}</span>
+                                                    <span className="text-[10px] text-muted-foreground truncate">{item.pais_origem}</span>
                                                 </div>
                                             ) : (
                                                 <span className="text-[10px] text-muted-foreground/40">—</span>
@@ -1712,7 +1712,7 @@ function EstoqueContent() {
                                                     )}
                                                     role="switch"
                                                     aria-checked={item.visivel_app}
-                                                    title={item.visivel_app ? "Visível no app — clique para esconder" : "Escondido do app — clique para mostrar"}
+                                                    title={item.visivel_app ? "Visível no menu — clique para esconder" : "Escondido do menu — clique para mostrar"}
                                                 >
                                                     <span className="sr-only">Toggle visibilidade no app</span>
                                                     <span
