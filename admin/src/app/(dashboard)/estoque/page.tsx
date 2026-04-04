@@ -1680,7 +1680,7 @@ function EstoqueContent() {
                                                     onClick={() => toggleDisponivel(item.produto_id, item.disponivel)}
                                                     className={cn(
                                                         "relative inline-flex h-3.5 w-6 cursor-pointer items-center rounded-full transition-colors focus:outline-hidden",
-                                                        item.disponivel ? "bg-emerald-500/80" : "bg-red-500/80"
+                                                        item.disponivel ? "bg-emerald-500/80" : "bg-muted-foreground/30"
                                                     )}
                                                     role="switch"
                                                     aria-checked={!item.disponivel}
