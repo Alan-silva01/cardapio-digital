@@ -966,7 +966,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
             // Apply current filters if they exist (crucial for initial mount via AnimatePresence)
             if (currentFilters && currentFilters.length > 0) {
                 const sanitizedFilters = currentFilters.map(f => f.normalize("NFC").toLowerCase().trim());
-                let filtered = enrichedProducts.filter(p => p.category && sanitizedFilters.includes(p.category.normalize("NFC").toLowerCase().trim()));
+                let filtered = visibleProducts.filter(p => p.category && sanitizedFilters.includes(p.category.normalize("NFC").toLowerCase().trim()));
                 
                 if (currentSubcat) {
                     const targetSubs = Array.isArray(currentSubcat)
@@ -982,26 +982,31 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                 const term = currentSearch.toLowerCase().trim();
                 const termNoSpace = term.replace(/\s+/g, "");
 
-                const matchedProduct = enrichedProducts.find(p => {
-                    if (!p.name) return false;
-                    const n = p.name.toLowerCase();
-                    const nNoSpace = n.replace(/\s+/g, "");
-                    return n.includes(term) || nNoSpace.includes(termNoSpace);
-                });
+                // Try exact match first to prevent selecting wrong variations like Combos instead of Garrafas
+                let matchedProduct = visibleProducts.find(p => p.name?.toLowerCase().trim() === term);
+
+                if (!matchedProduct) {
+                    matchedProduct = visibleProducts.find(p => {
+                        if (!p.name) return false;
+                        const n = p.name.toLowerCase();
+                        const nNoSpace = n.replace(/\s+/g, "");
+                        return n.includes(term) || nNoSpace.includes(termNoSpace);
+                    });
+                }
 
                 if (matchedProduct) {
                     const targetCat = matchedProduct.category;
-                    const categoryProducts = enrichedProducts.filter(p => p.category === targetCat);
+                    const categoryProducts = visibleProducts.filter(p => p.category === targetCat);
                     setProducts(categoryProducts);
 
                     // Add dynamic selection
                     const targetIdx = categoryProducts.findIndex(p => p.id === matchedProduct.id);
                     setCurrentIndex(targetIdx !== -1 ? targetIdx : 0);
                 } else {
-                    setProducts(enrichedProducts);
+                    setProducts(visibleProducts);
                 }
             } else {
-                setProducts(enrichedProducts);
+                setProducts(visibleProducts);
             }
             
             // ── Save full enriched data to cache for instant subsequent navigations ──
