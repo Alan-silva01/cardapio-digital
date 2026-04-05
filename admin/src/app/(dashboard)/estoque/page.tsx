@@ -1500,15 +1500,15 @@ function EstoqueContent() {
                 <Table className="table-fixed w-full">
                     <TableHeader>
                         <TableRow className="hover:bg-transparent border-border">
-                            <TableHead className="w-[42px] text-muted-foreground text-[10px] font-semibold uppercase px-1"></TableHead>
-                            <TableHead className="w-[15%] text-muted-foreground text-[10px] font-semibold uppercase px-2">Produto</TableHead>
-                            <FilterHeader title="Variação" column="variacao" options={allVariacoes} centered headClassName="w-[7%]" />
-                            <FilterHeader title="Categoria" column="categoria" options={categories} headClassName="w-[9%]" />
+                            <TableHead className="w-[4%] text-muted-foreground text-[10px] font-semibold uppercase px-1"></TableHead>
+                            <TableHead className="w-[20%] text-muted-foreground text-[10px] font-semibold uppercase px-2">Produto</TableHead>
+                            <FilterHeader title="Variação" column="variacao" options={allVariacoes} centered headClassName="w-[9%]" />
+                            <FilterHeader title="Categoria" column="categoria" options={categories} headClassName="w-[10%]" />
                             <FilterHeader title="Subcategoria" column="subcategoria" options={allSubcategorias} headClassName="w-[10%]" />
                             <FilterHeader title="Origem" column="origem" options={allOrigins} headClassName="w-[8%]" />
-                            <TableHead className="text-center text-muted-foreground text-[10px] font-semibold uppercase w-[5%] px-1">Estoque</TableHead>
+                            <TableHead className="text-center text-muted-foreground text-[10px] font-semibold uppercase w-[6%] px-1">Estoque</TableHead>
                             <FilterHeader title="Status" column="status" options={allStatus} centered headClassName="w-[6%]" />
-                            <TableHead className="text-center text-muted-foreground text-[10px] font-semibold uppercase w-[5%] px-1">Esgotado</TableHead>
+                            <TableHead className="text-center text-muted-foreground text-[10px] font-semibold uppercase w-[5%] px-1">Disponível</TableHead>
                             <TableHead className="text-muted-foreground text-[10px] font-semibold uppercase w-[8%] px-2">Preço</TableHead>
                             <TableHead className="text-center text-muted-foreground text-[10px] font-semibold uppercase w-[5%] px-1">Menu</TableHead>
                             <TableHead className="text-center text-muted-foreground text-[10px] font-semibold uppercase w-[9%] px-1">Ação</TableHead>
@@ -1673,7 +1673,7 @@ function EstoqueContent() {
                                             </div>
                                         </TableCell>
 
-                                        {/* Esgotado Toggle (marks as out of stock with blur in app) */}
+                                        {/* Disponível Toggle */}
                                         <TableCell className="text-center px-1">
                                             <div className="flex justify-center">
                                                 <button
@@ -1683,10 +1683,10 @@ function EstoqueContent() {
                                                         item.disponivel ? "bg-emerald-500/80" : "bg-muted-foreground/30"
                                                     )}
                                                     role="switch"
-                                                    aria-checked={!item.disponivel}
-                                                    title={item.disponivel ? "Marcar como esgotado" : "Desmarcar esgotado"}
+                                                    aria-checked={item.disponivel}
+                                                    title={item.disponivel ? "Desmarcar como disponível" : "Marcar como disponível"}
                                                 >
-                                                    <span className="sr-only">Toggle esgotado</span>
+                                                    <span className="sr-only">Toggle disponível</span>
                                                     <span
                                                         className={cn(
                                                             "inline-block h-2.5 w-2.5 transform rounded-full bg-white transition-transform",
