@@ -9,10 +9,15 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Loader2, Plus, Minus, UserCircle } from "lucide-react";
+import { Search, Loader2, Plus, Minus, UserCircle, ImageIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Separator } from "@/components/ui/separator";
 
@@ -214,8 +219,30 @@ export function AddProductModal({
                             className="p-3.5 hover:bg-muted/40 cursor-pointer flex items-center justify-between transition-colors group"
                             onClick={() => handleSelectProduct(p)}
                           >
-                            <span className="text-sm font-bold group-hover:text-brand transition-colors">{p.nome}</span>
-                            <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center group-hover:bg-brand/10 transition-colors">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-bold group-hover:text-brand transition-colors">{p.nome}</span>
+                              {p.imagem_url && (
+                                <HoverCard>
+                                  <HoverCardTrigger 
+                                    className="p-1.5 -m-1.5 text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50 focus:outline-hidden cursor-pointer"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <ImageIcon className="h-4 w-4" />
+                                  </HoverCardTrigger>
+                                  <HoverCardContent side="top" className="w-auto p-1.5 border-border/50 bg-background/95 backdrop-blur-xs z-50">
+                                    <div className="rounded-md overflow-hidden bg-muted/50 flex items-center justify-center">
+                                      <img 
+                                        src={p.imagem_url} 
+                                        alt={p.nome}
+                                        className="w-[160px] h-[192px] object-cover rounded-md block pointer-events-none"
+                                        loading="lazy"
+                                      />
+                                    </div>
+                                  </HoverCardContent>
+                                </HoverCard>
+                              )}
+                            </div>
+                            <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center group-hover:bg-brand/10 transition-colors shrink-0">
                               <Plus className="h-3 w-3 text-muted-foreground group-hover:text-brand" />
                             </div>
                           </div>
@@ -235,7 +262,26 @@ export function AddProductModal({
                   <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">
                     Produto Selecionado
                   </span>
-                  <span className="font-bold text-base leading-tight">{selectedProduct.nome}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-base leading-tight">{selectedProduct.nome}</span>
+                    {selectedProduct.imagem_url && (
+                      <HoverCard>
+                        <HoverCardTrigger className="p-1 -m-1 text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-muted/50 focus:outline-hidden cursor-pointer">
+                          <ImageIcon className="h-3.5 w-3.5" />
+                        </HoverCardTrigger>
+                        <HoverCardContent side="top" className="w-auto p-1.5 border-border/50 bg-background/95 backdrop-blur-xs z-50">
+                          <div className="rounded-md overflow-hidden bg-muted/50 flex items-center justify-center">
+                            <img 
+                              src={selectedProduct.imagem_url} 
+                              alt={selectedProduct.nome}
+                              className="w-[160px] h-[192px] object-cover rounded-md block pointer-events-none"
+                              loading="lazy"
+                            />
+                          </div>
+                        </HoverCardContent>
+                      </HoverCard>
+                    )}
+                  </div>
                 </div>
                 <Button
                   variant="outline"
