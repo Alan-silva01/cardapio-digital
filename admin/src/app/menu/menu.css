@@ -94,24 +94,14 @@ body.is-browser .top-nav {
 
 .hero {
   display: flex;
-  /* Base layout */
   flex-direction: column;
   align-items: center;
   position: relative;
   padding-top: 10px;
   padding-bottom: clamp(10px, 2dvh, 20px);
   will-change: transform, opacity;
-}
-
-/* Specific heights per mode */
-body.is-pwa .hero {
-  flex: 0.9;
-  /* Slightly raised for more sheet space as requested */
-}
-
-body.is-browser .hero {
-  flex: 1.1;
-  /* Slightly raised for better balance in Browser */
+  flex: 1 1 0; /* Grow and shrink automatically to fill remaining space */
+  min-height: 0; /* Critical for flex shrinking */
 }
 
 .bottom-sheet {
@@ -121,20 +111,17 @@ body.is-browser .hero {
   padding: 8px 16px 0;
   position: relative;
   z-index: 10;
-  flex: 1;
-  min-height: 0;
-  /* CRITICAL: allows content to shrink and scroll */
-  overflow: hidden;
+  flex: 0 0 auto; /* Takes only the space its content requires */
+  max-height: 70dvh; /* Safety limit for tiny screens with lots of options */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  /* Force children to opposite ends */
   margin-top: 0;
 }
 
 .sheet-content {
   flex: 1;
-  overflow-y: hidden;
+  overflow-y: auto; /* Fallback scroll only if exceeding 70dvh */
   padding-bottom: 140px;
   /* Space for sheet-footer + bottom-nav */
   /* Custom scrollbar for better aesthetics */
@@ -1303,30 +1290,5 @@ body.is-pwa .cart-footer {
 /* zoom scales EVERYTHING inside uniformly — fonts, paddings, buttons, gaps */
 /* flex compensation keeps the bottom-sheet filling its allocated space */
 
-@media (max-height: 750px) {
-  .bottom-sheet {
-    zoom: 0.92;
-    flex: 1.09;
-  }
-  .hero {
-    padding-top: 2px;
-  }
-}
-
-@media (max-height: 680px) {
-  .bottom-sheet {
-    zoom: 0.85;
-    flex: 1.18;
-  }
-  .hero {
-    padding-top: 0;
-  }
-}
-
-@media (max-height: 600px) {
-  .bottom-sheet {
-    zoom: 0.78;
-    flex: 1.28;
-  }
-}
+/* zoom media queries removed — now managed natively by flexbox layout */
 
