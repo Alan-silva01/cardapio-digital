@@ -99,6 +99,7 @@ body.is-browser .top-nav {
   align-items: center;
   position: relative;
   padding-top: 10px;
+  padding-bottom: clamp(10px, 2dvh, 20px);
   will-change: transform, opacity;
 }
 
