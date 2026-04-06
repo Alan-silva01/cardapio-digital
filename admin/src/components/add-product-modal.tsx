@@ -219,8 +219,11 @@ export function AddProductModal({
                             className="p-3.5 hover:bg-muted/40 cursor-pointer flex items-center justify-between transition-colors group"
                             onClick={() => handleSelectProduct(p)}
                           >
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-bold group-hover:text-brand transition-colors">{p.nome}</span>
+                            <span className="text-sm font-bold group-hover:text-brand transition-colors whitespace-nowrap overflow-hidden text-ellipsis mr-2">
+                              {p.nome}
+                            </span>
+
+                            <div className="flex items-center gap-3 shrink-0">
                               {p.imagem_url && (
                                 <HoverCard>
                                   <HoverCardTrigger 
@@ -241,9 +244,9 @@ export function AddProductModal({
                                   </HoverCardContent>
                                 </HoverCard>
                               )}
-                            </div>
-                            <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center group-hover:bg-brand/10 transition-colors shrink-0">
-                              <Plus className="h-3 w-3 text-muted-foreground group-hover:text-brand" />
+                              <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center group-hover:bg-brand/10 transition-colors shrink-0">
+                                <Plus className="h-3 w-3 text-muted-foreground group-hover:text-brand" />
+                              </div>
                             </div>
                           </div>
                         ))}
