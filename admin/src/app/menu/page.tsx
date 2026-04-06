@@ -160,33 +160,33 @@ export default function MenuPage() {
 
   return (
     <div className="relative min-h-screen w-full">
-      <AnimatePresence mode="wait">
-        {view === "home" ? (
-          <motion.div
-            key="home"
-            variants={pageVariants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={pageTransition}
-            style={{ position: "absolute", inset: 0, willChange: "transform, opacity" }}
-          >
-            <HomeApp
-              onCategorySelect={handleCategorySelect}
-              onProductSearch={handleProductSearch}
-              activeTab={activeTab}
-              onTabChange={handleTabChange}
-            />
-          </motion.div>
-        ) : (
+      {/* Both views stay mounted — prevents image reload on navigation */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          visibility: view === "home" ? "visible" : "hidden",
+          pointerEvents: view === "home" ? "auto" : "none",
+          zIndex: view === "home" ? 1 : 0,
+        }}
+      >
+        <HomeApp
+          onCategorySelect={handleCategorySelect}
+          onProductSearch={handleProductSearch}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
+        />
+      </div>
+
+      <AnimatePresence>
+        {view === "menu" && (
           <motion.div
             key="menu"
-            variants={pageVariants}
-            initial="enter"
-            animate="center"
-            exit="exit"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -30 }}
             transition={pageTransition}
-            style={{ position: "absolute", inset: 0, willChange: "transform, opacity" }}
+            style={{ position: "absolute", inset: 0, zIndex: 2, willChange: "transform, opacity" }}
           >
             <MenuApp
               isActive={view === "menu"}

@@ -818,7 +818,7 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
                       <img
                         src={cat.image}
                         alt={cat.label}
-                        loading="lazy"
+                        loading="eager"
                         decoding="async"
                         className="hlc-img"
                       />
@@ -858,7 +858,7 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
                       <img
                         src={cat.image}
                         alt={cat.label}
-                        loading="lazy"
+                        loading="eager"
                         decoding="async"
                         className="hc-img"
                       />
