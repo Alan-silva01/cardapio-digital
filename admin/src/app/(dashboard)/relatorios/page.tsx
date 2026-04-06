@@ -136,6 +136,7 @@ export default function RelatoriosPage() {
   const [searchNotFound, setSearchNotFound] = useState(false);
   const [estoqueBaixo, setEstoqueBaixo] = useState<any[]>([]);
   const [curtidas, setCurtidas] = useState<{ nome: string; total: number }[]>([]);
+  const [todosProdutos, setTodosProdutos] = useState<any[]>([]);
 
   // ── Fetch data ──
   const fetchData = useCallback(async () => {
@@ -165,8 +166,7 @@ export default function RelatoriosPage() {
         .neq("estoque", -1),
       supabase
         .from("produtos")
-        .select("nome, curtidas")
-        .gt("curtidas", 0)
+        .select("nome, curtidas, disponivel")
         .order("curtidas", { ascending: false })
     ]);
 
@@ -179,6 +179,7 @@ export default function RelatoriosPage() {
     }
 
     if (curtidasRes.data) {
+      setTodosProdutos(curtidasRes.data);
       setCurtidas(
         (curtidasRes.data as any[])
           .filter(p => p.nome && p.curtidas > 0)
@@ -350,6 +351,34 @@ export default function RelatoriosPage() {
 
     return Array.from(productMap.values()).sort((a, b) => b.qty - a.qty);
   }, [pedidosAtivos, itensPedido]);
+
+  // ── Bottom products (Least selling) ──
+  const bottomProducts = useMemo(() => {
+    const pedidoIds = new Set(pedidosAtivos.map(p => p.id));
+    const filteredItems = itensPedido.filter(
+      item => pedidoIds.has(item.pedido_id) && item.nome_produto !== COUVERT_NAME
+    );
+
+    const productMap = new Map<string, { name: string; qty: number; revenue: number }>();
+    
+    // Seed with all active products so zeroes show up
+    todosProdutos.forEach(p => {
+       if (p.disponivel && p.nome !== COUVERT_NAME) {
+           productMap.set(p.nome, { name: p.nome, qty: 0, revenue: 0 });
+       }
+    });
+
+    filteredItems.forEach(item => {
+      if (productMap.has(item.nome_produto)) {
+          const existing = productMap.get(item.nome_produto)!;
+          existing.qty += item.quantidade;
+          existing.revenue += Number(item.preco_total);
+          productMap.set(item.nome_produto, existing);
+      }
+    });
+
+    return Array.from(productMap.values()).sort((a, b) => a.qty - b.qty).slice(0, 50);
+  }, [pedidosAtivos, itensPedido, todosProdutos]);
 
   // ── Couvert Artístico metrics ──
   const couvertMetrics = useMemo(() => {
@@ -858,53 +887,99 @@ export default function RelatoriosPage() {
           </Card>
         </div>
 
-        {/* ── RANKING DE CURTIDAS ── */}
-        <Card className="shadow-none rounded-xl border border-border">
-          <CardHeader className="pb-2 pt-3 px-4">
-            <CardTitle className="text-xs font-semibold flex items-center gap-1.5">
-              <Heart className="h-3.5 w-3.5 text-rose-500" />
-              Ranking de Curtidas
-            </CardTitle>
-            <CardDescription className="text-[11px]">Produtos favoritos pelos clientes (todos os tempos)</CardDescription>
-          </CardHeader>
-          <CardContent className="px-4 pb-4">
-            {curtidas.length === 0 ? (
-              <p className="text-sm text-muted-foreground py-4 text-center">Sem curtidas registradas</p>
-            ) : (
-              <div className="space-y-1">
-                <div className="grid grid-cols-12 gap-2 text-[10px] text-muted-foreground font-medium px-2 py-1.5 uppercase tracking-wider">
-                  <div className="col-span-1">#</div>
-                  <div className="col-span-8">Produto</div>
-                  <div className="col-span-3 text-right">Curtidas</div>
-                </div>
-                <Separator />
-                <div className="h-[240px] w-full pr-1 overflow-y-auto hidden-scrollbar">
-                  <div className="space-y-1">
-                    {curtidas.map((item, index) => (
-                      <div
-                        key={item.nome}
-                        className="grid grid-cols-12 gap-2 items-center px-2 py-2 rounded-md hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="col-span-1">
-                          <span className={`text-xs font-bold ${index < 3 ? "text-rose-500" : "text-muted-foreground"}`}>
-                            {index + 1}
-                          </span>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* ── RANKING DE CURTIDAS ── */}
+          <Card className="shadow-none rounded-xl border border-border">
+            <CardHeader className="pb-2 pt-3 px-4">
+              <CardTitle className="text-xs font-semibold flex items-center gap-1.5">
+                <Heart className="h-3.5 w-3.5 text-rose-500" />
+                Ranking de Curtidas
+              </CardTitle>
+              <CardDescription className="text-[11px]">Produtos favoritos pelos clientes (todos os tempos)</CardDescription>
+            </CardHeader>
+            <CardContent className="px-4 pb-4">
+              {curtidas.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4 text-center">Sem curtidas registradas</p>
+              ) : (
+                <div className="space-y-1">
+                  <div className="grid grid-cols-12 gap-2 text-[10px] text-muted-foreground font-medium px-2 py-1.5 uppercase tracking-wider">
+                    <div className="col-span-1">#</div>
+                    <div className="col-span-8">Produto</div>
+                    <div className="col-span-3 text-right">Curtidas</div>
+                  </div>
+                  <Separator />
+                  <div className="h-[240px] w-full pr-1 overflow-y-auto hidden-scrollbar">
+                    <div className="space-y-1">
+                      {curtidas.map((item, index) => (
+                        <div
+                          key={item.nome}
+                          className="grid grid-cols-12 gap-2 items-center px-2 py-2 rounded-md hover:bg-muted/50 transition-colors"
+                        >
+                          <div className="col-span-1">
+                            <span className={`text-xs font-bold ${index < 3 ? "text-rose-500" : "text-muted-foreground"}`}>
+                              {index + 1}
+                            </span>
+                          </div>
+                          <div className="col-span-8">
+                            <span className="text-sm font-medium">{item.nome}</span>
+                          </div>
+                          <div className="col-span-3 text-right flex items-center justify-end gap-1">
+                            <Heart className="h-3 w-3 text-rose-400" />
+                            <span className="text-sm font-bold">{item.total}</span>
+                          </div>
                         </div>
-                        <div className="col-span-8">
-                          <span className="text-sm font-medium">{item.nome}</span>
-                        </div>
-                        <div className="col-span-3 text-right flex items-center justify-end gap-1">
-                          <Heart className="h-3 w-3 text-rose-400" />
-                          <span className="text-sm font-bold">{item.total}</span>
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* ── PRODUTOS BAIXA SAÍDA ── */}
+          <Card className="shadow-none rounded-xl border border-border">
+            <CardHeader className="pb-2 pt-3 px-4 flex-row justify-between items-center">
+              <div>
+                <CardTitle className="text-xs font-semibold flex items-center gap-1.5">
+                  <TrendingDown className="h-3.5 w-3.5 text-amber-500" />
+                  Produtos de Baixa Saída
+                </CardTitle>
+                <CardDescription className="text-[11px]">Ideais para promover ou repensar</CardDescription>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardHeader>
+            <CardContent className="px-4 pb-4">
+              {bottomProducts.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4 text-center">Sem dados no período</p>
+              ) : (
+                <div className="space-y-1">
+                  <div className="grid grid-cols-12 gap-2 text-[10px] text-muted-foreground font-medium px-2 py-1.5 uppercase tracking-wider sticky top-0 bg-background z-10">
+                    <div className="col-span-7">Produto</div>
+                    <div className="col-span-5 text-right">Qtd Vendida</div>
+                  </div>
+                  <Separator />
+                  <div className="h-[240px] w-full pr-1 overflow-y-auto hidden-scrollbar">
+                    <div className="space-y-1">
+                      {bottomProducts.map((product) => (
+                        <div
+                          key={product.name}
+                          className="grid grid-cols-12 gap-2 items-center px-2 py-2 rounded-md hover:bg-muted/50 transition-colors"
+                        >
+                          <div className="col-span-7">
+                            <span className="text-sm font-medium">{product.name}</span>
+                          </div>
+                          <div className="col-span-5 text-right">
+                            <span className={cn("text-sm font-bold", product.qty === 0 ? "text-amber-500" : "")}>{product.qty}</span>
+                            <span className="text-[11px] text-muted-foreground ml-1">un</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
         </div>
     </div>
