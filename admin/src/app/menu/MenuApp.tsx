@@ -1533,7 +1533,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                             </h1>
                         </div>
 
-                        <div style={{ position: 'relative', width: '100%', height: 'clamp(110px, 33dvh, 280px)', display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 'clamp(0px, 0.5dvh, 5px)' }}>
+                        <div style={{ position: 'relative', width: '100%', height: 'clamp(110px, 38dvh, 320px)', display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 'clamp(0px, 0.5dvh, 5px)' }}>
                             {/* Back Glow */}
                             <div style={{
                                 position: 'absolute', width: '200px', height: '200px',
