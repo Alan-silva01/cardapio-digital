@@ -2411,7 +2411,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                             {cartTab === 'pedidos' && (
                                 <div className="cart-footer" style={{position: 'relative', bottom: 'auto', borderTop: 'none', padding: '0 20px 24px'}}>
                                     <div className="cart-subtotal-row" style={{marginBottom: 0}}>
-                                        <span className="cart-subtotal-label">Total da sua comanda</span>
+                                        <span className="cart-subtotal-label">Total da sua conta</span>
                                         <span className="cart-subtotal-value">
                                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
                                                 orderHistory.reduce((sum, ped) => sum + ped.total, 0)
@@ -2477,7 +2477,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                     if (onTabChange) onTabChange('menu');
                                 }} 
                             />
-                            <span className="cart-title">Comanda</span>
+                            <span className="cart-title">Sua Conta</span>
                         </div>
                         
                         {/* TABS */}
@@ -2500,7 +2500,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                             {/* PEOPLE GROUPING IDENTIFIER */}
                             {pessoaAtiva && (
                                 <div className="cart-person-section" style={{marginBottom: '10px'}}>
-                                    <h5 style={{fontSize: '11px', color: '#666', margin: 0, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px'}}>Comanda Identificada</h5>
+                                    <h5 style={{fontSize: '11px', color: '#666', margin: 0, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px'}}>Seu Nome</h5>
                                     <div className="cart-person-active" style={{marginTop: '0px', padding: '6px 10px', background: '#F3F4F6', border: '1px solid #E5E7EB', borderRadius: '8px'}}>
                                         <span className="cart-person-active-name" style={{color: '#111827', fontWeight: 600, fontSize: '13px'}}>
                                             <div style={{width: '20px', height: '20px', borderRadius: '50%', background: 'var(--accent-gold)', color: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 900}}>
@@ -2847,7 +2847,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                             {cartTab === 'pedidos' && (
                                 <div className="cart-footer" style={{position: 'relative', bottom: 'auto', borderTop: 'none', padding: '0 20px 24px'}}>
                                     <div className="cart-subtotal-row" style={{marginBottom: 0}}>
-                                        <span className="cart-subtotal-label">Total da sua comanda</span>
+                                        <span className="cart-subtotal-label">Total da sua conta</span>
                                         <span className="cart-subtotal-value">
                                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
                                                 orderHistory.reduce((sum, ped) => sum + ped.total, 0)
@@ -2926,7 +2926,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                         >
                             <div className="people-drawer-header">
-                                <h3 className="people-drawer-title">Pra qual comanda?</h3>
+                                <h3 className="people-drawer-title">Qual seu nome?</h3>
                                 <button onClick={() => setIsPeopleDrawerOpen(false)} style={{ background: 'none', border: 'none', color: '#FFF', cursor: 'pointer' }}>
                                     <X size={20} />
                                 </button>
@@ -3021,7 +3021,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                             ))
                                         ) : (
                                             <div style={{ padding: '20px', textAlign: 'center', color: '#888', fontSize: '14px' }}>
-                                                Nenhuma comanda aberta nesta mesa ainda.
+                                                Ninguém registrou pedidos nesta mesa ainda.
                                             </div>
                                         )}
                                     </div>
@@ -3030,7 +3030,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                         style={{ background: 'transparent', border: '1px solid var(--accent-gold)', color: 'var(--accent-gold)' }}
                                         onClick={() => setIsAddMode(true)}
                                     >
-                                        <Plus size={16} /> ADICIONAR NOVA COMANDA
+                                        <Plus size={16} /> INSERIR MEU NOME
                                     </button>
                                 </>
                             )}
