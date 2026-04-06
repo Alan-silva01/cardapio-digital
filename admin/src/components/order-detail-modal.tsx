@@ -303,7 +303,7 @@ function CouvertModal({
   nomePessoa?: string;
   onConfirm: (quantidade: number) => void;
 }) {
-  const [qtd, setQtd] = React.useState(1);
+  const [qtd, setQtd] = React.useState<number | "">(1);
 
   React.useEffect(() => {
     if (open) setQtd(1);
@@ -348,7 +348,15 @@ function CouvertModal({
               <Input 
                 type="number" 
                 value={qtd} 
-                onChange={(e) => setQtd(Math.max(1, parseInt(e.target.value) || 1))}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === '') {
+                    setQtd("");
+                  } else {
+                    setQtd(Math.max(1, parseInt(val) || 1));
+                  }
+                }}
+                onFocus={(e) => e.target.select()}
                 min={1}
                 className="h-10 text-center font-bold text-lg"
                 autoFocus
@@ -360,7 +368,7 @@ function CouvertModal({
             </div>
             <div className="flex items-center justify-between">
               <span className="font-bold text-sm text-foreground">Total do Couvert:</span>
-              <span className="font-bold text-brand text-base">R$ {(qtd * valorCouvert).toFixed(2)}</span>
+              <span className="font-bold text-brand text-base">R$ {(Number(qtd || 0) * valorCouvert).toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -372,7 +380,7 @@ function CouvertModal({
           <Button
             className="h-9 text-xs bg-brand hover:bg-brand/90 text-white font-semibold flex-1"
             onClick={() => {
-              onConfirm(qtd);
+              onConfirm(Number(qtd) || 1);
               onOpenChange(false);
             }}
           >

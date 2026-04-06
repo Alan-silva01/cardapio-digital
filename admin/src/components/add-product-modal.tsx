@@ -49,7 +49,7 @@ export function AddProductModal({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [selectedVariacaoId, setSelectedVariacaoId] = useState<string>("");
-  const [quantidade, setQuantidade] = useState(1);
+  const [quantidade, setQuantidade] = useState<number | "">(1);
   const [observacao, setObservacao] = useState("");
   const [nomePessoa, setNomePessoa] = useState(defaultPessoa || "Balcão");
 
@@ -140,7 +140,7 @@ export function AddProductModal({
       await onAdd(
         selectedProduct.id,
         selectedVariacaoId || null,
-        quantidade,
+        Number(quantidade) || 1,
         observacao,
         nomePessoa
       );
@@ -155,10 +155,11 @@ export function AddProductModal({
 
   const totalCalculated = useMemo(() => {
     if (!selectedProduct) return 0;
+    const qtdFinal = Number(quantidade) || 0;
     const variacao = variacoes.find((v) => v.id === selectedVariacaoId);
-    if (variacao) return variacao.preco * quantidade;
+    if (variacao) return variacao.preco * qtdFinal;
     // If no variation chosen yet but 1 exists, use it
-    if (productVariations.length === 1) return productVariations[0].preco * quantidade;
+    if (productVariations.length === 1) return productVariations[0].preco * qtdFinal;
     return 0;
   }, [selectedProduct, selectedVariacaoId, variacoes, quantidade, productVariations]);
 
@@ -205,7 +206,7 @@ export function AddProductModal({
                       Nenhum produto encontrado.
                     </div>
                   ) : (
-                    <ScrollArea className="flex-1">
+                    <div className="flex-1 overflow-y-auto min-h-0">
                       <div className="divide-y divide-border/50">
                         {filteredProducts.map((p) => (
                           <div
@@ -220,7 +221,7 @@ export function AddProductModal({
                           </div>
                         ))}
                       </div>
-                    </ScrollArea>
+                    </div>
                   )}
                 </div>
               )}
@@ -317,14 +318,22 @@ export function AddProductModal({
                       variant="outline"
                       size="icon"
                       className="h-10 w-10 shrink-0 rounded-r-none border-r-0"
-                      onClick={() => setQuantidade(Math.max(1, quantidade - 1))}
+                      onClick={() => setQuantidade(Math.max(1, (Number(quantidade) || 1) - 1))}
                     >
                       <Minus className="h-4 w-4" />
                     </Button>
                     <Input
                       type="number"
                       value={quantidade}
-                      onChange={(e) => setQuantidade(Math.max(1, parseInt(e.target.value) || 1))}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val === '') {
+                          setQuantidade("");
+                        } else {
+                          setQuantidade(Math.max(1, parseInt(val) || 1));
+                        }
+                      }}
+                      onFocus={(e) => e.target.select()}
                       className="h-10 text-center font-bold font-mono text-base rounded-none border-x-0 bg-muted/10 focus-visible:ring-0"
                     />
                     <Button
@@ -332,7 +341,7 @@ export function AddProductModal({
                       variant="outline"
                       size="icon"
                       className="h-10 w-10 shrink-0 rounded-l-none border-l-0"
-                      onClick={() => setQuantidade(quantidade + 1)}
+                      onClick={() => setQuantidade((Number(quantidade) || 0) + 1)}
                     >
                       <Plus className="h-4 w-4" />
                     </Button>

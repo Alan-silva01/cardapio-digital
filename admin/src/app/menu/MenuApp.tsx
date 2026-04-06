@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { countryFlags } from "@/lib/countryFlags";
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, ShoppingCart, ArrowLeft, Loader2, Heart, Users, User, Droplet, Plus, Minus, Trash2, X, Bell, Receipt, MessageSquare, Clock, ChevronDown, Check, Home, ShoppingBag, ClipboardList } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ShoppingCart, ArrowLeft, Loader2, Heart, Users, User, Droplet, Plus, Minus, Trash2, X, Bell, Receipt, MessageSquare, Clock, ChevronDown, Check, Home, ShoppingBag, ClipboardList, AlertCircle } from 'lucide-react';
 import { createClient } from "@/lib/supabase/client";
 const supabase = createClient();
 
@@ -208,6 +208,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
     const [wineGlassImages, setWineGlassImages] = useState({}); // { tinto: url, branco: url, rose: url }
     const [isCartOpen, setIsCartOpen] = useState(false); // Controls the cart overlay
     const [isCheckingOut, setIsCheckingOut] = useState(false); // Loading state for checkout
+    const [checkoutErrorMsg, setCheckoutErrorMsg] = useState(null); // Stock or custom business error
     const [orderSuccess, setOrderSuccess] = useState(false); // Success screen after order
     const [config, setConfig] = useState(null);
     const [showPromo, setShowPromo] = useState(false);
@@ -548,7 +549,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
 
             // Check for business logic errors returned by the function
             if (result && result.error) {
-                alert(result.error);
+                setCheckoutErrorMsg(result.error);
                 setIsCheckingOut(false);
                 if (result.closed) {
                     setIsCartOpen(false);
@@ -3033,6 +3034,101 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                     </button>
                                 </>
                             )}
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Error Message Dashboard / Stock Modal */}
+            <AnimatePresence>
+                {checkoutErrorMsg && (
+                    <motion.div
+                        className="modal-overlay"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        style={{
+                            position: 'fixed',
+                            top: 0, left: 0, right: 0, bottom: 0,
+                            backgroundColor: 'rgba(0,0,0,0.85)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            zIndex: 999999,
+                            backdropFilter: 'blur(10px)',
+                            padding: '24px'
+                        }}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                            style={{
+                                background: '#111',
+                                border: '1px solid #333',
+                                borderRadius: '24px',
+                                padding: '32px 24px',
+                                width: '100%',
+                                maxWidth: '380px',
+                                textAlign: 'center',
+                                boxShadow: '0 20px 40px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.05)'
+                            }}
+                        >
+                            <div style={{ 
+                                width: '70px', 
+                                height: '70px', 
+                                borderRadius: '50%', 
+                                backgroundColor: 'rgba(255,60,60,0.1)', 
+                                border: '1px solid rgba(255,60,60,0.2)',
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center', 
+                                margin: '0 auto 24px auto',
+                                color: '#ff4444'
+                            }}>
+                                <AlertCircle size={32} />
+                            </div>
+                            
+                            <h3 style={{ 
+                                margin: '0 0 16px 0', 
+                                color: '#fff', 
+                                fontSize: '20px', 
+                                fontWeight: '600',
+                                letterSpacing: '-0.5px'
+                            }}>
+                                Ops! Algo deu errado.
+                            </h3>
+                            
+                            <p style={{ 
+                                margin: '0 0 32px 0', 
+                                color: '#aaa', 
+                                fontSize: '15px', 
+                                lineHeight: '1.5' 
+                            }}>
+                                {checkoutErrorMsg}
+                            </p>
+                            
+                            <button
+                                onClick={() => setCheckoutErrorMsg(null)}
+                                style={{
+                                    width: '100%',
+                                    padding: '16px',
+                                    borderRadius: '16px',
+                                    border: 'none',
+                                    background: 'var(--accent-gold)',
+                                    color: '#000',
+                                    fontWeight: '600',
+                                    fontSize: '16px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '8px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                Entendi
+                            </button>
                         </motion.div>
                     </motion.div>
                 )}
