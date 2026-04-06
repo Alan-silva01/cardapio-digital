@@ -246,9 +246,13 @@ export default function DashboardPage() {
         return { categoryName: "Outros", imgUrl: "" };
     }, [productsByName]);
 
+    const COUVERT_NAME = "Couvert Artístico";
+
     const topProducts = useMemo(() => {
         const pedidoIds = new Set(pedidosHojeAtivos.map(p => p.id));
-        const filteredItems = itensPedido.filter(item => pedidoIds.has(item.pedido_id));
+        const filteredItems = itensPedido.filter(
+            item => pedidoIds.has(item.pedido_id) && item.nome_produto !== COUVERT_NAME
+        );
 
         const productMap = new Map<string, { name: string; category: string; qty: number; revenue: number; img: string }>();
         filteredItems.forEach(item => {
