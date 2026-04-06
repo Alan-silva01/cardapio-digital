@@ -1164,7 +1164,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
             document.documentElement.classList.add('theme-dark');
             document.body.classList.add('theme-dark');
             if (rootEl) rootEl.classList.add('theme-dark');
-            if (themeMetaTag) themeMetaTag.setAttribute('content', '#000000');
+            if (themeMetaTag) themeMetaTag.setAttribute('content', '#d9d0c1');
         } else {
             document.documentElement.classList.remove('theme-dark');
             document.body.classList.remove('theme-dark');
