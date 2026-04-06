@@ -28,6 +28,8 @@ import {
   Receipt,
   BarChart3,
   Loader2,
+  Music2,
+  Heart,
 } from "lucide-react";
 import {
   Bar,
@@ -133,13 +135,14 @@ export default function RelatoriosPage() {
   const [searching, setSearching] = useState(false);
   const [searchNotFound, setSearchNotFound] = useState(false);
   const [estoqueBaixo, setEstoqueBaixo] = useState<any[]>([]);
+  const [curtidas, setCurtidas] = useState<{ nome: string; total: number }[]>([]);
 
   // ── Fetch data ──
   const fetchData = useCallback(async () => {
     setLoading(true);
     const { from, to } = getDateRange(period);
 
-    const [pedidosRes, itensRes, estoqueRes] = await Promise.all([
+    const [pedidosRes, itensRes, estoqueRes, curtidasRes] = await Promise.all([
       supabase
         .from("pedidos")
         .select("id, comanda_id, order_number, order_id, numero_mesa, nome_pessoa, status, total, forma_pagamento, criado_em")
@@ -159,7 +162,12 @@ export default function RelatoriosPage() {
           produtos!inner(nome)
         `)
         .eq("ativo", true)
-        .neq("estoque", -1)
+        .neq("estoque", -1),
+      supabase
+        .from("produtos")
+        .select("nome, curtidas")
+        .gt("curtidas", 0)
+        .order("curtidas", { ascending: false })
     ]);
 
     if (pedidosRes.data) setPedidos(pedidosRes.data as unknown as PedidoRow[]);
@@ -168,6 +176,15 @@ export default function RelatoriosPage() {
     if (estoqueRes.data) {
       const lowStock = (estoqueRes.data as any[]).filter(item => item.estoque <= item.estoque_minimo);
       setEstoqueBaixo(lowStock.sort((a, b) => a.estoque - b.estoque));
+    }
+
+    if (curtidasRes.data) {
+      setCurtidas(
+        (curtidasRes.data as any[])
+          .filter(p => p.nome && p.curtidas > 0)
+          .map(p => ({ nome: p.nome, total: p.curtidas as number }))
+          .sort((a, b) => b.total - a.total)
+      );
     }
 
     setLoading(false);
@@ -314,10 +331,14 @@ export default function RelatoriosPage() {
     });
   }, [pedidosAtivos]);
 
-  // ── Top products ──
+  // ── Top products (couvert excluded from ranking) ──
+  const COUVERT_NAME = "Couvert Artístico";
+
   const topProducts = useMemo(() => {
     const pedidoIds = new Set(pedidosAtivos.map(p => p.id));
-    const filteredItems = itensPedido.filter(item => pedidoIds.has(item.pedido_id));
+    const filteredItems = itensPedido.filter(
+      item => pedidoIds.has(item.pedido_id) && item.nome_produto !== COUVERT_NAME
+    );
 
     const productMap = new Map<string, { name: string; qty: number; revenue: number }>();
     filteredItems.forEach(item => {
@@ -327,9 +348,18 @@ export default function RelatoriosPage() {
       productMap.set(item.nome_produto, existing);
     });
 
-    return Array.from(productMap.values())
-      .sort((a, b) => b.qty - a.qty);
-      // We removed the .slice(0, 10) to allow scrolling all products.
+    return Array.from(productMap.values()).sort((a, b) => b.qty - a.qty);
+  }, [pedidosAtivos, itensPedido]);
+
+  // ── Couvert Artístico metrics ──
+  const couvertMetrics = useMemo(() => {
+    const pedidoIds = new Set(pedidosAtivos.map(p => p.id));
+    const couvertItems = itensPedido.filter(
+      item => pedidoIds.has(item.pedido_id) && item.nome_produto === COUVERT_NAME
+    );
+    const qty = couvertItems.reduce((sum, i) => sum + i.quantidade, 0);
+    const revenue = couvertItems.reduce((sum, i) => sum + Number(i.preco_total), 0);
+    return { qty, revenue };
   }, [pedidosAtivos, itensPedido]);
 
   // ── Status label ──
@@ -689,6 +719,45 @@ export default function RelatoriosPage() {
             </Card>
           </div>
 
+        {/* ── COUVERT + CURTIDAS METRICS ── */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Couvert Artístico */}
+          <Card className="shadow-none rounded-xl border border-border">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-3 px-4">
+              <CardTitle className="text-[11px] font-medium text-muted-foreground">Couvert Artístico</CardTitle>
+              <Music2 className="h-3.5 w-3.5 text-[#EC662D]" />
+            </CardHeader>
+            <CardContent className="px-4 pb-3">
+              <div className="text-lg font-bold tracking-tight">
+                {loading ? "..." : `R$ ${couvertMetrics.revenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`}
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                {couvertMetrics.qty} cobranças no período
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Mais Curtidos */}
+          <Card className="shadow-none rounded-xl border border-border">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 pt-3 px-4">
+              <CardTitle className="text-[11px] font-medium text-muted-foreground">Produto Mais Curtido</CardTitle>
+              <Heart className="h-3.5 w-3.5 text-rose-500" />
+            </CardHeader>
+            <CardContent className="px-4 pb-3">
+              {loading || curtidas.length === 0 ? (
+                <div className="text-lg font-bold tracking-tight text-muted-foreground">{loading ? "..." : "—"}</div>
+              ) : (
+                <>
+                  <div className="text-sm font-bold tracking-tight truncate">{curtidas[0].nome}</div>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    ❤️ {curtidas[0].total} curtidas · #{curtidas[1] ? `2° ${curtidas[1].nome}` : "único no ranking"}
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* ── RANKING DE PRODUTOS ── */}
           <Card className="shadow-none rounded-xl border border-border">
@@ -788,6 +857,54 @@ export default function RelatoriosPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* ── RANKING DE CURTIDAS ── */}
+        <Card className="shadow-none rounded-xl border border-border">
+          <CardHeader className="pb-2 pt-3 px-4">
+            <CardTitle className="text-xs font-semibold flex items-center gap-1.5">
+              <Heart className="h-3.5 w-3.5 text-rose-500" />
+              Ranking de Curtidas
+            </CardTitle>
+            <CardDescription className="text-[11px]">Produtos favoritos pelos clientes (todos os tempos)</CardDescription>
+          </CardHeader>
+          <CardContent className="px-4 pb-4">
+            {curtidas.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-4 text-center">Sem curtidas registradas</p>
+            ) : (
+              <div className="space-y-1">
+                <div className="grid grid-cols-12 gap-2 text-[10px] text-muted-foreground font-medium px-2 py-1.5 uppercase tracking-wider">
+                  <div className="col-span-1">#</div>
+                  <div className="col-span-8">Produto</div>
+                  <div className="col-span-3 text-right">Curtidas</div>
+                </div>
+                <Separator />
+                <div className="h-[240px] w-full pr-1 overflow-y-auto hidden-scrollbar">
+                  <div className="space-y-1">
+                    {curtidas.map((item, index) => (
+                      <div
+                        key={item.nome}
+                        className="grid grid-cols-12 gap-2 items-center px-2 py-2 rounded-md hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="col-span-1">
+                          <span className={`text-xs font-bold ${index < 3 ? "text-rose-500" : "text-muted-foreground"}`}>
+                            {index + 1}
+                          </span>
+                        </div>
+                        <div className="col-span-8">
+                          <span className="text-sm font-medium">{item.nome}</span>
+                        </div>
+                        <div className="col-span-3 text-right flex items-center justify-end gap-1">
+                          <Heart className="h-3 w-3 text-rose-400" />
+                          <span className="text-sm font-bold">{item.total}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         </div>
     </div>
