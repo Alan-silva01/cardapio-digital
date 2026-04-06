@@ -1472,8 +1472,8 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                             gap: '2px',
                             marginBottom: '2px',
                             zIndex: 10,
-                            height: '30px',
-                            minHeight: '30px'
+                            height: 'clamp(18px, 4dvh, 30px)',
+                            minHeight: 'clamp(18px, 4dvh, 30px)'
                         }}>
                             {currentProduct.flagUrl && (
                                 <img
@@ -1507,10 +1507,10 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                             padding: '0 20px',
                             textAlign: 'center',
                             width: '90%',
-                            marginBottom: '10px',
+                            marginBottom: 'clamp(4px, 1.2dvh, 10px)',
                             zIndex: 5,
-                            height: '34px',
-                            minHeight: '34px',
+                            height: 'clamp(22px, 4.5dvh, 34px)',
+                            minHeight: 'clamp(22px, 4.5dvh, 34px)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -1520,7 +1520,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                 ref={heroTitleRef}
                                 style={{
                                     fontFamily: 'Playfair Display, serif',
-                                    fontSize: '24px',
+                                    fontSize: 'clamp(16px, 3.2dvh, 24px)',
                                     fontWeight: 900,
                                     color: '#222',
                                     textAlign: 'center',
@@ -1533,7 +1533,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                             </h1>
                         </div>
 
-                        <div style={{ position: 'relative', width: '100%', height: '35dvh', maxHeight: '280px', minHeight: '150px', display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '5px' }}>
+                        <div style={{ position: 'relative', width: '100%', height: 'clamp(100px, 25dvh, 260px)', display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 'clamp(0px, 0.5dvh, 5px)' }}>
                             {/* Back Glow */}
                             <div style={{
                                 position: 'absolute', width: '200px', height: '200px',
@@ -1592,7 +1592,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                 <div className="drag-handle" />
 
                 {/* FIXED HEART ON THE SIDE */}
-                <div style={{ position: 'absolute', top: '65px', right: '15px', zIndex: 100 }}>
+                <div style={{ position: 'absolute', top: 'clamp(45px, 8dvh, 65px)', right: '15px', zIndex: 100 }}>
                     <button
                         onClick={async (e) => {
                             const rect = e.currentTarget.getBoundingClientRect();
@@ -1759,7 +1759,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                             </div>
 
                             {/* ELITE METADATA LINE */}
-                            <div style={{ display: 'flex', justifyContent: 'center', gap: 'clamp(4px, 1.5vw, 8px)', marginBottom: 'clamp(4px, 2vw, 10px)', opacity: 0.8, alignItems: 'center', flexWrap: 'wrap' }}>
+                            <div style={{ display: 'flex', justifyContent: 'center', gap: 'clamp(3px, 1.2vw, 8px)', marginBottom: 'clamp(2px, 1dvh, 10px)', opacity: 0.8, alignItems: 'center', flexWrap: 'wrap' }}>
                                 {currentProduct.tipo_vinho && (
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '10px', color: '#A0A0A0' }}>
                                         <Droplet size={10} fill={currentProduct.tipo_vinho === 'tinto' ? '#722F37' : currentProduct.tipo_vinho === 'rose' ? '#DB7093' : '#F5F5F5'} color={currentProduct.tipo_vinho === 'tinto' ? '#722F37' : currentProduct.tipo_vinho === 'rose' ? '#DB7093' : '#F5F5F5'} /> {currentProduct.tipo_vinho === 'rose' ? 'Rosé' : currentProduct.tipo_vinho === 'tinto' ? 'Tinto' : 'Branco'}
@@ -1798,7 +1798,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                             {/* MULTI-FLAVOR / VARIATION SELECTION — DYNAMIC (reads DB) */}
                             {((currentProduct.variations && Object.keys(currentProduct.variations).length > 1) ||
                                 currentProduct.grupo_id_sabor) && (
-                                    <div style={{ marginTop: '0px', marginBottom: 'clamp(8px, 3vw, 20px)', width: '100%' }}>
+                                    <div style={{ marginTop: '0px', marginBottom: 'clamp(4px, 1.5dvh, 20px)', width: '100%' }}>
                                         <div style={{
                                             textAlign: 'center',
                                             fontSize: 'clamp(7px, 2vw, 9px)',
