@@ -83,6 +83,7 @@ export interface ComandaAgrupada {
     pago?: boolean;
     cancelado?: boolean;
   }[];
+  contribuicoes?: { id: string; nome_pagador: string; nome_pessoa_alvo: string; valor: number; metodo: string; criado_em: string }[];
 }
 
 const STATUS_ORDER = ["recebido", "preparando", "pronto", "entregue", "cancelado"];
@@ -236,14 +237,29 @@ export default function PedidosPage() {
   }, []);
 
   const fetchMesasLivres = useCallback(async () => {
-    const { data } = await supabase
+    const { data: mesasData } = await supabase
       .from("mesas")
       .select("id, numero, status")
       .order("numero", { ascending: true });
-    if (data) {
-      setMesasLivres(data.filter(m => m.status === "livre"));
+
+    const startDate = new Date();
+    startDate.setHours(0, 0, 0, 0);
+
+    const { data: pedidosData } = await supabase
+      .from("pedidos")
+      .select("numero_mesa")
+      .gte("criado_em", startDate.toISOString())
+      .neq("status", "entregue")
+      .neq("status", "cancelado");
+
+    if (mesasData) {
+      const mesasOcupadas = new Set((pedidosData || []).map((p) => p.numero_mesa));
+      // Filtra as mesas vazias!
+      const mesasVazias = mesasData.filter((m) => !mesasOcupadas.has(m.numero));
+      
+      setMesasLivres(mesasVazias);
       const idMap: Record<number, string> = {};
-      data.forEach(m => { idMap[m.numero] = m.id; });
+      mesasData.forEach(m => { idMap[m.numero] = m.id; });
       setMesaIdMap(idMap);
     }
   }, []);
@@ -289,7 +305,29 @@ export default function PedidosPage() {
     }
 
     if (data) {
-      const comandas = groupPedidosByComanda(data as unknown as PedidoRaw[]);
+      const pedidosData = data as unknown as PedidoRaw[];
+      const comandas = groupPedidosByComanda(pedidosData);
+
+      // Fetch contributions for these comandas
+      const comandaIds = comandas.map(c => c.comanda_id);
+      const { data: contribData } = await supabase
+        .from("pagamentos")
+        .select("id, comanda_id, nome_pagador, nome_pessoa_alvo, valor, metodo, criado_em")
+        .in("comanda_id", comandaIds)
+        .eq("tipo", "contribuicao")
+        .order("criado_em", { ascending: true });
+
+      // Inject contributions into each comanda
+      const contribMap = new Map<string, any[]>();
+      (contribData || []).forEach((c: any) => {
+        const existing = contribMap.get(c.comanda_id) || [];
+        existing.push(c);
+        contribMap.set(c.comanda_id, existing);
+      });
+      comandas.forEach(c => {
+        c.contribuicoes = contribMap.get(c.comanda_id) || [];
+      });
+
       setColumns(groupByStatus(comandas));
 
       // Update selected comanda symmetrically if it's already open
@@ -308,7 +346,6 @@ export default function PedidosPage() {
           const activeComanda = comandas.find(c => c.numero_mesa === mesaNum && c.status !== "entregue" && c.status !== "cancelado");
           if (activeComanda) {
             setSelectedComanda(activeComanda);
-            // Clear URL param after opening
             window.history.replaceState({}, '', '/pedidos');
           }
         }
@@ -703,10 +740,55 @@ export default function PedidosPage() {
     }
 
     toast.success(`Mesa transferida para a Mesa ${String(novaMesaNumero).padStart(2, "0")} com sucesso!`);
-    // Refresh everything
     await fetchPedidos();
     await fetchMesasLivres();
   }, [fetchPedidos, fetchMesasLivres]);
+
+  const handleEditItem = useCallback(async (itemId: string, novaQuantidade: number, observacao: string) => {
+    const { data, error } = await supabase.rpc("editar_item_comanda", {
+      p_item_id: itemId,
+      p_nova_quantidade: novaQuantidade,
+      p_observacao: observacao,
+    });
+
+    const rd = data as Record<string, any>;
+
+    if (error || (rd && !rd.success)) {
+      const msg = error?.message || rd?.error || "Erro ao editar item.";
+      toast.error(msg);
+      throw new Error(msg);
+    }
+
+    toast.success("Item atualizado!");
+    await fetchPedidos();
+  }, [fetchPedidos]);
+
+  const handleRegistrarContribuicao = useCallback(async (
+    comandaId: string,
+    nomePessoaAlvo: string,
+    nomePagador: string,
+    valor: number,
+    metodo: string,
+  ) => {
+    const { data, error } = await supabase.rpc("registrar_contribuicao", {
+      p_comanda_id: comandaId,
+      p_nome_pessoa_alvo: nomePessoaAlvo,
+      p_nome_pagador: nomePagador,
+      p_valor: valor,
+      p_metodo: metodo,
+    });
+
+    const rd = data as Record<string, any>;
+
+    if (error || (rd && !rd.success)) {
+      const msg = error?.message || rd?.error || "Erro ao registrar contribuição.";
+      toast.error(msg);
+      throw new Error(msg);
+    }
+
+    toast.success(`Pagamento de R$ ${valor.toFixed(2)} de ${nomePagador} registrado!`);
+    await fetchPedidos();
+  }, [fetchPedidos]);
 
 
   const getActionLabel = (status: string) => {
@@ -936,6 +1018,27 @@ export default function PedidosPage() {
         <table>${itemsHtml}</table>
         ${couvertHtml}
         <div class="total">Total: R$ ${pessoa.subtotal.toFixed(2)}</div>
+        ${(() => {
+          const contribs = comanda.contribuicoes?.filter(c => c.nome_pessoa_alvo === nomePessoa) || [];
+          if (contribs.length === 0) return "";
+          const totalPago = contribs.reduce((s, c) => s + c.valor, 0);
+          const saldo = pessoa.subtotal - totalPago;
+          const contribsHtml = contribs.map(c => 
+            `<tr>
+              <td style="padding:1px 0;">${c.nome_pagador}</td>
+              <td style="padding:1px 0; text-align:right;">${c.metodo.toUpperCase()}</td>
+              <td style="padding:1px 0; text-align:right;">R$ ${c.valor.toFixed(2)}</td>
+            </tr>`
+          ).join("");
+          return `
+            <div style="border-top:1px dashed #000; margin-top:6px; padding-top:4px;">
+              <div style="font-weight:bold; font-size:11px; margin-bottom:4px;">Pagamentos Recebidos</div>
+              <table style="width:100%;"><tbody>${contribsHtml}</tbody></table>
+              <div style="text-align:right; font-weight:bold; margin-top:4px; font-size:12px;">Pago: R$ ${totalPago.toFixed(2)}</div>
+              ${saldo > 0.01 ? `<div style="text-align:right; font-weight:bold; font-size:12px; color:#c00;">Restante: R$ ${saldo.toFixed(2)}</div>` : `<div style="text-align:right; font-size:11px; color:#080;">✓ Quitado</div>`}
+            </div>
+          `;
+        })()}
         <div class="footer">
           <div>Comanda Individual</div>
           <div class="powered">
@@ -1523,6 +1626,8 @@ export default function PedidosPage() {
         mesasLivres={mesasLivres.filter(m => m.numero !== selectedComanda?.numero_mesa)}
         onTransferirMesa={handleTransferirMesa}
         mesaOrigemId={selectedComanda ? mesaIdMap[selectedComanda.numero_mesa] : undefined}
+        onEditItem={handleEditItem}
+        onRegistrarContribuicao={handleRegistrarContribuicao}
       />
 
       {/* SERVICE CALL MODAL — ULTRA COMPACT */}

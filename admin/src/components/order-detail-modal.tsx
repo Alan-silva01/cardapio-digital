@@ -21,6 +21,11 @@ import {
   PlusCircle,
   Plus,
   ArrowRightLeft,
+  Pencil,
+  Minus,
+  HandCoins,
+  X,
+  Save,
 } from "lucide-react";
 import {
   Dialog,
@@ -62,6 +67,15 @@ interface ItemPedido {
   produtos?: any;
 }
 
+interface Contribuicao {
+  id: string;
+  nome_pagador: string;
+  nome_pessoa_alvo: string;
+  valor: number;
+  metodo: string;
+  criado_em: string;
+}
+
 interface ComandaAgrupada {
   comanda_id: string;
   numero_mesa: number;
@@ -79,6 +93,7 @@ interface ComandaAgrupada {
     pago?: boolean;
     cancelado?: boolean;
   }[];
+  contribuicoes?: Contribuicao[];
 }
 
 interface MesaLivre {
@@ -113,6 +128,8 @@ interface OrderDetailModalProps {
   mesasLivres?: MesaLivre[];
   onTransferirMesa?: (comandaId: string, mesaOrigemId: string, mesaDestinoId: string, novaMesaNumero: number) => Promise<void>;
   mesaOrigemId?: string;
+  onEditItem?: (itemId: string, novaQuantidade: number, observacao: string) => Promise<void>;
+  onRegistrarContribuicao?: (comandaId: string, nomePessoaAlvo: string, nomePagador: string, valor: number, metodo: string) => Promise<void>;
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon?: any }> = {
@@ -145,20 +162,110 @@ function ItemCheckbox({
   comandaStatus,
   onToggle,
   onRemove,
+  onEdit,
 }: {
   item: ItemPedido;
   comandaStatus: string;
   onToggle: (itemId: string, currentValue: boolean) => void;
   onRemove?: (itemId: string) => void;
+  onEdit?: (itemId: string, novaQtd: number, obs: string) => Promise<void>;
 }) {
+  const [editing, setEditing] = useState(false);
+  const [editQtd, setEditQtd] = useState(item.quantidade);
+  const [editObs, setEditObs] = useState(item.observacao || "");
+  const [editLoading, setEditLoading] = useState(false);
+
   const isServed = item.servido || comandaStatus === "pronto" || comandaStatus === "entregue";
   const canToggle = comandaStatus !== "entregue";
+  const canEdit = comandaStatus !== "entregue" && comandaStatus !== "cancelado";
 
   const handleClick = useCallback(() => {
     if (canToggle) {
       onToggle(item.id, item.servido);
     }
   }, [canToggle, onToggle, item.id, item.servido]);
+
+  const handleStartEdit = () => {
+    setEditQtd(item.quantidade);
+    setEditObs(item.observacao || "");
+    setEditing(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!onEdit || editQtd < 1) return;
+    setEditLoading(true);
+    try {
+      await onEdit(item.id, editQtd, editObs);
+      setEditing(false);
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  if (editing) {
+    return (
+      <div className="bg-muted/30 rounded-lg p-3 space-y-2 border border-border/50">
+        <div className="flex items-center justify-between">
+          <span className="text-[13px] font-medium text-foreground">
+            {item.nome_produto}
+            {(item.nome_variacao && item.nome_variacao.toLowerCase() !== 'unidade') && (
+              <span className="text-muted-foreground/70 ml-1">({item.nome_variacao})</span>
+            )}
+          </span>
+          <button onClick={() => setEditing(false)} className="p-1 text-muted-foreground hover:text-foreground rounded">
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-0">
+            <button
+              type="button"
+              onClick={() => setEditQtd(Math.max(1, editQtd - 1))}
+              className="h-8 w-8 flex items-center justify-center rounded-l-md bg-muted hover:bg-muted/80 border border-border text-foreground transition-colors"
+            >
+              <Minus className="h-3.5 w-3.5" />
+            </button>
+            <div className="h-8 w-10 flex items-center justify-center border-y border-border bg-background text-sm font-bold">
+              {editQtd}
+            </div>
+            <button
+              type="button"
+              onClick={() => setEditQtd(editQtd + 1)}
+              className="h-8 w-8 flex items-center justify-center rounded-r-md bg-muted hover:bg-muted/80 border border-border text-foreground transition-colors"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </button>
+          </div>
+          <span className="text-[11px] font-mono text-muted-foreground">
+            R$ {(item.preco_unitario * editQtd).toFixed(2)}
+          </span>
+        </div>
+        <Input
+          placeholder="Observação (opcional)"
+          value={editObs}
+          onChange={(e) => setEditObs(e.target.value)}
+          className="h-8 text-xs"
+        />
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" className="h-7 text-[11px] flex-1" onClick={() => setEditing(false)}>
+            Cancelar
+          </Button>
+          <Button
+            size="sm"
+            className="h-7 text-[11px] flex-1 bg-brand hover:bg-brand/90 text-white"
+            onClick={handleSaveEdit}
+            disabled={editLoading || editQtd < 1}
+          >
+            {editLoading ? (
+              <span className="h-3 w-3 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+            ) : (
+              <><Save className="h-3 w-3 mr-1" />Salvar</>
+            )}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center w-full group/item">
@@ -202,10 +309,19 @@ function ItemCheckbox({
               </span>
             )}
           </div>
-          {onRemove && comandaStatus !== "entregue" && comandaStatus !== "cancelado" && (
+          {canEdit && onEdit && (
+            <button
+              onClick={handleStartEdit}
+              className="p-1.5 ml-0.5 text-muted-foreground/30 hover:text-blue-500 hover:bg-blue-500/10 rounded-md transition-colors"
+              title="Editar item"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+          )}
+          {onRemove && canEdit && (
             <button
               onClick={() => onRemove(item.id)}
-              className="p-1.5 ml-1 text-muted-foreground/30 hover:text-red-500 hover:bg-red-500/10 rounded-md transition-colors"
+              className="p-1.5 ml-0.5 text-muted-foreground/30 hover:text-red-500 hover:bg-red-500/10 rounded-md transition-colors"
               title="Remover item do pedido"
             >
               <Trash2 className="h-3.5 w-3.5" />
@@ -427,6 +543,8 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
   mesasLivres = [],
   onTransferirMesa,
   mesaOrigemId,
+  onEditItem,
+  onRegistrarContribuicao,
 }: OrderDetailModalProps) {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -441,6 +559,11 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
   const [showTransferModal, setShowTransferModal] = useState(false);
   const [selectedMesaDestino, setSelectedMesaDestino] = useState<string>("");
   const [transferLoading, setTransferLoading] = useState(false);
+  const [contribTarget, setContribTarget] = useState<string | null>(null);
+  const [contribNome, setContribNome] = useState("");
+  const [contribValor, setContribValor] = useState<number | "">(0);
+  const [contribMetodo, setContribMetodo] = useState("pix");
+  const [contribLoading, setContribLoading] = useState(false);
 
   const hasCouvert = useMemo(() => {
     if (!comanda) return false;
@@ -737,9 +860,63 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
                             comandaStatus={comanda.status}
                             onToggle={onToggleItemServido}
                             onRemove={setItemToRemove}
+                            onEdit={onEditItem}
                           />
                         ))}
                       </div>
+
+                      {/* Contribution history for this person */}
+                      {(() => {
+                        const pessoaContribs = comanda.contribuicoes?.filter(c => c.nome_pessoa_alvo === pessoa.nome) || [];
+                        const totalPago = pessoaContribs.reduce((sum, c) => sum + c.valor, 0);
+                        const saldo = pessoa.subtotal - totalPago;
+
+                        if (pessoaContribs.length === 0 && !onRegistrarContribuicao) return null;
+
+                        return (
+                          <div className="mt-2 px-3">
+                            {pessoaContribs.length > 0 && (
+                              <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-lg p-2.5 space-y-1.5 mb-2">
+                                <span className="text-[10px] font-semibold text-emerald-500 uppercase tracking-wider">Pagamentos Recebidos</span>
+                                {pessoaContribs.map((c) => (
+                                  <div key={c.id} className="flex items-center justify-between text-[11px]">
+                                    <span className="text-foreground">
+                                      <span className="font-medium">{c.nome_pagador}</span>
+                                      <span className="text-muted-foreground ml-1">({c.metodo.toUpperCase()})</span>
+                                    </span>
+                                    <span className="font-mono text-emerald-500 font-medium">R$ {c.valor.toFixed(2)}</span>
+                                  </div>
+                                ))}
+                                <div className="flex items-center justify-between text-[11px] border-t border-emerald-500/10 pt-1.5 mt-1">
+                                  <span className="text-muted-foreground font-medium">Total pago:</span>
+                                  <span className="font-mono font-bold text-foreground">R$ {totalPago.toFixed(2)}</span>
+                                </div>
+                                {saldo > 0.01 && (
+                                  <div className="flex items-center justify-between text-[11px]">
+                                    <span className="text-muted-foreground font-medium">Saldo restante:</span>
+                                    <span className="font-mono font-bold text-brand">R$ {saldo.toFixed(2)}</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                            {onRegistrarContribuicao && saldo > 0.01 && comanda.status !== "entregue" && comanda.status !== "cancelado" && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setContribTarget(pessoa.nome);
+                                  setContribNome("");
+                                  setContribValor("");
+                                  setContribMetodo("pix");
+                                }}
+                                className="flex items-center gap-1.5 text-[11px] text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 px-2 py-1 rounded-md transition-colors font-medium"
+                              >
+                                <HandCoins className="h-3 w-3" />
+                                Receber Contribuição
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
                 </div>
@@ -1043,6 +1220,129 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
                 <span className="flex items-center gap-1.5">
                   <ArrowRightLeft className="h-3.5 w-3.5" />
                   Confirmar Transferência
+                </span>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Contribution modal */}
+      <Dialog open={!!contribTarget} onOpenChange={(open) => { if (!open) setContribTarget(null); }}>
+        <DialogContent className="sm:max-w-[380px]">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+                <HandCoins className="h-4.5 w-4.5 text-emerald-500" />
+              </div>
+              <div>
+                <DialogTitle>Receber Contribuição</DialogTitle>
+                <DialogDescription className="mt-1">
+                  Registrar pagamento parcial na comanda de <strong>{contribTarget}</strong>
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="py-2">
+            <div className="bg-muted/30 p-4 rounded-xl space-y-3">
+              <div className="space-y-2">
+                <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Quem está pagando?
+                </label>
+                <Input
+                  placeholder="Nome de quem está pagando..."
+                  value={contribNome}
+                  onChange={(e) => setContribNome(e.target.value)}
+                  className="h-9 text-sm"
+                  autoFocus
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Valor (R$)
+                </label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  placeholder="0.00"
+                  value={contribValor}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v === '') { setContribValor(""); } else { setContribValor(parseFloat(v) || 0); }
+                  }}
+                  onFocus={(e) => e.target.select()}
+                  className="h-9 text-sm font-mono"
+                />
+                {(() => {
+                  const pessoaData = comanda.pessoas.find(p => p.nome === contribTarget);
+                  const totalPago = comanda.contribuicoes?.filter(c => c.nome_pessoa_alvo === contribTarget).reduce((s, c) => s + c.valor, 0) || 0;
+                  const saldo = (pessoaData?.subtotal || 0) - totalPago;
+                  return saldo > 0 ? (
+                    <button
+                      type="button"
+                      className="text-[10px] text-brand hover:underline"
+                      onClick={() => setContribValor(saldo)}
+                    >
+                      Saldo restante: R$ {saldo.toFixed(2)} — clique para preencher
+                    </button>
+                  ) : null;
+                })()}
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Método
+                </label>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {(["pix", "credito", "debito", "dinheiro"] as const).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setContribMetodo(m)}
+                      className={`h-8 text-[10px] font-semibold rounded-md border transition-colors ${
+                        contribMetodo === m
+                          ? "bg-brand/10 border-brand text-brand"
+                          : "border-border text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      }`}
+                    >
+                      {m === "credito" ? "Crédito" : m === "debito" ? "Débito" : m.charAt(0).toUpperCase() + m.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:space-x-0 mt-2">
+            <Button variant="outline" className="h-9 text-xs w-full sm:w-auto" onClick={() => setContribTarget(null)} disabled={contribLoading}>
+              Cancelar
+            </Button>
+            <Button
+              className="h-9 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold flex-1"
+              disabled={!contribNome.trim() || !contribValor || contribValor <= 0 || contribLoading}
+              onClick={async () => {
+                if (!contribTarget || !onRegistrarContribuicao || !contribValor || contribValor <= 0) return;
+                setContribLoading(true);
+                try {
+                  await onRegistrarContribuicao(comanda.comanda_id, contribTarget, contribNome.trim(), contribValor, contribMetodo);
+                  setContribTarget(null);
+                } finally {
+                  setContribLoading(false);
+                }
+              }}
+            >
+              {contribLoading ? (
+                <span className="flex items-center gap-1.5">
+                  <span className="h-3 w-3 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                  Registrando...
+                </span>
+              ) : (
+                <span className="flex items-center gap-1.5">
+                  <HandCoins className="h-3.5 w-3.5" />
+                  Registrar Pagamento
                 </span>
               )}
             </Button>

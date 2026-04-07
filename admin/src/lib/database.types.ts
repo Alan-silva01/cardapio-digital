@@ -495,6 +495,8 @@ export type Database = {
           criado_por: string | null
           id: string
           metodo: string | null
+          nome_pagador: string | null
+          nome_pessoa_alvo: string | null
           pessoa_id: string | null
           tipo: string | null
           valor: number
@@ -505,6 +507,8 @@ export type Database = {
           criado_por?: string | null
           id?: string
           metodo?: string | null
+          nome_pagador?: string | null
+          nome_pessoa_alvo?: string | null
           pessoa_id?: string | null
           tipo?: string | null
           valor: number
@@ -515,6 +519,8 @@ export type Database = {
           criado_por?: string | null
           id?: string
           metodo?: string | null
+          nome_pagador?: string | null
+          nome_pessoa_alvo?: string | null
           pessoa_id?: string | null
           tipo?: string | null
           valor?: number
@@ -817,6 +823,14 @@ export type Database = {
       remover_item_comanda: { Args: { p_item_id: string }; Returns: Json }
       transferir_mesa: {
         Args: { p_mesa_origem_id: string; p_mesa_destino_id: string }
+        Returns: Json
+      }
+      editar_item_comanda: {
+        Args: { p_item_id: string; p_nova_quantidade: number; p_observacao?: string }
+        Returns: Json
+      }
+      registrar_contribuicao: {
+        Args: { p_comanda_id: string; p_nome_pessoa_alvo: string; p_nome_pagador: string; p_valor: number; p_metodo: string }
         Returns: Json
       }
     }
