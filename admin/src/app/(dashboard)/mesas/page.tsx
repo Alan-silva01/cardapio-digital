@@ -25,6 +25,21 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 
+const formatDateUTC = (dateString?: string | null) => {
+  if (!dateString) return '—';
+  try {
+    const rawDate = dateString.split(/[T ]/)[0];
+    const parts = rawDate.split('-');
+    if (parts.length === 3) {
+      if (parts[0].length === 4) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+      if (parts[0].length === 2) return `${parts[0]}/${parts[1]}/${parts[2]}`;
+    }
+    return rawDate;
+  } catch (e) {
+    return dateString;
+  }
+};
+
 interface MesaStats {
   id?: string;
   numero: number;
@@ -348,21 +363,7 @@ export default function MesasPage() {
                           </p>
                           <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1.5">
                             <Timer className="h-3 w-3" />
-                            {mesa.reserva_data
-                              ? (() => {
-                                  try {
-                                    const rawDate = mesa.reserva_data.split(/[T ]/)[0];
-                                    const parts = rawDate.split('-');
-                                    if (parts.length === 3) {
-                                      if (parts[0].length === 4) return `${parts[2]}/${parts[1]}/${parts[0]}`;
-                                      if (parts[0].length === 2) return `${parts[0]}/${parts[1]}/${parts[2]}`;
-                                    }
-                                    return rawDate;
-                                  } catch (e) {
-                                    return mesa.reserva_data;
-                                  }
-                                })()
-                              : '—'}
+                            {formatDateUTC(mesa.reserva_data)}
                           </p>
                         </div>
                         <div className="mt-auto pt-2 flex gap-2">
@@ -497,10 +498,10 @@ export default function MesasPage() {
       {/* Ticket de Impressão — layout otimizado para 80mm térmico */}
       {printMesa && (
         <div
-          className="hidden print:block fixed inset-0 z-[99999] bg-white text-black"
+          className="hidden print:flex fixed inset-0 z-[99999] bg-white text-black justify-start items-start"
           style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", padding: "0", margin: "0" }}
         >
-          <div style={{ width: "72mm", margin: "0 auto", paddingTop: "6mm", textAlign: "center" }}>
+          <div style={{ width: "72mm", margin: "0", paddingTop: "0mm", textAlign: "center" }}>
             {/* Logo */}
             <img
               src="https://res.cloudinary.com/dvhkcemd0/image/upload/v1773870490/migrated/csxl9gvgqpm5vqj8ww5w.png"
@@ -533,7 +534,7 @@ export default function MesasPage() {
               Reservada para: <strong>{printMesa.reserva_nome}</strong>
             </p>
             <p style={{ fontSize: "10px", textTransform: "uppercase", margin: "1mm 0 4mm" }}>
-              Data: {printMesa.reserva_data}
+              Data: {formatDateUTC(printMesa.reserva_data)}
             </p>
 
             {/* Divisor */}
