@@ -1030,7 +1030,7 @@ export default function PedidosPage() {
             <div style="border-top:1px dashed #000; margin-top:6px; padding-top:4px;">
               <div style="font-weight:bold; font-size:11px; margin-bottom:4px;">Pagamentos Recebidos</div>
               <table style="width:100%;"><tbody>${contribsHtml}</tbody></table>
-              <div style="text-align:right; font-weight:bold; margin-top:4px; font-size:12px;">Pago: R$ ${totalPago.toFixed(2)}</div>
+              ${contribs.length > 1 ? `<div style="text-align:right; font-weight:bold; margin-top:4px; font-size:12px;">Pago: R$ ${totalPago.toFixed(2)}</div>` : ""}
               ${saldo > 0.01 ? `<div style="text-align:right; font-weight:bold; font-size:12px; color:#c00;">Restante: R$ ${saldo.toFixed(2)}</div>` : `<div style="text-align:right; font-size:11px; color:#080;">✓ Quitado</div>`}
             </div>
           `;
@@ -1055,6 +1055,8 @@ export default function PedidosPage() {
     const printWindow = window.open("", "_blank", "width=320,height=600");
     if (!printWindow) return;
 
+    let totalGeralPago = 0;
+
     const sectionsHtml = comanda.pessoas
       .map(
         (pessoa) => {
@@ -1067,11 +1069,39 @@ export default function PedidosPage() {
                  </tr>${item.observacao ? `<tr><td colspan="2" style="padding:0 0 4px 12px; font-size:10px; font-style:italic; color:#555;">Obs: ${item.observacao}</td></tr>` : ""}`
             )
             .join("");
+            
+          const contribs = comanda.contribuicoes?.filter(c => c.nome_pessoa_alvo === pessoa.nome) || [];
+          let contribsBlock = "";
+          
+          if (contribs.length > 0) {
+            const totalPago = contribs.reduce((s, c) => s + c.valor, 0);
+            totalGeralPago += totalPago;
+            const saldo = pessoa.subtotal - totalPago;
+            
+            const contribsHtml = contribs.map(c => 
+              `<tr>
+                <td style="padding:1px 0;"><span style="font-size:10px; color:#555;">Por:</span> ${c.nome_pagador}</td>
+                <td style="padding:1px 0; text-align:right;">${c.metodo.toUpperCase()}</td>
+                <td style="padding:1px 0; text-align:right;">R$ ${c.valor.toFixed(2)}</td>
+              </tr>`
+            ).join("");
+            
+            contribsBlock = `
+              <div style="border-top:1px dashed #000; margin-top:4px; padding-top:4px;">
+                <div style="font-weight:bold; font-size:11px; margin-bottom:4px;">Pagamentos Parciais</div>
+                <table style="width:100%;"><tbody>${contribsHtml}</tbody></table>
+                ${contribs.length > 1 ? `<div style="text-align:right; font-weight:bold; margin-top:4px; font-size:11px;">Pago: R$ ${totalPago.toFixed(2)}</div>` : ""}
+                ${saldo > 0.01 ? `<div style="text-align:right; font-weight:bold; font-size:12px; color:#c00;">Restante: R$ ${saldo.toFixed(2)}</div>` : `<div style="text-align:right; font-size:11px; color:#080;">✓ Quitado</div>`}
+              </div>
+            `;
+          }
+
           return `
             <div class="person">
               <div class="person-name">${pessoa.nome}</div>
               <table>${itemsHtml}</table>
               <div class="subtotal">Subtotal: R$ ${pessoa.subtotal.toFixed(2)}</div>
+              ${contribsBlock}
             </div>
           `;
         }
@@ -1084,6 +1114,9 @@ export default function PedidosPage() {
     const couvertHtml = totalCouvertQtd > 0 
       ? `<div style="text-align: right; font-size: 11px; margin-top: 4px; color: #555;">Couvert R$ ${(totalCouvertValor / totalCouvertQtd).toFixed(2)} por pessoa</div>`
       : "";
+
+    const totalComanda = Number(comanda.total);
+    const totalRestanteFinal = totalComanda - totalGeralPago;
 
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -1121,7 +1154,9 @@ export default function PedidosPage() {
         </div>
         ${sectionsHtml}
         ${couvertHtml}
-        <div class="total">Total: R$ ${Number(comanda.total).toFixed(2)}</div>
+        ${totalGeralPago > 0 ? `<div style="text-align: right; font-size: 11px; margin-top: 4px; color: #555;">Subtotal Mesa: R$ ${totalComanda.toFixed(2)}</div>` : ''}
+        ${totalGeralPago > 0 ? `<div style="text-align: right; font-size: 11px; margin-top: 2px; color: #555;">Pago Parcial: R$ ${totalGeralPago.toFixed(2)}</div>` : ''}
+        <div class="total">Total ${totalGeralPago > 0 ? 'Restante' : ''}: R$ ${totalRestanteFinal.toFixed(2)}</div>
         <div class="footer">
           <div>Pedido Completo</div>
           <div class="powered">
