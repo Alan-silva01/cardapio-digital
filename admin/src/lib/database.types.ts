@@ -815,6 +815,10 @@ export type Database = {
         Returns: Json
       }
       remover_item_comanda: { Args: { p_item_id: string }; Returns: Json }
+      transferir_mesa: {
+        Args: { p_mesa_origem_id: string; p_mesa_destino_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

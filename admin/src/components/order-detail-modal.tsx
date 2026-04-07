@@ -6,7 +6,6 @@ import {
   Clock,
   User,
   Check,
-  DollarSign,
   Ban,
   CreditCard,
   AlertTriangle,
@@ -21,6 +20,7 @@ import {
   Trash2,
   PlusCircle,
   Plus,
+  ArrowRightLeft,
 } from "lucide-react";
 import {
   Dialog,
@@ -39,6 +39,13 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { AddProductModal } from "./add-product-modal";
 
@@ -74,6 +81,11 @@ interface ComandaAgrupada {
   }[];
 }
 
+interface MesaLivre {
+  id: string;
+  numero: number;
+}
+
 interface OrderDetailModalProps {
   comanda: ComandaAgrupada | null;
   open: boolean;
@@ -98,6 +110,9 @@ interface OrderDetailModalProps {
     observacao: string,
     nomePessoa: string
   ) => Promise<void>;
+  mesasLivres?: MesaLivre[];
+  onTransferirMesa?: (comandaId: string, mesaOrigemId: string, mesaDestinoId: string, novaMesaNumero: number) => Promise<void>;
+  mesaOrigemId?: string;
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon?: any }> = {
@@ -409,6 +424,9 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
   onAddCouvert,
   onRemoveItem,
   onAddProduct,
+  mesasLivres = [],
+  onTransferirMesa,
+  mesaOrigemId,
 }: OrderDetailModalProps) {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -420,6 +438,9 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [addPessoaName, setAddPessoaName] = useState<string | undefined>(undefined);
   const [couvertTargetPerson, setCouvertTargetPerson] = useState<string | null>(null);
+  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [selectedMesaDestino, setSelectedMesaDestino] = useState<string>("");
+  const [transferLoading, setTransferLoading] = useState(false);
 
   const hasCouvert = useMemo(() => {
     if (!comanda) return false;
@@ -568,7 +589,7 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
             </div>
 
             {/* Info row */}
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
               <div className="flex items-center gap-1.5 bg-muted/50 px-2 py-1 rounded-md">
                 <Package className="h-3 w-3" />
                 {totalItems} itens
@@ -577,6 +598,19 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
                 <Check className="h-3 w-3" />
                 {servedCount}/{allItems.length} prontos
               </div>
+              {onTransferirMesa && comanda.status !== "entregue" && comanda.status !== "cancelado" && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedMesaDestino("");
+                    setShowTransferModal(true);
+                  }}
+                  className="flex items-center gap-1.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-500 px-2.5 py-1 rounded-md transition-colors font-medium"
+                >
+                  <ArrowRightLeft className="h-3 w-3" />
+                  Mudar de Mesa
+                </button>
+              )}
               <div className="ml-auto font-mono text-sm font-bold text-foreground">
                 R$ {Number(comanda.total).toFixed(2)}
               </div>
@@ -907,6 +941,110 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
             >
               <Ticket className="h-3.5 w-3.5 mr-1" />
               Sim, Adicionar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Transfer table modal */}
+      <Dialog open={showTransferModal} onOpenChange={(open) => {
+        if (!open) setSelectedMesaDestino("");
+        setShowTransferModal(open);
+      }}>
+        <DialogContent className="sm:max-w-[380px]">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0">
+                <ArrowRightLeft className="h-4.5 w-4.5 text-blue-500" />
+              </div>
+              <div>
+                <DialogTitle>Mudar de Mesa</DialogTitle>
+                <DialogDescription className="mt-1">
+                  Mesa <strong>{String(comanda.numero_mesa).padStart(2, "0")}</strong> → selecione a mesa de destino.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="py-2">
+            <div className="bg-muted/30 p-4 rounded-xl space-y-3">
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Mesa de Destino
+              </label>
+              {mesasLivres.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-2">
+                  Nenhuma mesa livre disponível.
+                </p>
+              ) : (
+                <Select
+                  value={selectedMesaDestino}
+                  onValueChange={(v) => setSelectedMesaDestino(v ?? "")}
+                >
+                  <SelectTrigger className="h-10">
+                    <SelectValue placeholder="Selecione uma mesa livre..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {mesasLivres.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        Mesa {String(m.numero).padStart(2, "0")}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+
+              {selectedMesaDestino && (() => {
+                const mesa = mesasLivres.find(m => m.id === selectedMesaDestino);
+                return mesa ? (
+                  <div className="flex items-center justify-between text-sm border-t border-border/50 pt-3">
+                    <span className="text-muted-foreground text-xs">Transferindo:</span>
+                    <span className="font-semibold text-xs">
+                      Mesa {String(comanda.numero_mesa).padStart(2, "0")} → Mesa {String(mesa.numero).padStart(2, "0")}
+                    </span>
+                  </div>
+                ) : null;
+              })()}
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:space-x-0 mt-2">
+            <Button
+              variant="outline"
+              className="h-9 text-xs w-full sm:w-auto"
+              onClick={() => setShowTransferModal(false)}
+              disabled={transferLoading}
+            >
+              Cancelar
+            </Button>
+            <Button
+              className="h-9 text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold flex-1"
+              disabled={!selectedMesaDestino || transferLoading}
+              onClick={async () => {
+                if (!selectedMesaDestino || !mesaOrigemId || !onTransferirMesa) return;
+                const mesa = mesasLivres.find(m => m.id === selectedMesaDestino);
+                if (!mesa) return;
+                setTransferLoading(true);
+                try {
+                  await onTransferirMesa(comanda.comanda_id, mesaOrigemId, selectedMesaDestino, mesa.numero);
+                  setShowTransferModal(false);
+                  setSelectedMesaDestino("");
+                  onOpenChange(false);
+                } finally {
+                  setTransferLoading(false);
+                }
+              }}
+            >
+              {transferLoading ? (
+                <span className="flex items-center gap-1.5">
+                  <span className="h-3 w-3 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                  Transferindo...
+                </span>
+              ) : (
+                <span className="flex items-center gap-1.5">
+                  <ArrowRightLeft className="h-3.5 w-3.5" />
+                  Confirmar Transferência
+                </span>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -34,6 +34,7 @@ import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea
 import { createClient } from "@/lib/supabase/client";
 import { useNotificationSound } from "@/hooks/useNotificationSound";
 import { OrderDetailModal } from "@/components/order-detail-modal";
+import { toast } from "sonner";
 
 interface ItemPedido {
   id: string;
@@ -215,6 +216,8 @@ export default function PedidosPage() {
     entregue: [],
   });
   const [mesasStatus, setMesasStatus] = useState<Record<number, { garcom: boolean, conta: boolean }>>({});
+  const [mesasLivres, setMesasLivres] = useState<{ id: string; numero: number }[]>([]);
+  const [mesaIdMap, setMesaIdMap] = useState<Record<number, string>>({}); // numero → id
   const [searchQuery, setSearchQuery] = useState("");
   const [dateFilter, setDateFilter] = useState<'hoje' | 'ontem' | '7dias'>("hoje");
   const [serviceModal, setServiceModal] = useState<{ mesa: number, type: 'garcom' | 'conta' } | null>(null);
@@ -228,6 +231,21 @@ export default function PedidosPage() {
     supabase.from('configuracoes').select('*').limit(1).single().then(({ data }) => {
       if (data) setConfig(data);
     });
+    // Fetch free tables on mount
+    fetchMesasLivres();
+  }, []);
+
+  const fetchMesasLivres = useCallback(async () => {
+    const { data } = await supabase
+      .from("mesas")
+      .select("id, numero, status")
+      .order("numero", { ascending: true });
+    if (data) {
+      setMesasLivres(data.filter(m => m.status === "livre"));
+      const idMap: Record<number, string> = {};
+      data.forEach(m => { idMap[m.numero] = m.id; });
+      setMesaIdMap(idMap);
+    }
   }, []);
 
   const fetchPedidos = useCallback(async () => {
@@ -359,6 +377,8 @@ export default function PedidosPage() {
             ...prev,
             [newMesa.numero]: { garcom: newMesa.chamando_garcom, conta: newMesa.solicitando_conta }
           }));
+          // Keep free tables list in sync
+          fetchMesasLivres();
         }
       )
       .subscribe();
@@ -366,7 +386,7 @@ export default function PedidosPage() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [fetchPedidos, playSound]);
+  }, [fetchPedidos, fetchMesasLivres, playSound]);
 
   useEffect(() => {
     setMounted(true);
@@ -662,6 +682,32 @@ export default function PedidosPage() {
     const field = type === 'garcom' ? { chamando_garcom: false } : { solicitando_conta: false };
     await supabase.from("mesas").update(field).eq("numero", numero);
   };
+
+  const handleTransferirMesa = useCallback(async (
+    _comandaId: string,
+    mesaOrigemId: string,
+    mesaDestinoId: string,
+    novaMesaNumero: number,
+  ) => {
+    const { data, error } = await supabase.rpc("transferir_mesa", {
+      p_mesa_origem_id: mesaOrigemId,
+      p_mesa_destino_id: mesaDestinoId,
+    });
+
+    const rd = data as Record<string, any>;
+
+    if (error || (rd && !rd.success)) {
+      const msg = error?.message || rd?.error || "Erro ao transferir mesa.";
+      toast.error(msg);
+      throw new Error(msg);
+    }
+
+    toast.success(`Mesa transferida para a Mesa ${String(novaMesaNumero).padStart(2, "0")} com sucesso!`);
+    // Refresh everything
+    await fetchPedidos();
+    await fetchMesasLivres();
+  }, [fetchPedidos, fetchMesasLivres]);
+
 
   const getActionLabel = (status: string) => {
     switch (status) {
@@ -1474,6 +1520,9 @@ export default function PedidosPage() {
         onPrintAll={handlePrintAll}
         mesasStatus={mesasStatus}
         onClearService={clearMesaStatus}
+        mesasLivres={mesasLivres.filter(m => m.numero !== selectedComanda?.numero_mesa)}
+        onTransferirMesa={handleTransferirMesa}
+        mesaOrigemId={selectedComanda ? mesaIdMap[selectedComanda.numero_mesa] : undefined}
       />
 
       {/* SERVICE CALL MODAL — ULTRA COMPACT */}
