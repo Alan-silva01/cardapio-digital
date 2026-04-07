@@ -188,7 +188,7 @@ export default function MesasPage() {
     setReservaForm({ ...reservaForm, telefone: value });
   };
 
-  const handleSaveReserva = async () => {
+  const handleSaveReserva = async (shouldPrint: boolean) => {
     if (!selectedMesa) return;
     setIsSavingReserva(true);
     // HTML date input returns YYYY-MM-DD — send directly to timestamptz column
@@ -206,15 +206,17 @@ export default function MesasPage() {
     
     if (!error) {
       setReservaModalOpen(false);
-      setPrintMesa({
-        ...selectedMesa,
-        reserva_nome: reservaForm.nome,
-        reserva_data: dateStr
-      });
-      setTimeout(() => {
-        window.print();
-        setPrintMesa(null);
-      }, 500);
+      if (shouldPrint) {
+        setPrintMesa({
+          ...selectedMesa,
+          reserva_nome: reservaForm.nome,
+          reserva_data: dateStr
+        });
+        setTimeout(() => {
+          window.print();
+          setPrintMesa(null);
+        }, 500);
+      }
       fetchMesasData();
     } else {
       console.error(error);
@@ -480,9 +482,12 @@ export default function MesasPage() {
               <Input type="date" value={reservaForm.data} onChange={e => setReservaForm({ ...reservaForm, data: e.target.value })} />
             </div>
           </div>
-          <DialogFooter>
-             <Button variant="outline" onClick={() => setReservaModalOpen(false)}>Cancelar</Button>
-             <Button onClick={handleSaveReserva} disabled={!selectedMesa || !reservaForm.nome || isSavingReserva}>
+          <DialogFooter className="gap-2 sm:gap-0 sm:justify-end">
+             <Button variant="ghost" onClick={() => setReservaModalOpen(false)}>Cancelar</Button>
+             <Button variant="outline" onClick={() => handleSaveReserva(false)} disabled={!selectedMesa || !reservaForm.nome || isSavingReserva}>
+               Apenas Salvar
+             </Button>
+             <Button onClick={() => handleSaveReserva(true)} disabled={!selectedMesa || !reservaForm.nome || isSavingReserva}>
                Reservar e Imprimir
              </Button>
           </DialogFooter>
