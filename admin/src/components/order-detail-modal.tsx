@@ -911,7 +911,7 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
                                 className="flex items-center gap-1.5 text-[11px] text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 px-2 py-1 rounded-md transition-colors font-medium"
                               >
                                 <HandCoins className="h-3 w-3" />
-                                Receber Contribuição
+                                Receber Pagamento Parcial
                               </button>
                             )}
                           </div>
@@ -1236,7 +1236,7 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
                 <HandCoins className="h-4.5 w-4.5 text-emerald-500" />
               </div>
               <div>
-                <DialogTitle>Receber Contribuição</DialogTitle>
+                <DialogTitle>Receber Pagamento Parcial</DialogTitle>
                 <DialogDescription className="mt-1">
                   Registrar pagamento parcial na comanda de <strong>{contribTarget}</strong>
                 </DialogDescription>
