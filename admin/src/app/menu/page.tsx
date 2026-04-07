@@ -79,14 +79,26 @@ export default function MenuPage() {
             if (!data.reserva_data) {
               showModal = true;
             } else {
-              const reservaDate = new Date(data.reserva_data);
-              const today = new Date();
-              // Compara apenas ano/mês/dia
-              showModal = (
-                reservaDate.getFullYear() === today.getFullYear() &&
-                reservaDate.getMonth() === today.getMonth() &&
-                reservaDate.getDate() === today.getDate()
-              );
+              try {
+                // Supabase store time in UTC format string, e.g. "2026-04-08T00:00:00+00:00"
+                const rawDate = data.reserva_data.split(/[T ]/)[0];
+                const [resYear, resMonth, resDay] = rawDate.split('-').map(Number);
+
+                // Convert server current time to São Paulo local timezone
+                const spDateStr = new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" });
+                const spNow = new Date(spDateStr);
+
+                const isSameDay = (
+                  resYear === spNow.getFullYear() &&
+                  resMonth === (spNow.getMonth() + 1) &&
+                  resDay === spNow.getDate()
+                );
+
+                // Mostra o modal da reserva apenas no próprio dia E a partir das 12:00 (meio-dia)
+                showModal = isSameDay && spNow.getHours() >= 12;
+              } catch(e) {
+                showModal = true;
+              }
             }
 
             if (showModal) {

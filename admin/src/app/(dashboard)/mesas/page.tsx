@@ -347,7 +347,19 @@ export default function MesasPage() {
                           <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1.5">
                             <Timer className="h-3 w-3" />
                             {mesa.reserva_data
-                              ? new Date(mesa.reserva_data).toLocaleDateString('pt-BR')
+                              ? (() => {
+                                  try {
+                                    const rawDate = mesa.reserva_data.split(/[T ]/)[0];
+                                    const parts = rawDate.split('-');
+                                    if (parts.length === 3) {
+                                      if (parts[0].length === 4) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                                      if (parts[0].length === 2) return `${parts[0]}/${parts[1]}/${parts[2]}`;
+                                    }
+                                    return rawDate;
+                                  } catch (e) {
+                                    return mesa.reserva_data;
+                                  }
+                                })()
                               : '—'}
                           </p>
                         </div>
