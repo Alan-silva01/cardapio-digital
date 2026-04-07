@@ -1021,7 +1021,7 @@ export default function PedidosPage() {
           const saldo = pessoa.subtotal - totalPago;
           const contribsHtml = contribs.map(c => 
             `<tr>
-              <td style="padding:1px 0;">${c.nome_pagador}</td>
+              <td style="padding:1px 0;"><span style="font-size:10px; color:#555;">Por:</span> ${c.nome_pagador}</td>
               <td style="padding:1px 0; text-align:right;">${c.metodo.toUpperCase()}</td>
               <td style="padding:1px 0; text-align:right;">R$ ${c.valor.toFixed(2)}</td>
             </tr>`
