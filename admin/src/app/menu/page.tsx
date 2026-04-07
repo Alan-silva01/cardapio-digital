@@ -72,10 +72,25 @@ export default function MenuPage() {
         const token = params.get('t');
         if (token) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const { data } = await (supabase.from('mesas') as any).select('reserva_ativa, reserva_nome').eq('token', token).single();
+          const { data } = await (supabase.from('mesas') as any).select('reserva_ativa, reserva_nome, reserva_data').eq('token', token).single();
           if (data && data.reserva_ativa) {
-             setReservaInfo({ ativa: true, nome: data.reserva_nome as string ?? '' });
-             setShowReservaWelcome(true);
+            const today = new Date();
+            const day = String(today.getDate()).padStart(2, '0');
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const year = today.getFullYear();
+            const todayStr = `${day}-${month}-${year}`; // Formato DD-MM-AAAA
+            const todayReverseStr = `${year}-${month}-${day}`; // Formato AAAA-MM-DD (fallback)
+
+            // Mostra o modal apenas se não tiver data, ou se a data for hoje
+            if (
+              !data.reserva_data || 
+              data.reserva_data === todayStr || 
+              data.reserva_data === todayReverseStr || 
+              data.reserva_data.startsWith(todayReverseStr)
+            ) {
+              setReservaInfo({ ativa: true, nome: data.reserva_nome as string ?? '' });
+              setShowReservaWelcome(true);
+            }
           }
         }
       }
