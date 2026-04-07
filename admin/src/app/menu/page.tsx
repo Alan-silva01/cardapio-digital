@@ -286,46 +286,85 @@ export default function MenuPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[999999] flex items-center justify-center text-center"
+            className="fixed inset-0 z-[999999] flex items-center justify-center"
             style={{ 
-              backgroundColor: "rgba(0,0,0,0.9)",
-              backdropFilter: "blur(24px)",
-              padding: "20px"
+              backgroundColor: "rgba(0,0,0,0.92)",
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+              padding: "24px"
             }}
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              initial={{ scale: 0.92, opacity: 0, y: 24 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 20 }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              className="relative bg-[#0a0a0a] border border-white/10 rounded-[36px] flex flex-col items-center justify-center shadow-[0_30px_60px_-15px_rgba(0,0,0,1)]"
+              exit={{ scale: 0.92, opacity: 0, y: 24 }}
+              transition={{ type: "spring", stiffness: 280, damping: 26 }}
               style={{
-                width: "90%",
-                maxWidth: "380px",
-                minHeight: "400px",
-                padding: "40px 30px",
+                width: "100%",
+                maxWidth: "360px",
+                backgroundColor: "#000000",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: "28px",
+                padding: "40px 28px 32px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                textAlign: "center",
+                boxShadow: "0 40px 80px -20px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.04) inset",
               }}
             >
-              <div style={{ marginBottom: "24px", display: "flex", justifySelf: "center", width: "100px", height: "100px", backgroundColor: "white", borderRadius: "20px", alignItems: "center", justifyContent: "center" }}>
-                 <img src="/logo-black.png" alt="Seu Manel" style={{ width: "80%", height: "80%", objectFit: "contain" }} onError={(e) => e.currentTarget.style.display = 'none'} />
-              </div>
-              
-              <h2 className="font-semibold text-white tracking-tight uppercase" style={{ fontSize: "28px", marginBottom: "8px", lineHeight: "1.1" }}>
-                Bem vindo(a)
+              {/* Logo — sem fundo, logo tem transparência */}
+              <img
+                src="https://res.cloudinary.com/dvhkcemd0/image/upload/v1773870490/migrated/csxl9gvgqpm5vqj8ww5w.png"
+                alt="Seu Manel"
+                style={{ width: "72px", height: "auto", filter: "brightness(0) invert(1)", marginBottom: "28px", objectFit: "contain" }}
+              />
+
+              {/* Títulos */}
+              <p style={{ fontSize: "11px", fontWeight: 600, letterSpacing: "0.16em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: "8px", fontFamily: "inherit" }}>
+                Seja bem-vindo ao
+              </p>
+              <h2 style={{ fontSize: "26px", fontWeight: 800, color: "#ffffff", letterSpacing: "-0.02em", lineHeight: 1.1, marginBottom: "4px" }}>
+                Seu Manel
               </h2>
-              <h2 className="font-semibold text-[#ff5e1e] tracking-tight uppercase" style={{ fontSize: "24px", marginBottom: "32px", lineHeight: "1.1" }}>
+
+              {/* Divisor com brilho */}
+              <div style={{ width: "40px", height: "2px", background: "#ff5e1e", borderRadius: "2px", margin: "20px auto" }} />
+
+              {/* Nome do cliente */}
+              <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.45)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: "6px" }}>
+                Reserva confirmada para
+              </p>
+              <h3 style={{ fontSize: "22px", fontWeight: 700, color: "#ff5e1e", letterSpacing: "-0.01em", lineHeight: 1.2, marginBottom: "20px" }}>
                 {reservaInfo.nome}
-              </h2>
-              
-              <p className="font-medium text-neutral-400" style={{ fontSize: "16px", lineHeight: "1.6", marginBottom: "0px", marginInline: "10px" }}>
-                É uma honra receber você. Sinta-se em casa e aproveite nosso cardápio!
+              </h3>
+
+              {/* Mensagem */}
+              <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.5)", lineHeight: 1.6, marginBottom: "32px" }}>
+                É uma honra receber você.<br />Sinta-se em casa e aproveite!
               </p>
 
-              <button 
+              {/* Botão CTA */}
+              <button
                 onClick={() => setShowReservaWelcome(false)}
-                className="w-full bg-[#ff5e1e] hover:bg-[#e54e15] text-white font-bold h-12 rounded-xl mt-8 transition-colors uppercase tracking-wider"
+                style={{
+                  width: "100%",
+                  backgroundColor: "#ff5e1e",
+                  color: "#fff",
+                  fontWeight: 700,
+                  fontSize: "13px",
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  border: "none",
+                  borderRadius: "14px",
+                  padding: "14px 0",
+                  cursor: "pointer",
+                  transition: "background 0.15s ease",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#e54e15")}
+                onMouseLeave={e => (e.currentTarget.style.backgroundColor = "#ff5e1e")}
               >
-                Acessar Cardápio
+                Ver Cardápio
               </button>
             </motion.div>
           </motion.div>

@@ -410,27 +410,65 @@ export default function MesasPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Ticket de Impressao Oculto (Aparece apenas na impressao e quando existe mesa a imprimir) */}
+      {/* Ticket de Impressão — layout otimizado para 80mm térmico */}
       {printMesa && (
-        <div className="hidden print:flex fixed inset-0 z-[99999] bg-white text-black flex-col items-center justify-start py-8 px-4 font-mono text-center">
-            <h1 className="text-3xl font-black mb-2 uppercase">Seu Manel</h1>
-            <div className="w-[80mm] border-b border-dashed border-black my-4"></div>
-            <p className="text-md font-bold mb-1 w-[80mm] leading-snug uppercase">Seja bem vindo ao Seu Manel</p>
-            <p className="text-md font-bold mb-2 w-[80mm] leading-snug uppercase">é uma honra receber vocês!</p>
-            <p className="text-sm uppercase mb-6">Sinta-se em casa</p>
+        <div
+          className="hidden print:block fixed inset-0 z-[99999] bg-white text-black"
+          style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: "11px", padding: "0", margin: "0" }}
+        >
+          <div style={{ width: "72mm", margin: "0 auto", paddingTop: "6mm", textAlign: "center" }}>
+            {/* Logo */}
+            <img
+              src="https://res.cloudinary.com/dvhkcemd0/image/upload/v1773870490/migrated/csxl9gvgqpm5vqj8ww5w.png"
+              alt="Seu Manel"
+              style={{ maxWidth: "35mm", height: "auto", filter: "grayscale(100%) brightness(0)", margin: "0 auto 4mm" }}
+            />
 
-            <h2 className="text-2xl font-black mb-2 uppercase">MESA {printMesa.numero.toString().padStart(2, '0')}</h2>
-            <p className="text-lg uppercase">Reservada para: <span className="font-bold">{printMesa.reserva_nome}</span></p>
-            <p className="text-md uppercase mb-8">Dia: {printMesa.reserva_data}</p>
+            {/* Divisor */}
+            <div style={{ borderBottom: "1px dashed #000", margin: "4mm 0" }} />
 
-            <div className="my-2 p-2 bg-white rounded-md">
-                <QRCodeCanvas 
-                  value={`https://paineladminmenubar.vercel.app/menu?t=${printMesa.token}`} 
-                  size={200} 
-                  level="H" 
-                />
+            {/* Saudação */}
+            <p style={{ fontWeight: "bold", fontSize: "11px", textTransform: "uppercase", margin: "2mm 0 1mm" }}>
+              Seja bem vindo ao Seu Manel!
+            </p>
+            <p style={{ fontWeight: "bold", fontSize: "11px", textTransform: "uppercase", margin: "0 0 1mm" }}>
+              É uma honra receber vocês!
+            </p>
+            <p style={{ fontSize: "10px", textTransform: "uppercase", margin: "0 0 4mm" }}>
+              Sinta-se em casa
+            </p>
+
+            {/* Divisor */}
+            <div style={{ borderBottom: "1px dashed #000", margin: "4mm 0" }} />
+
+            {/* Mesa e Reserva */}
+            <p style={{ fontSize: "16px", fontWeight: "900", textTransform: "uppercase", margin: "3mm 0 2mm", letterSpacing: "2px" }}>
+              MESA {printMesa.numero.toString().padStart(2, "0")}
+            </p>
+            <p style={{ fontSize: "11px", textTransform: "uppercase", margin: "1mm 0" }}>
+              Reservada para: <strong>{printMesa.reserva_nome}</strong>
+            </p>
+            <p style={{ fontSize: "10px", textTransform: "uppercase", margin: "1mm 0 4mm" }}>
+              Data: {printMesa.reserva_data}
+            </p>
+
+            {/* Divisor */}
+            <div style={{ borderBottom: "1px dashed #000", margin: "4mm 0" }} />
+
+            {/* QR Code — 120px é suficiente para 80mm */}
+            <div style={{ display: "flex", justifyContent: "center", margin: "3mm 0 2mm" }}>
+              <QRCodeCanvas
+                value={`https://paineladminmenubar.vercel.app/menu?t=${printMesa.token}`}
+                size={120}
+                level="H"
+                bgColor="#FFFFFF"
+                fgColor="#000000"
+              />
             </div>
-            <p className="text-sm font-bold uppercase mt-2">Leia para acessar a mesa</p>
+            <p style={{ fontSize: "9px", fontWeight: "bold", textTransform: "uppercase", margin: "1mm 0 6mm" }}>
+              Leia o QR Code para acessar a mesa
+            </p>
+          </div>
         </div>
       )}
 
