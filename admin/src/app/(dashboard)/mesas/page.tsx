@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { Printer } from "lucide-react";
 import { QRCodeCanvas } from "qrcode.react";
@@ -49,6 +50,7 @@ export default function MesasPage() {
   const [printMesa, setPrintMesa] = useState<MesaStats | null>(null);
   const [isSavingReserva, setIsSavingReserva] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [cancelReservaId, setCancelReservaId] = useState<string | null>(null);
 
   const fetchMesasData = useCallback(async () => {
     // 1. Fetch mesas
@@ -189,12 +191,8 @@ export default function MesasPage() {
   const handleSaveReserva = async () => {
     if (!selectedMesa) return;
     setIsSavingReserva(true);
-    let dateStr = reservaForm.data;
-    if (dateStr) {
-      // Formata data caso receba AAAA-MM-DD para DD-MM-AAAA
-      const parts = dateStr.split('-');
-      if (parts.length === 3) dateStr = `${parts[2]}-${parts[1]}-${parts[0]}`;
-    }
+    // HTML date input returns YYYY-MM-DD — send directly to timestamptz column
+    const dateStr = reservaForm.data || undefined;
 
     const { error } = await supabase.from('mesas')
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -240,9 +238,8 @@ export default function MesasPage() {
     fetchMesasData();
   };
 
-  const handleCancelarReserva = async (e: React.MouseEvent, mesaId: string) => {
-    e.stopPropagation();
-    if (!confirm("Tem certeza que deseja cancelar esta reserva?")) return;
+  const handleCancelarReserva = async () => {
+    if (!cancelReservaId) return;
     
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await supabase.from('mesas').update({
@@ -250,8 +247,9 @@ export default function MesasPage() {
       reserva_nome: null,
       reserva_telefone: null,
       reserva_data: null
-    } as any).eq('id', mesaId);
+    } as any).eq('id', cancelReservaId);
     
+    setCancelReservaId(null);
     if (!error) {
       fetchMesasData();
     }
@@ -340,48 +338,35 @@ export default function MesasPage() {
 
                   <div className="flex-1">
                     {mesa.reserva_ativa && mesa.status === "reservada" ? (
-                      <div className="flex flex-col gap-3 h-full">
-                        <div className="flex flex-col gap-1 p-3 rounded-xl bg-amber-500/5 border border-amber-500/10">
-                          <p className="text-[10px] font-bold text-amber-600/60 uppercase tracking-tight">Reservada para</p>
-                          <h3 className="text-sm font-bold text-amber-700 leading-tight truncate">
+                      <div className="flex flex-col gap-2 h-full">
+                        <div className="flex flex-col gap-0.5">
+                          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-tight">Reserva</p>
+                          <p className="text-sm font-semibold text-foreground leading-tight truncate">
                             {mesa.reserva_nome}
-                          </h3>
-                          <p className="text-[11px] font-medium text-amber-600/80 mt-1 flex items-center gap-1.5">
+                          </p>
+                          <p className="text-[11px] text-muted-foreground mt-0.5 flex items-center gap-1.5">
                             <Timer className="h-3 w-3" />
                             {mesa.reserva_data
-                              ? mesa.reserva_data.includes('T')
-                                ? new Date(mesa.reserva_data).toLocaleDateString('pt-BR')
-                                : (() => {
-                                    // Stored as DD-MM-AAAA → display as DD/MM/AAAA
-                                    const parts = mesa.reserva_data!.split('-');
-                                    if (parts.length === 3 && parts[0].length === 2) {
-                                      return `${parts[0]}/${parts[1]}/${parts[2]}`;
-                                    }
-                                    // Stored as AAAA-MM-DD → format to DD/MM/AAAA
-                                    if (parts.length === 3 && parts[0].length === 4) {
-                                      return `${parts[2]}/${parts[1]}/${parts[0]}`;
-                                    }
-                                    return mesa.reserva_data;
-                                  })()
+                              ? new Date(mesa.reserva_data).toLocaleDateString('pt-BR')
                               : '—'}
                           </p>
                         </div>
-                        <div className="mt-auto pt-2 flex flex-col gap-2">
+                        <div className="mt-auto pt-2 flex gap-2">
                             <Button 
                               variant="outline" 
                               size="sm" 
                               onClick={(e) => handlePrintReserva(e, mesa)} 
-                              className="h-9 gap-2 w-full text-xs font-bold border-amber-500/20 text-amber-700 hover:bg-amber-500/10 hover:text-amber-700 transition-all rounded-xl shadow-none"
+                              className="h-8 gap-1.5 flex-1 text-[11px] font-medium shadow-none"
                             >
-                                <Printer className="h-3.5 w-3.5" /> Re-imprimir Ticket
+                                <Printer className="h-3 w-3" /> Imprimir
                             </Button>
                             <Button 
-                              variant="ghost" 
+                              variant="outline" 
                               size="sm" 
-                              onClick={(e) => handleCancelarReserva(e, mesa.id as string)} 
-                              className="h-9 gap-2 w-full text-xs font-bold text-red-500/70 hover:bg-red-500/10 hover:text-red-600 transition-all rounded-xl shadow-none"
+                              onClick={(e) => { e.stopPropagation(); setCancelReservaId(mesa.id as string); }} 
+                              className="h-8 gap-1.5 text-[11px] font-medium text-destructive hover:text-destructive shadow-none"
                             >
-                                <Trash2 className="h-3.5 w-3.5" /> Cancelar Reserva
+                                <Trash2 className="h-3 w-3" />
                             </Button>
                         </div>
                       </div>
@@ -553,6 +538,24 @@ export default function MesasPage() {
           </div>
         </div>
       )}
+
+      {/* AlertDialog para cancelar reserva */}
+      <AlertDialog open={!!cancelReservaId} onOpenChange={(open) => { if (!open) setCancelReservaId(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancelar reserva</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja cancelar esta reserva? Essa ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Voltar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleCancelarReserva} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Cancelar Reserva
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
    </>
   );
