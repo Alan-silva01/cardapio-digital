@@ -242,13 +242,9 @@ export default function PedidosPage() {
       .select("id, numero, status")
       .order("numero", { ascending: true });
 
-    const startDate = new Date();
-    startDate.setHours(0, 0, 0, 0);
-
     const { data: pedidosData } = await supabase
       .from("pedidos")
       .select("numero_mesa")
-      .gte("criado_em", startDate.toISOString())
       .neq("status", "entregue")
       .neq("status", "cancelado");
 
