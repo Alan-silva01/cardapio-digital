@@ -298,12 +298,27 @@ export default function MesasPage() {
 
                   <div className="flex-1">
                     {mesa.reserva_ativa && mesa.status === "reservada" ? (
-                      <div className="flex flex-col gap-2">
-                        <div className="text-sm font-semibold text-amber-600">Reservada para {mesa.reserva_nome}</div>
-                        <div className="text-xs text-muted-foreground">{mesa.reserva_data}</div>
-                        <div className="mt-2 flex gap-2">
-                            <Button variant="outline" size="sm" onClick={(e) => handlePrintReserva(e, mesa)} className="h-8 gap-2 w-full text-xs">
-                                <Printer className="h-3 w-3" /> Imprimir
+                      <div className="flex flex-col gap-3 h-full">
+                        <div className="flex flex-col gap-1 p-3 rounded-xl bg-amber-500/5 border border-amber-500/10">
+                          <p className="text-[10px] font-bold text-amber-600/60 uppercase tracking-tight">Reservada para</p>
+                          <h3 className="text-sm font-bold text-amber-700 leading-tight truncate">
+                            {mesa.reserva_nome}
+                          </h3>
+                          <p className="text-[11px] font-medium text-amber-600/80 mt-1 flex items-center gap-1.5">
+                            <Timer className="h-3 w-3" />
+                            {mesa.reserva_data && mesa.reserva_data.includes('T') 
+                              ? new Date(mesa.reserva_data).toLocaleDateString('pt-BR') 
+                              : mesa.reserva_data}
+                          </p>
+                        </div>
+                        <div className="mt-auto pt-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={(e) => handlePrintReserva(e, mesa)} 
+                              className="h-9 gap-2 w-full text-xs font-bold border-amber-500/20 text-amber-700 hover:bg-amber-500/10 hover:text-amber-700 transition-all rounded-xl shadow-none"
+                            >
+                                <Printer className="h-3.5 w-3.5" /> Re-imprimir Ticket
                             </Button>
                         </div>
                       </div>
