@@ -10,7 +10,8 @@ import {
   MessageSquare,
   DollarSign,
   Timer,
-  CheckCircle2
+  CheckCircle2,
+  Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
@@ -161,6 +162,30 @@ export default function MesasPage() {
     setReservaModalOpen(true);
   };
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, ""); // Remove non-digits
+    
+    // Limit to 11 digits
+    if (value.length > 11) value = value.slice(0, 11);
+
+    // Apply Mask: (99) 99999-9999 or (99) 9999-9999
+    if (value.length > 10) {
+      // 11 digits: (99) 99999-9999
+      value = value.replace(/^(\d{2})(\d{5})(\d{4}).*/, "($1) $2-$3");
+    } else if (value.length > 6) {
+      // (99) 9999-9999
+      value = value.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, "($1) $2-$3");
+    } else if (value.length > 2) {
+      // (99) 9999
+      value = value.replace(/^(\d{2})(\d{0,5}).*/, "($1) $2");
+    } else if (value.length > 0) {
+      // (99
+      value = value.replace(/^(\d{0,2}).*/, "($1");
+    }
+
+    setReservaForm({ ...reservaForm, telefone: value });
+  };
+
   const handleSaveReserva = async () => {
     if (!selectedMesa) return;
     setIsSavingReserva(true);
@@ -213,6 +238,23 @@ export default function MesasPage() {
     await supabase.from('mesas').update({ chamando_garcom: false, solicitando_conta: false }).eq('numero', numeroMesa);
     // Optimistic update done via fetch on next tick
     fetchMesasData();
+  };
+
+  const handleCancelarReserva = async (e: React.MouseEvent, mesaId: string) => {
+    e.stopPropagation();
+    if (!confirm("Tem certeza que deseja cancelar esta reserva?")) return;
+    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await supabase.from('mesas').update({
+      reserva_ativa: false,
+      reserva_nome: null,
+      reserva_telefone: null,
+      reserva_data: null
+    } as any).eq('id', mesaId);
+    
+    if (!error) {
+      fetchMesasData();
+    }
   };
 
   const filteredMesas = mesas.filter(m => 
@@ -306,12 +348,25 @@ export default function MesasPage() {
                           </h3>
                           <p className="text-[11px] font-medium text-amber-600/80 mt-1 flex items-center gap-1.5">
                             <Timer className="h-3 w-3" />
-                            {mesa.reserva_data && mesa.reserva_data.includes('T') 
-                              ? new Date(mesa.reserva_data).toLocaleDateString('pt-BR') 
-                              : mesa.reserva_data}
+                            {mesa.reserva_data
+                              ? mesa.reserva_data.includes('T')
+                                ? new Date(mesa.reserva_data).toLocaleDateString('pt-BR')
+                                : (() => {
+                                    // Stored as DD-MM-AAAA → display as DD/MM/AAAA
+                                    const parts = mesa.reserva_data!.split('-');
+                                    if (parts.length === 3 && parts[0].length === 2) {
+                                      return `${parts[0]}/${parts[1]}/${parts[2]}`;
+                                    }
+                                    // Stored as AAAA-MM-DD → format to DD/MM/AAAA
+                                    if (parts.length === 3 && parts[0].length === 4) {
+                                      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                                    }
+                                    return mesa.reserva_data;
+                                  })()
+                              : '—'}
                           </p>
                         </div>
-                        <div className="mt-auto pt-2">
+                        <div className="mt-auto pt-2 flex flex-col gap-2">
                             <Button 
                               variant="outline" 
                               size="sm" 
@@ -319,6 +374,14 @@ export default function MesasPage() {
                               className="h-9 gap-2 w-full text-xs font-bold border-amber-500/20 text-amber-700 hover:bg-amber-500/10 hover:text-amber-700 transition-all rounded-xl shadow-none"
                             >
                                 <Printer className="h-3.5 w-3.5" /> Re-imprimir Ticket
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={(e) => handleCancelarReserva(e, mesa.id as string)} 
+                              className="h-9 gap-2 w-full text-xs font-bold text-red-500/70 hover:bg-red-500/10 hover:text-red-600 transition-all rounded-xl shadow-none"
+                            >
+                                <Trash2 className="h-3.5 w-3.5" /> Cancelar Reserva
                             </Button>
                         </div>
                       </div>
@@ -409,7 +472,11 @@ export default function MesasPage() {
             </div>
             <div className="grid gap-2">
               <Label>Telefone</Label>
-              <Input type="tel" value={reservaForm.telefone} onChange={e => setReservaForm({ ...reservaForm, telefone: e.target.value })} />
+              <Input 
+                type="tel" 
+                value={reservaForm.telefone} 
+                onChange={handlePhoneChange} 
+              />
             </div>
             <div className="grid gap-2">
               <Label>Data da Reserva</Label>
