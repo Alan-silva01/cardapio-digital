@@ -136,7 +136,7 @@ export function Sidebar() {
             {/* Spacer - Only pushes content when PINNED, stays 48px on hover */}
             <div className={cn(
                 "hidden sm:block flex-shrink-0 transition-all duration-300 ease-out",
-                isPinned ? "w-[260px]" : "w-[48px]"
+                isPinned ? "w-48" : "w-[48px]"
             )} />
 
             <aside
@@ -145,7 +145,7 @@ export function Sidebar() {
                 onClick={() => setIsPinned(!isPinned)}
                 className={cn(
                     "fixed inset-y-0 left-0 z-40 mt-11 flex flex-col border-r bg-sidebar border-sidebar-border transition-all duration-300 ease-out overflow-hidden cursor-pointer",
-                    isExpanded ? "w-[260px]" : "w-[48px]",
+                    isExpanded ? "w-48" : "w-[48px]",
                     !isPinned && isHovered ? "shadow-[10px_0_30px_-10px_rgba(0,0,0,0.5)]" : "shadow-none"
                 )}
             >
