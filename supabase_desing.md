@@ -114,8 +114,8 @@
 | Propriedade | Valor Real |
 |---|---|
 | **color** | `#171717` |
-| **background** | `#72e3ad` |
-| **font-weight** | `400` |
+| **background** | `#e8e8e8` (cinza visivelmente mais escuro que o fundo) |
+| **font-weight** | `500` (Medium/Bold) — destaque visual no item selecionado |
 
 ### Títulos de Grupos (GROUP_TITLES)
 
@@ -189,7 +189,8 @@ Extraídas via `getComputedStyle(document.documentElement)` — valores nos dois
 | Sidebar background | `#171717` | `#fcfcfc` |
 | Sidebar border | `#2e2e2e` | `#dfdfdf` |
 | Link color | `#fafafa` | `#171717` |
-| Link ativo bg | `#006239` | `#72e3ad` |
+| Link ativo bg | `#2a2a2a` (dark) | `#e8e8e8` (light, cinza visivelmente escuro) |
+| Link ativo font-weight | `500` bold | `500` bold |
 | Group title color | `#898989` | `#707070` |
 | Icon color | `#898989` | `#707070` |
 | Pill button bg | `#242424` | `#fdfdfd` |

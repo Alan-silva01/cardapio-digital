@@ -118,7 +118,8 @@ export function Sidebar() {
 
                             {/* Label - only fades in, no width/position animation */}
                             <span className={cn(
-                                "text-[12px] font-normal whitespace-nowrap transition-opacity duration-300 ease-out",
+                                "text-[12px] whitespace-nowrap transition-opacity duration-300 ease-out",
+                                isActive ? "font-medium" : "font-normal",
                                 isExpanded ? "opacity-100" : "opacity-0 pointer-events-none"
                             )}>
                                 {item.label}
