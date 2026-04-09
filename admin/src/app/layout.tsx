@@ -11,10 +11,6 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Seu Manel - Admin Panel",
   description: "Painel Administrativo do restaurante Seu Manel",
-  icons: {
-    icon: "/favicon.png",
-    apple: "/favicon.png",
-  },
 };
 
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
