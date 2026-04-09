@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Clock, Save, Store, Edit2, Loader2 } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
+
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -407,12 +407,20 @@ export default function HorariosPage() {
               >
                 {/* Day name + switch */}
                 <div className="flex items-center gap-3 min-w-[200px]">
-                  <Switch
-                    checked={dia.aberto}
-                    onCheckedChange={(val) =>
-                      handleHorarioChange(index, "aberto", val)
-                    }
-                  />
+                  <button
+                    onClick={() => handleHorarioChange(index, "aberto", !dia.aberto)}
+                    role="switch"
+                    aria-checked={dia.aberto}
+                    className={cn(
+                      "relative inline-flex h-3.5 w-6 shrink-0 cursor-pointer items-center rounded-full transition-colors focus:outline-none",
+                      dia.aberto ? "bg-emerald-500/80" : "bg-muted-foreground/30"
+                    )}
+                  >
+                    <span className={cn(
+                      "inline-block h-2.5 w-2.5 transform rounded-full bg-white transition-transform",
+                      dia.aberto ? "translate-x-3" : "translate-x-0.5"
+                    )} />
+                  </button>
                   <div className="flex items-center gap-2">
                     <span
                       className={cn(
