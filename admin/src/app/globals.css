@@ -92,9 +92,9 @@
 
         --radius: 0.375rem;
 
-        /* Sidebar Light — #fcfcfc fundo, texto #171717, hover #f4f4f5 */
+        /* Sidebar Light — #fcfcfc fundo, inativos #707070, ativo #171717, hover #f4f4f5 */
         --sidebar: #fcfcfc;
-        --sidebar-foreground: #171717;
+        --sidebar-foreground: #707070;
         --sidebar-primary: #72e3ad;
         --sidebar-primary-foreground: #171717;
         --sidebar-accent: #f4f4f5;
