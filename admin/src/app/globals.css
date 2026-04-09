@@ -132,9 +132,9 @@
         --chart-4: #2F3232;
         --chart-5: #4B4E4E;
 
-        /* Sidebar Dark — #171717 fundo, texto #fafafa, hover #242424, border #2e2e2e */
+        /* Sidebar Dark — #171717 fundo, inativos #898989, ativo #fafafa, hover #242424, border #2e2e2e */
         --sidebar: #171717;
-        --sidebar-foreground: #fafafa;
+        --sidebar-foreground: #898989;
         --sidebar-primary: #006239;
         --sidebar-primary-foreground: #fafafa;
         --sidebar-accent: #242424;
