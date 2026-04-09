@@ -1,5 +1,5 @@
 import { Sidebar } from "@/components/sidebar";
-import { Hexagon, ChevronsUpDown } from "lucide-react";
+import { Box, ChevronsUpDown } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -60,22 +60,21 @@ export default function DashboardLayout({
                         </div>
                         
                         {/* Separador / */}
-                        <span className="text-muted-foreground/30 font-light text-xl px-0.5 leading-none translate-y-[-1px]">/</span>
+                        <span className="text-muted-foreground/30 font-light mx-1">/</span>
                         
                         {/* 2. Projeto / Sistema */}
                         <div className="flex items-center gap-2 hover:bg-black/5 dark:hover:bg-white/5 px-2 py-1.5 rounded-md cursor-pointer transition-colors">
-                            <Hexagon className="h-[15px] w-[15px] text-muted-foreground" strokeWidth={1.5} />
+                            <Box className="h-[15px] w-[15px] text-muted-foreground" strokeWidth={1.5} />
                             <span>Seu Manel</span>
-                            <span className="h-5 flex items-center px-2 border border-border bg-card rounded-full text-[10px] font-medium text-foreground tracking-wider ml-1">FREE</span>
                             <ChevronsUpDown className="h-3 w-3 text-muted-foreground/70" strokeWidth={2} />
                         </div>
 
                         {/* Separador / */}
-                        <span className="text-muted-foreground/30 font-light text-xl px-0.5 leading-none translate-y-[-1px]">/</span>
+                        <span className="text-muted-foreground/30 font-light mx-1">/</span>
 
                         {/* 3. Módulo / App */}
                         <div className="flex items-center gap-2 hover:bg-black/5 dark:hover:bg-white/5 px-2 py-1.5 rounded-md cursor-pointer transition-colors">
-                            <Hexagon className="h-[15px] w-[15px] text-muted-foreground" strokeWidth={1.5} />
+                            <Box className="h-[15px] w-[15px] text-muted-foreground" strokeWidth={1.5} />
                             <span>Painel Administrativo</span>
                             <ChevronsUpDown className="h-3 w-3 text-muted-foreground/70" strokeWidth={2} />
                         </div>
