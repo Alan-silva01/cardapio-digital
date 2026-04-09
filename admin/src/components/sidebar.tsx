@@ -112,13 +112,13 @@ export function Sidebar() {
                                         "h-[18px] w-[18px]",
                                         !isExpanded && "group-hover:scale-105"
                                     )}
-                                    strokeWidth={1.2}
+                                    strokeWidth={1.5}
                                 />
                             </div>
 
                             {/* Label - only fades in, no width/position animation */}
                             <span className={cn(
-                                "text-[13px] font-medium whitespace-nowrap transition-opacity duration-300 ease-out",
+                                "text-[12px] font-normal whitespace-nowrap transition-opacity duration-300 ease-out",
                                 isExpanded ? "opacity-100" : "opacity-0 pointer-events-none"
                             )}>
                                 {item.label}
