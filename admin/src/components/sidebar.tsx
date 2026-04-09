@@ -109,7 +109,7 @@ export function Sidebar() {
                             <div className="w-[40px] h-9 shrink-0 flex items-center justify-center">
                                 <Icon
                                     className={cn(
-                                        "h-[18px] w-[18px]",
+                                        "h-4 w-4",
                                         !isExpanded && "group-hover:scale-105"
                                     )}
                                     strokeWidth={1.5}
