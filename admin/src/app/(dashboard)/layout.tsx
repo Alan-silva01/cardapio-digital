@@ -1,5 +1,5 @@
 import { Sidebar } from "@/components/sidebar";
-import { Box, ChevronsUpDown } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -53,31 +53,12 @@ export default function DashboardLayout({
 
                 {/* Breadcrumbs and Actions */}
                 <div className="flex-1 flex items-center justify-between px-4 h-full">
-                    <div className="flex items-center text-[13px] font-normal text-foreground">
-                        {/* 1. Nome principal / Organização */}
-                        <div className="flex items-center hover:bg-black/5 dark:hover:bg-white/5 px-2 py-1.5 rounded-md cursor-pointer transition-colors">
-                            <span>Intelflux</span>
-                        </div>
-                        
-                        {/* Separador / */}
-                        <span className="text-muted-foreground/30 font-light mx-1">/</span>
-                        
-                        {/* 2. Projeto / Sistema */}
-                        <div className="flex items-center gap-2 hover:bg-black/5 dark:hover:bg-white/5 px-2 py-1.5 rounded-md cursor-pointer transition-colors">
-                            <Box className="h-[15px] w-[15px] text-muted-foreground" strokeWidth={1.5} />
-                            <span>Seu Manel</span>
-                            <ChevronsUpDown className="h-3 w-3 text-muted-foreground/70" strokeWidth={2} />
-                        </div>
-
-                        {/* Separador / */}
-                        <span className="text-muted-foreground/30 font-light mx-1">/</span>
-
-                        {/* 3. Módulo / App */}
-                        <div className="flex items-center gap-2 hover:bg-black/5 dark:hover:bg-white/5 px-2 py-1.5 rounded-md cursor-pointer transition-colors">
-                            <Box className="h-[15px] w-[15px] text-muted-foreground" strokeWidth={1.5} />
-                            <span>Painel Administrativo</span>
-                            <ChevronsUpDown className="h-3 w-3 text-muted-foreground/70" strokeWidth={2} />
-                        </div>
+                    <div className="flex items-center gap-2 text-[11px] font-medium tracking-wide text-muted-foreground">
+                        <span className="text-foreground hover:opacity-80 cursor-pointer transition-opacity">Intelflux</span>
+                        <ChevronRight className="h-3 w-3 opacity-50" />
+                        <span>Seu Manel</span>
+                        <ChevronRight className="h-3 w-3 opacity-50" />
+                        <span>Painel Administrativo</span>
                     </div>
 
                     <div className="flex items-center gap-2">
