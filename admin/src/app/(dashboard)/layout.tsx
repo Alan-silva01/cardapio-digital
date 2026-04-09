@@ -40,7 +40,7 @@ export default function DashboardLayout({
             <header className="h-11 border-b bg-card flex items-center shrink-0 w-full z-50">
                 {/* Fixed Logo Area - Always 48px */}
                 <div className="w-[48px] h-11 flex items-center justify-center shrink-0 border-r">
-                    <div className="h-[34px] w-[34px] relative">
+                    <div className="h-[24px] w-[24px] relative">
                         <Image
                             src={logoImage}
                             alt="Logo IntelFlux"
