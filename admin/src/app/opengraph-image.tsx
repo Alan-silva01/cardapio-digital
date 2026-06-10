@@ -5,14 +5,11 @@ export const alt = "Cardápio Digital | Seu Manel";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
+// Logo já hospedada no Cloudinary (usada no app — sempre acessível)
+const LOGO_URL =
+  "https://res.cloudinary.com/dvhkcemd0/image/upload/v1773870490/migrated/csxl9gvgqpm5vqj8ww5w.png";
+
 export default async function Image() {
-  // Busca a logo como buffer para funcionar no edge runtime
-  const logoUrl =
-    (process.env.NEXT_PUBLIC_SITE_URL || "https://seumanel.vercel.app") +
-    "/images/logo_bar.png";
-
-  const logoData = await fetch(logoUrl).then((r) => r.arrayBuffer());
-
   return new ImageResponse(
     (
       <div
@@ -23,25 +20,24 @@ export default async function Image() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          gap: 48,
-          padding: "0 80px",
+          gap: 60,
+          padding: "0 100px",
         }}
       >
-        {/* Logo — branca no fundo preto fica perfeita */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
+        {/* Logo branca — fica perfeita no fundo preto */}
         <img
-          // @ts-expect-error — ImageResponse aceita ArrayBuffer via src
-          src={logoData}
-          width={220}
-          height={220}
+          src={LOGO_URL}
+          width={240}
+          height={240}
           alt="Seu Manel"
+          style={{ objectFit: "contain" }}
         />
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           <span
             style={{
               color: "#ffffff",
-              fontSize: 64,
+              fontSize: 68,
               fontWeight: 800,
               lineHeight: 1,
               letterSpacing: "-2px",
@@ -52,9 +48,8 @@ export default async function Image() {
           <span
             style={{
               color: "#ff5e1e",
-              fontSize: 30,
+              fontSize: 32,
               fontWeight: 500,
-              letterSpacing: "0.5px",
             }}
           >
             Seu Manel • Bar &amp; Restaurante
@@ -65,3 +60,4 @@ export default async function Image() {
     { ...size }
   );
 }
+
