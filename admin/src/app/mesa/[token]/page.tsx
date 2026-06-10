@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import { createClient } from "@supabase/supabase-js";
-import { redirect } from "next/navigation";
+
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL || "https://seumanel.vercel.app";
+
+// Logo com fundo — Cloudinary (transparente fica invisível em preview)
+const OG_IMAGE = `${SITE_URL}/images/logo_bar.png`;
 
 // ─── Supabase anon client (sem cookies — só leitura pública) ───────────────
 function getSupabase() {
@@ -42,10 +47,6 @@ export async function generateMetadata({
     ? `Você está na Mesa ${numero}. Acesse o cardápio digital do Seu Manel e faça seu pedido!`
     : "Acesse o cardápio digital do Seu Manel e faça seu pedido!";
 
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    "https://menu-seumanel.vercel.app";
-
   return {
     title,
     description,
@@ -55,33 +56,61 @@ export async function generateMetadata({
       siteName: "Seu Manel",
       type: "website",
       locale: "pt_BR",
-      images: [
-        {
-          url: `${siteUrl}/images/logo_bar.png`,
-          width: 512,
-          height: 512,
-          alt: "Seu Manel — Bar & Restaurante",
-        },
-      ],
+      images: [{ url: OG_IMAGE, width: 512, height: 512, alt: "Seu Manel" }],
     },
     twitter: {
       card: "summary",
       title,
       description,
-      images: [`${siteUrl}/images/logo_bar.png`],
+      images: [OG_IMAGE],
     },
   };
 }
 
-// ─── Page: redireciona imediatamente pro /menu?t=TOKEN ─────────────────────
+// ─── Page: HTML real com meta refresh ──────────────────────────────────────
+// Usar redirect() server-side envia HTTP 307 sem body — o bot do WhatsApp
+// nunca vê as tags OG. Aqui renderizamos HTML real + meta refresh:
+// • Bots (WhatsApp, Telegram) lêem o <head> e param aqui ✅
+// • Browsers executam o meta refresh e vão pro /menu?t=TOKEN ✅
 export default async function MesaRedirectPage({
   params,
 }: {
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
+  const numero = await getMesaNumero(token);
+  const menuUrl = `/menu?t=${token}`;
 
-  // Redirect server-side — bots de link preview (WhatsApp) já leram o <head>
-  // antes de seguir o redirect, então o OG fica registrado corretamente.
-  redirect(`/menu?t=${token}`);
+  return (
+    <>
+      {/* eslint-disable-next-line @next/next/no-head-element */}
+      <head>
+        <meta httpEquiv="refresh" content={`0;url=${menuUrl}`} />
+      </head>
+      <body
+        style={{
+          margin: 0,
+          background: "#000",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100vh",
+          flexDirection: "column",
+          gap: "16px",
+          fontFamily: "sans-serif",
+          color: "#fff",
+        }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={OG_IMAGE}
+          alt="Seu Manel"
+          style={{ width: 80, filter: "brightness(0) invert(1)" }}
+        />
+        <p style={{ margin: 0, opacity: 0.5, fontSize: 14 }}>
+          {numero ? `Mesa ${numero} — ` : ""}Abrindo cardápio...
+        </p>
+      </body>
+    </>
+  );
 }

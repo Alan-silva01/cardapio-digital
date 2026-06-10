@@ -11,9 +11,30 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Seu Manel - Menu Interativo",
-  description: "Cardápio digital interativo do restaurante Seu Manel",
+  title: "Cardápio Digital | Seu Manel",
+  description: "Acesse o cardápio digital do Seu Manel e faça seu pedido!",
   manifest: "/manifest.json",
+  openGraph: {
+    title: "Cardápio Digital | Seu Manel",
+    description: "Acesse o cardápio digital do Seu Manel e faça seu pedido!",
+    siteName: "Seu Manel",
+    type: "website",
+    locale: "pt_BR",
+    images: [
+      {
+        url: "https://seumanel.vercel.app/images/logo_bar.png",
+        width: 512,
+        height: 512,
+        alt: "Seu Manel — Bar & Restaurante",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: "Cardápio Digital | Seu Manel",
+    description: "Acesse o cardápio digital do Seu Manel e faça seu pedido!",
+    images: ["https://seumanel.vercel.app/images/logo_bar.png"],
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
