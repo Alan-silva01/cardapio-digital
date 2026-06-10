@@ -9,10 +9,12 @@ const nextConfig: NextConfig = {
     async redirects() {
         return [
             {
-                // QR codes point to /?t=TOKEN — redirect to /menu?t=TOKEN
+                // QR codes point to /?t=TOKEN
+                // → passa pela rota /mesa/[token] (Server Component com OG tags)
+                // → que redireciona pro /menu?t=TOKEN
                 source: '/',
                 has: [{ type: 'query', key: 't' }],
-                destination: '/menu?t=:t',
+                destination: '/mesa/:t',
                 permanent: false,
             },
         ];
