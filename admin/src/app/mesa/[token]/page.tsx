@@ -4,8 +4,8 @@ import { createClient } from "@supabase/supabase-js";
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL || "https://seumanel.vercel.app";
 
-// Logo com fundo — gerado pelo Next.js (opengraph-image)
-const OG_IMAGE = `${SITE_URL}/opengraph-image`;
+// Logo com fundo — gerado pelo Next.js (opengraph-image.png)
+const OG_IMAGE = `${SITE_URL}/opengraph-image.png`;
 
 // ─── Supabase anon client (sem cookies — só leitura pública) ───────────────
 function getSupabase() {

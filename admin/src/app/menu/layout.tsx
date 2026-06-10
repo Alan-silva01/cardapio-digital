@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     locale: "pt_BR",
     images: [
       {
-        url: "https://seumanel.vercel.app/opengraph-image",
+        url: "https://seumanel.vercel.app/opengraph-image.png",
         width: 810,
         height: 810,
         alt: "Cardápio Digital | Seu Manel",
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Cardápio Digital | Seu Manel",
     description: "Acesse o cardápio digital do Seu Manel e faça seu pedido!",
-    images: ["https://seumanel.vercel.app/opengraph-image"],
+    images: ["https://seumanel.vercel.app/opengraph-image.png"],
   },
   appleWebApp: {
     capable: true,
