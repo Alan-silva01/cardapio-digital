@@ -33,7 +33,12 @@ export async function updateSession(request: NextRequest) {
         request.nextUrl.pathname.startsWith('/register') ||
         request.nextUrl.pathname.startsWith('/auth') ||
         request.nextUrl.pathname.startsWith('/menu') ||
-        request.nextUrl.pathname.startsWith('/mesa')
+        request.nextUrl.pathname.startsWith('/mesa') ||
+        request.nextUrl.pathname.startsWith('/opengraph-image') ||
+        request.nextUrl.pathname.startsWith('/twitter-image') ||
+        request.nextUrl.pathname.startsWith('/icon') ||
+        request.nextUrl.pathname.startsWith('/apple-icon') ||
+        request.nextUrl.pathname.startsWith('/manifest.json')
 
     // Not authenticated → redirect to /login (except public routes)
     if (!user && !isPublicRoute) {
