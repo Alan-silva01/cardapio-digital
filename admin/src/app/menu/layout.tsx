@@ -22,18 +22,18 @@ export const metadata: Metadata = {
     locale: "pt_BR",
     images: [
       {
-        url: "https://seumanel.vercel.app/images/logo_bar.png",
-        width: 512,
-        height: 512,
-        alt: "Seu Manel — Bar & Restaurante",
+        url: "https://seumanel.vercel.app/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Cardápio Digital | Seu Manel",
       },
     ],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Cardápio Digital | Seu Manel",
     description: "Acesse o cardápio digital do Seu Manel e faça seu pedido!",
-    images: ["https://seumanel.vercel.app/images/logo_bar.png"],
+    images: ["https://seumanel.vercel.app/opengraph-image"],
   },
   appleWebApp: {
     capable: true,
