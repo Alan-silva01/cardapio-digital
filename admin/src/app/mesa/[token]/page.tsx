@@ -56,7 +56,7 @@ export async function generateMetadata({
       siteName: "Seu Manel",
       type: "website",
       locale: "pt_BR",
-      images: [{ url: OG_IMAGE, width: 512, height: 512, alt: "Seu Manel" }],
+      images: [{ url: OG_IMAGE, width: 810, height: 810, alt: "Seu Manel" }],
     },
     twitter: {
       card: "summary",

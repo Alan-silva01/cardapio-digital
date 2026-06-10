@@ -23,8 +23,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: "https://seumanel.vercel.app/opengraph-image",
-        width: 1200,
-        height: 630,
+        width: 810,
+        height: 810,
         alt: "Cardápio Digital | Seu Manel",
       },
     ],
