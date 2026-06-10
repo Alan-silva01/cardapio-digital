@@ -14,10 +14,12 @@ export const metadata: Metadata = {
   ),
   title: "Seu Manel - Admin Panel",
   description: "Painel Administrativo do restaurante Seu Manel",
+  manifest: "/manifest.json",
 };
 
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { ThemeProvider } from '@/components/theme-provider';
+import { PWARegister } from "@/components/pwa-register";
 
 export default function RootLayout({
   children,
@@ -36,7 +38,10 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <NuqsAdapter>
-            <TooltipProvider>{children}</TooltipProvider>
+            <TooltipProvider>
+              <PWARegister />
+              {children}
+            </TooltipProvider>
           </NuqsAdapter>
         </ThemeProvider>
       </body>
