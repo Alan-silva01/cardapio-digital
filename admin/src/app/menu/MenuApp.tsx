@@ -183,8 +183,8 @@ const OptimizedImage = ({ src, alt, style = {}, isUnavailable = false }: { src: 
 };
 
 
-const formatErrorMessage = (msg: string | null) => {
-    if (!msg) return { title: "Aviso", message: "", type: "generic" };
+const formatErrorMessage = (msg: string | null, allProducts: any[]) => {
+    if (!msg) return { title: "Aviso", message: "", type: "generic", imageUrl: null };
 
     // Verifica se é erro de estoque
     if (msg.includes("Estoque insuficiente")) {
@@ -208,18 +208,40 @@ const formatErrorMessage = (msg: string | null) => {
                     nomeFinal = `${nomeProduto} (${nomeVariacao})`;
                 }
 
+                // Busca a imagem do produto/variação
+                let imageUrl = null;
+                if (allProducts && allProducts.length > 0) {
+                    const productObj = allProducts.find(
+                        p => p.name && p.name.toLowerCase().trim() === nomeProduto.toLowerCase().trim()
+                    );
+                    if (productObj) {
+                        imageUrl = productObj.imageUrl;
+                        // Se houver uma imagem específica para a variação, usa ela
+                        if (
+                            nomeVariacao && 
+                            productObj.variations && 
+                            productObj.variations[nomeVariacao] && 
+                            productObj.variations[nomeVariacao].imagem_url
+                        ) {
+                            imageUrl = productObj.variations[nomeVariacao].imagem_url;
+                        }
+                    }
+                }
+
                 const qtd = parseInt(disponivel, 10);
                 if (qtd === 0) {
                     return {
                         title: "Produto Esgotado",
                         message: `Desculpe, mas o produto "${nomeFinal}" acabou no estoque no momento.`,
-                        type: "stock_zero"
+                        type: "stock_zero",
+                        imageUrl
                     };
                 } else {
                     return {
                         title: "Estoque Limitado",
                         message: `Desculpe, mas só temos ${qtd} ${qtd === 1 ? 'unidade' : 'unidades'} de "${nomeFinal}" em estoque no momento.`,
-                        type: "stock_limited"
+                        type: "stock_limited",
+                        imageUrl
                     };
                 }
             }
@@ -229,7 +251,8 @@ const formatErrorMessage = (msg: string | null) => {
         return {
             title: "Estoque Insuficiente",
             message: msg,
-            type: "stock_generic"
+            type: "stock_generic",
+            imageUrl: null
         };
     }
 
@@ -237,14 +260,16 @@ const formatErrorMessage = (msg: string | null) => {
         return {
             title: "Estabelecimento Fechado",
             message: msg,
-            type: "closed"
+            type: "closed",
+            imageUrl: null
         };
     }
 
     return {
         title: "Ops! Algo deu errado",
         message: msg,
-        type: "generic"
+        type: "generic",
+        imageUrl: null
     };
 };
 
@@ -3107,7 +3132,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
             {/* Error Message Dashboard / Stock Modal */}
             <AnimatePresence>
                 {checkoutErrorMsg && (() => {
-                    const errorDetails = formatErrorMessage(checkoutErrorMsg);
+                    const errorDetails = formatErrorMessage(checkoutErrorMsg, allProductsRef.current);
                     const isStockError = errorDetails.type.startsWith("stock");
                     
                     return (
@@ -3144,20 +3169,64 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                                     boxShadow: '0 20px 40px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.05)'
                                 }}
                             >
-                                <div style={{ 
-                                    width: '70px', 
-                                    height: '70px', 
-                                    borderRadius: '50%', 
-                                    backgroundColor: isStockError ? 'rgba(255,179,0,0.1)' : 'rgba(255,60,60,0.1)', 
-                                    border: isStockError ? '1px solid rgba(255,179,0,0.2)' : '1px solid rgba(255,60,60,0.2)',
-                                    display: 'flex', 
-                                    alignItems: 'center', 
-                                    justifyContent: 'center', 
-                                    margin: '0 auto 24px auto',
-                                    color: isStockError ? '#ffb300' : '#ff4444'
-                                }}>
-                                    <AlertCircle size={32} />
-                                </div>
+                                {errorDetails.imageUrl ? (
+                                    <div style={{
+                                        position: 'relative',
+                                        width: '90px',
+                                        height: '108px',
+                                        margin: '0 auto 24px auto',
+                                        backgroundColor: '#181818',
+                                        border: '1px solid rgba(255,255,255,0.06)',
+                                        borderRadius: '16px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        padding: '10px',
+                                        boxShadow: '0 12px 24px rgba(0,0,0,0.4)'
+                                    }}>
+                                        <img 
+                                            src={errorDetails.imageUrl} 
+                                            alt="Produto" 
+                                            style={{
+                                                maxWidth: '100%',
+                                                maxHeight: '100%',
+                                                objectFit: 'contain'
+                                            }}
+                                        />
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '-6px',
+                                            right: '-6px',
+                                            width: '24px',
+                                            height: '24px',
+                                            borderRadius: '50%',
+                                            backgroundColor: isStockError ? '#ffb300' : '#ff4444',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            color: '#000',
+                                            border: '2px solid #111',
+                                            boxShadow: '0 2px 8px rgba(0,0,0,0.5)'
+                                        }}>
+                                            <AlertCircle size={14} style={{ color: '#000', strokeWidth: 3 }} />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div style={{ 
+                                        width: '70px', 
+                                        height: '70px', 
+                                        borderRadius: '50%', 
+                                        backgroundColor: isStockError ? 'rgba(255,179,0,0.1)' : 'rgba(255,60,60,0.1)', 
+                                        border: isStockError ? '1px solid rgba(255,179,0,0.2)' : '1px solid rgba(255,60,60,0.2)',
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        justifyContent: 'center', 
+                                        margin: '0 auto 24px auto',
+                                        color: isStockError ? '#ffb300' : '#ff4444'
+                                    }}>
+                                        <AlertCircle size={32} />
+                                    </div>
+                                )}
                                 
                                 <h3 style={{ 
                                     margin: '0 0 16px 0', 
