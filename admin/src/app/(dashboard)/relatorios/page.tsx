@@ -203,6 +203,7 @@ export default function RelatoriosPage() {
     setSearchItems([]);
     setSearchNotFound(false);
 
+    // 1. Find the pedido by order_id
     const { data } = await supabase
       .from("pedidos")
       .select("id, comanda_id, order_number, order_id, numero_mesa, nome_pessoa, status, total, forma_pagamento, criado_em")
@@ -210,12 +211,47 @@ export default function RelatoriosPage() {
       .limit(1);
 
     if (data && data.length > 0) {
-      setSearchResult(data[0] as unknown as PedidoRow);
-      // Fetch items for this pedido
+      const pedidoFound = data[0] as unknown as PedidoRow;
+
+      // 2. Fetch ALL pedidos from the same comanda (may be multiple rounds)
+      const { data: allPedidosComanda } = await supabase
+        .from("pedidos")
+        .select("id, total, forma_pagamento, status")
+        .eq("comanda_id", pedidoFound.comanda_id);
+
+      // 3. Aggregate total from all non-cancelled pedidos in the comanda
+      const totalComanda = (allPedidosComanda || [])
+        .filter((p: any) => p.status !== "cancelado")
+        .reduce((sum: number, p: any) => sum + Number(p.total), 0);
+
+      // 4. Aggregate forma_pagamento across all pedidos
+      const formaAgregada = (allPedidosComanda || []).reduce((acc: any, p: any) => {
+        if (p.forma_pagamento) {
+          acc.pix = (acc.pix || 0) + (p.forma_pagamento.pix || 0);
+          acc.credito = (acc.credito || 0) + (p.forma_pagamento.credito || 0);
+          acc.debito = (acc.debito || 0) + (p.forma_pagamento.debito || 0);
+          acc.dinheiro = (acc.dinheiro || 0) + (p.forma_pagamento.dinheiro || 0);
+        }
+        return acc;
+      }, {});
+
+      // Build synthetic PedidoRow with aggregated totals
+      const pedidoAgregado: PedidoRow = {
+        ...pedidoFound,
+        total: String(totalComanda.toFixed(2)),
+        forma_pagamento: (formaAgregada.pix || formaAgregada.credito || formaAgregada.debito || formaAgregada.dinheiro)
+          ? formaAgregada
+          : pedidoFound.forma_pagamento,
+      };
+
+      setSearchResult(pedidoAgregado);
+
+      // 5. Fetch ALL items from ALL pedidos of this comanda
+      const allPedidoIds = (allPedidosComanda || []).map((p: any) => p.id);
       const { data: items } = await supabase
         .from("itens_pedido")
         .select("id, pedido_id, nome_produto, nome_variacao, quantidade, preco_unitario, preco_total")
-        .eq("pedido_id", data[0].id);
+        .in("pedido_id", allPedidoIds);
       setSearchItems((items || []) as unknown as ItemPedidoRow[]);
     } else {
       setSearchNotFound(true);
