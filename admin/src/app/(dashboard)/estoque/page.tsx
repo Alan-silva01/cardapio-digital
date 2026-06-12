@@ -1078,6 +1078,31 @@ function EstoqueContent() {
 
     useEffect(() => { fetchStock(); }, [fetchStock]);
 
+    // Assinatura em tempo real para atualizar o estoque e produtos quando houver alterações no banco
+    useEffect(() => {
+        const channel = supabase
+            .channel("realtime-estoque")
+            .on(
+                "postgres_changes",
+                { event: "*", schema: "public", table: "variacoes_produto" },
+                () => {
+                    fetchStock();
+                }
+            )
+            .on(
+                "postgres_changes",
+                { event: "*", schema: "public", table: "produtos" },
+                () => {
+                    fetchStock();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [supabase, fetchStock]);
+
     // Counts
     const counts = useMemo(() => {
         const ok = items.filter(i => i.estoque > i.estoque_minimo || i.estoque === -1).length;
