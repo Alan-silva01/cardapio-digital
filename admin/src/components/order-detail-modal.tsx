@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useMemo } from "react";
 import { PaymentModal, FormaPagamento } from "@/components/payment-modal";
+import { toast } from "sonner";
 import {
   Clock,
   User,
@@ -26,6 +27,7 @@ import {
   HandCoins,
   X,
   Save,
+  Copy,
 } from "lucide-react";
 import {
   Dialog,
@@ -986,9 +988,17 @@ export const OrderDetailModal = React.memo(function OrderDetailModal({
               )}
             </div>
 
-            <div className="text-[10px] text-center text-muted-foreground/60 w-full flex items-center justify-center gap-1.5 select-all">
-              ID: {comanda.order_id}
-            </div>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(comanda.order_id);
+                toast.success("ID copiado!");
+              }}
+              className="text-[10px] text-center text-muted-foreground/60 hover:text-foreground w-full flex items-center justify-center gap-1 cursor-pointer transition-colors active:scale-95 py-1 select-all outline-none"
+              title="Clique para copiar o ID"
+            >
+              <span>ID: {comanda.order_id}</span>
+              <Copy className="h-2.5 w-2.5 opacity-60" />
+            </button>
           </div>
         </DialogContent>
       </Dialog>
