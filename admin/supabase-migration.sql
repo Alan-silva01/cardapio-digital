@@ -272,3 +272,59 @@ EXCEPTION
     RETURN jsonb_build_object('error', format('Erro interno: %s', SQLERRM));
 END;
 $function$;
+
+-- ★ NEW (2026): Trigger para desativar produtos e combos automaticamente quando o estoque for a 0, e reativar se voltar a ser maior que 0
+CREATE OR REPLACE FUNCTION public.handle_estoque_update()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_has_stock BOOLEAN;
+BEGIN
+  IF TG_OP = 'INSERT' OR (TG_OP = 'UPDATE' AND OLD.estoque IS DISTINCT FROM NEW.estoque) THEN
+    
+    -- Se a variação atual foi atualizada para estoque zero (e não for ilimitado que é -1)
+    IF NEW.estoque = 0 THEN
+      -- Verifica se ainda resta estoque em outras variações ativas deste produto
+      SELECT EXISTS (
+        SELECT 1 
+        FROM public.variacoes_produto
+        WHERE produto_id = NEW.produto_id
+          AND id != NEW.id
+          AND ativo = true
+          AND (estoque > 0 OR estoque = -1)
+      ) INTO v_has_stock;
+      
+      -- Se não houver estoque disponível em nenhuma variação, marca como indisponível
+      IF NOT v_has_stock THEN
+        UPDATE public.produtos
+        SET disponivel = false
+        WHERE id = NEW.produto_id;
+        
+        -- Adicionalmente desativa os combos que usam este produto como base
+        UPDATE public.produtos
+        SET disponivel = false
+        WHERE whiskey_base_id = NEW.produto_id;
+      END IF;
+      
+    -- Se o estoque for reabastecido (maior que 0 ou ilimitado)
+    ELSIF NEW.estoque > 0 OR NEW.estoque = -1 THEN
+      -- Se a variação está ativa, reativa o produto no cardápio
+      IF NEW.ativo = true THEN
+        UPDATE public.produtos
+        SET disponivel = true
+        WHERE id = NEW.produto_id AND disponivel = false;
+      END IF;
+    END IF;
+    
+  END IF;
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trigger_handle_estoque_update ON public.variacoes_produto;
+
+CREATE TRIGGER trigger_handle_estoque_update
+AFTER INSERT OR UPDATE ON public.variacoes_produto
+FOR EACH ROW
+EXECUTE FUNCTION public.handle_estoque_update();
+
