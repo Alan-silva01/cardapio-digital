@@ -224,16 +224,18 @@ export default function RelatoriosPage() {
         .filter((p: any) => p.status !== "cancelado")
         .reduce((sum: number, p: any) => sum + Number(p.total), 0);
 
-      // 4. Aggregate forma_pagamento across all pedidos
-      const formaAgregada = (allPedidosComanda || []).reduce((acc: any, p: any) => {
-        if (p.forma_pagamento) {
-          acc.pix = (acc.pix || 0) + (p.forma_pagamento.pix || 0);
-          acc.credito = (acc.credito || 0) + (p.forma_pagamento.credito || 0);
-          acc.debito = (acc.debito || 0) + (p.forma_pagamento.debito || 0);
-          acc.dinheiro = (acc.dinheiro || 0) + (p.forma_pagamento.dinheiro || 0);
-        }
-        return acc;
-      }, {});
+      // 4. Aggregate forma_pagamento only across NON-CANCELLED pedidos
+      const formaAgregada = (allPedidosComanda || [])
+        .filter((p: any) => p.status !== "cancelado")
+        .reduce((acc: any, p: any) => {
+          if (p.forma_pagamento) {
+            acc.pix = (acc.pix || 0) + (p.forma_pagamento.pix || 0);
+            acc.credito = (acc.credito || 0) + (p.forma_pagamento.credito || 0);
+            acc.debito = (acc.debito || 0) + (p.forma_pagamento.debito || 0);
+            acc.dinheiro = (acc.dinheiro || 0) + (p.forma_pagamento.dinheiro || 0);
+          }
+          return acc;
+        }, {});
 
       // Build synthetic PedidoRow with aggregated totals
       const pedidoAgregado: PedidoRow = {
@@ -524,12 +526,12 @@ export default function RelatoriosPage() {
                 </Card>
               ) : searchResult && (
                 <Card className="shadow-none rounded-xl border border-border max-w-2xl">
-                  <CardContent className="p-3">
-                    {/* Header row */}
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2 min-w-0">
+                  <CardContent className="p-0">
+                    {/* ── Header ── */}
+                    <div className="flex items-center justify-between gap-3 px-4 py-3">
+                      <div className="flex items-center gap-2 min-w-0 flex-wrap">
                         <Receipt className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                        <span className="font-mono text-xs font-bold truncate">{searchResult.order_id}</span>
+                        <span className="font-mono text-xs font-bold">{searchResult.order_id}</span>
                         <Badge variant="outline" className={`text-[9px] px-1.5 py-0 ${statusLabel(searchResult.status).className}`}>
                           {statusLabel(searchResult.status).label}
                         </Badge>
@@ -537,44 +539,68 @@ export default function RelatoriosPage() {
                         <span className="text-[10px] text-muted-foreground">·</span>
                         <span className="text-[10px] text-muted-foreground">{searchResult.nome_pessoa || "Cliente"}</span>
                         <span className="text-[10px] text-muted-foreground">·</span>
-                        <span className="text-[10px] text-muted-foreground">{format(parseISO(searchResult.criado_em), "dd/MM HH:mm")}</span>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <span className="text-sm font-bold font-mono">R$ {Number(searchResult.total).toFixed(2)}</span>
+                        <span className="text-[10px] text-muted-foreground">{format(parseISO(searchResult.criado_em), "dd/MM/yyyy HH:mm")}</span>
                       </div>
                     </div>
 
-                    {/* Items - compact inline */}
+                    {/* ── Items table ── */}
                     {searchItems.length > 0 && (
-                      <div className="mt-2 pt-2 border-t flex flex-wrap gap-x-3 gap-y-0.5">
-                        {searchItems.map(item => (
-                          <span key={item.id} className="text-[11px] text-muted-foreground">
-                            <span className="text-foreground font-medium">{item.quantidade}x</span> {item.nome_produto}
-                            {item.nome_variacao && item.nome_variacao.toLowerCase() !== "unidade" && (
-                              <span className="opacity-60"> ({item.nome_variacao})</span>
-                            )}
-                          </span>
-                        ))}
+                      <div className="border-t">
+                        <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-4 px-4 py-1.5 bg-muted/40 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+                          <span>Produto</span>
+                          <span className="text-right">Qtd</span>
+                          <span className="text-right">Unit.</span>
+                          <span className="text-right">Total</span>
+                        </div>
+                        <div className="divide-y divide-border">
+                          {searchItems.map(item => {
+                            const varDisplay = item.nome_variacao &&
+                              item.nome_variacao.toLowerCase() !== "unidade" &&
+                              !item.nome_produto.toLowerCase().includes(item.nome_variacao.toLowerCase())
+                                ? ` (${item.nome_variacao})` : "";
+                            return (
+                              <div key={item.id} className="grid grid-cols-[1fr_auto_auto_auto] gap-x-4 px-4 py-2 text-xs items-center hover:bg-muted/20 transition-colors">
+                                <span className="font-medium truncate">
+                                  {item.nome_produto}
+                                  {varDisplay && <span className="text-muted-foreground font-normal">{varDisplay}</span>}
+                                </span>
+                                <span className="text-right text-muted-foreground tabular-nums">{item.quantidade}×</span>
+                                <span className="text-right text-muted-foreground tabular-nums">R$ {Number(item.preco_unitario).toFixed(2)}</span>
+                                <span className="text-right font-semibold tabular-nums">R$ {Number(item.preco_total).toFixed(2)}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
 
-                    {/* Payment - compact inline */}
-                    {searchResult.forma_pagamento && (
-                      <div className="mt-1.5 pt-1.5 border-t flex items-center gap-3 text-[10px] text-muted-foreground">
-                        {searchResult.forma_pagamento.pix > 0 && (
-                          <span className="flex items-center gap-0.5"><Smartphone className="h-2.5 w-2.5" /> PIX R$ {searchResult.forma_pagamento.pix.toFixed(2)}</span>
-                        )}
-                        {searchResult.forma_pagamento.credito > 0 && (
-                          <span className="flex items-center gap-0.5"><CreditCard className="h-2.5 w-2.5" /> Crédito R$ {searchResult.forma_pagamento.credito.toFixed(2)}</span>
-                        )}
-                        {searchResult.forma_pagamento.debito > 0 && (
-                          <span className="flex items-center gap-0.5"><CreditCard className="h-2.5 w-2.5" /> Débito R$ {searchResult.forma_pagamento.debito.toFixed(2)}</span>
-                        )}
-                        {searchResult.forma_pagamento.dinheiro > 0 && (
-                          <span className="flex items-center gap-0.5"><Banknote className="h-2.5 w-2.5" /> Dinheiro R$ {searchResult.forma_pagamento.dinheiro.toFixed(2)}</span>
+                    {/* ── Footer: payment + total ── */}
+                    <div className="border-t px-4 py-3 flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
+                        {searchResult.forma_pagamento ? (
+                          <>
+                            {searchResult.forma_pagamento.pix > 0 && (
+                              <span className="flex items-center gap-1"><Smartphone className="h-3 w-3" /> PIX <span className="font-medium text-foreground">R$ {searchResult.forma_pagamento.pix.toFixed(2)}</span></span>
+                            )}
+                            {searchResult.forma_pagamento.credito > 0 && (
+                              <span className="flex items-center gap-1"><CreditCard className="h-3 w-3" /> Crédito <span className="font-medium text-foreground">R$ {searchResult.forma_pagamento.credito.toFixed(2)}</span></span>
+                            )}
+                            {searchResult.forma_pagamento.debito > 0 && (
+                              <span className="flex items-center gap-1"><CreditCard className="h-3 w-3" /> Débito <span className="font-medium text-foreground">R$ {searchResult.forma_pagamento.debito.toFixed(2)}</span></span>
+                            )}
+                            {searchResult.forma_pagamento.dinheiro > 0 && (
+                              <span className="flex items-center gap-1"><Banknote className="h-3 w-3" /> Dinheiro <span className="font-medium text-foreground">R$ {searchResult.forma_pagamento.dinheiro.toFixed(2)}</span></span>
+                            )}
+                          </>
+                        ) : (
+                          <span className="italic">Sem pagamento registrado</span>
                         )}
                       </div>
-                    )}
+                      <div className="text-right shrink-0">
+                        <p className="text-[10px] text-muted-foreground mb-0.5">Total</p>
+                        <span className="text-base font-bold font-mono">R$ {Number(searchResult.total).toFixed(2)}</span>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               )}
