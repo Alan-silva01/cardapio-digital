@@ -132,6 +132,8 @@ export default function RelatoriosPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResult, setSearchResult] = useState<PedidoRow | null>(null);
   const [searchItems, setSearchItems] = useState<ItemPedidoRow[]>([]);
+  // Maps pedido_id → nome_pessoa for grouping items by person in search results
+  const [searchPessoaMap, setSearchPessoaMap] = useState<Record<string, string>>({});
   const [searching, setSearching] = useState(false);
   const [searchNotFound, setSearchNotFound] = useState(false);
   const [estoqueBaixo, setEstoqueBaixo] = useState<any[]>([]);
@@ -201,6 +203,7 @@ export default function RelatoriosPage() {
     setSearching(true);
     setSearchResult(null);
     setSearchItems([]);
+    setSearchPessoaMap({});
     setSearchNotFound(false);
 
     // 1. Find the pedido by order_id
@@ -216,7 +219,7 @@ export default function RelatoriosPage() {
       // 2. Fetch ALL pedidos from the same comanda (may be multiple rounds)
       const { data: allPedidosComanda } = await supabase
         .from("pedidos")
-        .select("id, total, forma_pagamento, status")
+        .select("id, total, forma_pagamento, status, nome_pessoa")
         .eq("comanda_id", pedidoFound.comanda_id);
 
       // 3. Aggregate total from all non-cancelled pedidos in the comanda
@@ -250,6 +253,14 @@ export default function RelatoriosPage() {
 
       // 5. Fetch ALL items from ALL pedidos of this comanda
       const allPedidoIds = (allPedidosComanda || []).map((p: any) => p.id);
+
+      // Build map: pedido_id → nome_pessoa
+      const pessoaMap: Record<string, string> = {};
+      (allPedidosComanda || []).forEach((p: any) => {
+        pessoaMap[p.id] = p.nome_pessoa || "Cliente";
+      });
+      setSearchPessoaMap(pessoaMap);
+
       const { data: items } = await supabase
         .from("itens_pedido")
         .select("id, pedido_id, nome_produto, nome_variacao, quantidade, preco_unitario, preco_total")
@@ -543,36 +554,67 @@ export default function RelatoriosPage() {
                       </div>
                     </div>
 
-                    {/* ── Items table ── */}
-                    {searchItems.length > 0 && (
-                      <div className="border-t">
-                        <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-4 px-4 py-1.5 bg-muted/40 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
-                          <span>Produto</span>
-                          <span className="text-right">Qtd</span>
-                          <span className="text-right">Unit.</span>
-                          <span className="text-right">Total</span>
-                        </div>
-                        <div className="divide-y divide-border">
-                          {searchItems.map(item => {
-                            const varDisplay = item.nome_variacao &&
-                              item.nome_variacao.toLowerCase() !== "unidade" &&
-                              !item.nome_produto.toLowerCase().includes(item.nome_variacao.toLowerCase())
-                                ? ` (${item.nome_variacao})` : "";
+                    {/* ── Items table grouped by person ── */}
+                    {searchItems.length > 0 && (() => {
+                      // Group items by pessoa
+                      const byPessoa = new Map<string, ItemPedidoRow[]>();
+                      searchItems.forEach(item => {
+                        const nome = searchPessoaMap[item.pedido_id] || "Cliente";
+                        const existing = byPessoa.get(nome) || [];
+                        existing.push(item);
+                        byPessoa.set(nome, existing);
+                      });
+                      const pessoas = Array.from(byPessoa.entries());
+                      const multiPessoa = pessoas.length > 1;
+
+                      return (
+                        <div className="border-t">
+                          {/* Table header */}
+                          <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-4 px-4 py-1.5 bg-muted/40 text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+                            <span>Produto</span>
+                            <span className="text-right">Qtd</span>
+                            <span className="text-right">Unit.</span>
+                            <span className="text-right">Total</span>
+                          </div>
+                          {pessoas.map(([nome, itens]) => {
+                            const subtotal = itens.reduce((s, i) => s + Number(i.preco_total), 0);
                             return (
-                              <div key={item.id} className="grid grid-cols-[1fr_auto_auto_auto] gap-x-4 px-4 py-2 text-xs items-center hover:bg-muted/20 transition-colors">
-                                <span className="font-medium truncate">
-                                  {item.nome_produto}
-                                  {varDisplay && <span className="text-muted-foreground font-normal">{varDisplay}</span>}
-                                </span>
-                                <span className="text-right text-muted-foreground tabular-nums">{item.quantidade}×</span>
-                                <span className="text-right text-muted-foreground tabular-nums">R$ {Number(item.preco_unitario).toFixed(2)}</span>
-                                <span className="text-right font-semibold tabular-nums">R$ {Number(item.preco_total).toFixed(2)}</span>
+                              <div key={nome}>
+                                {/* Person header row — only show if multiple people */}
+                                {multiPessoa && (
+                                  <div className="flex items-center justify-between px-4 py-1.5 bg-muted/60 border-y border-border">
+                                    <span className="text-[10px] font-semibold text-foreground flex items-center gap-1.5">
+                                      <User className="h-3 w-3 text-muted-foreground" />
+                                      {nome}
+                                    </span>
+                                    <span className="text-[10px] font-semibold tabular-nums">R$ {subtotal.toFixed(2)}</span>
+                                  </div>
+                                )}
+                                <div className="divide-y divide-border">
+                                  {itens.map(item => {
+                                    const varDisplay = item.nome_variacao &&
+                                      item.nome_variacao.toLowerCase() !== "unidade" &&
+                                      !item.nome_produto.toLowerCase().includes(item.nome_variacao.toLowerCase())
+                                        ? ` (${item.nome_variacao})` : "";
+                                    return (
+                                      <div key={item.id} className="grid grid-cols-[1fr_auto_auto_auto] gap-x-4 px-4 py-2 text-xs items-center hover:bg-muted/20 transition-colors">
+                                        <span className="font-medium truncate">
+                                          {item.nome_produto}
+                                          {varDisplay && <span className="text-muted-foreground font-normal">{varDisplay}</span>}
+                                        </span>
+                                        <span className="text-right text-muted-foreground tabular-nums">{item.quantidade}×</span>
+                                        <span className="text-right text-muted-foreground tabular-nums">R$ {Number(item.preco_unitario).toFixed(2)}</span>
+                                        <span className="text-right font-semibold tabular-nums">R$ {Number(item.preco_total).toFixed(2)}</span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
                               </div>
                             );
                           })}
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
 
                     {/* ── Footer: payment + total ── */}
                     <div className="border-t px-4 py-3 flex items-center justify-between gap-4">
