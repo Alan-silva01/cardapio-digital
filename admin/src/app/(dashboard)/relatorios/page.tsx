@@ -134,6 +134,8 @@ export default function RelatoriosPage() {
   const [searchItems, setSearchItems] = useState<ItemPedidoRow[]>([]);
   // Maps pedido_id → nome_pessoa for grouping items by person in search results
   const [searchPessoaMap, setSearchPessoaMap] = useState<Record<string, string>>({});
+  // All pedidos of the searched comanda (for per-person payment info)
+  const [searchAllPedidos, setSearchAllPedidos] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchNotFound, setSearchNotFound] = useState(false);
   const [estoqueBaixo, setEstoqueBaixo] = useState<any[]>([]);
@@ -203,6 +205,7 @@ export default function RelatoriosPage() {
     setSearching(true);
     setSearchResult(null);
     setSearchItems([]);
+    setSearchAllPedidos([]);
     setSearchPessoaMap({});
     setSearchNotFound(false);
 
@@ -260,6 +263,7 @@ export default function RelatoriosPage() {
         pessoaMap[p.id] = p.nome_pessoa || "Cliente";
       });
       setSearchPessoaMap(pessoaMap);
+      setSearchAllPedidos(allPedidosComanda || []);
 
       const { data: items } = await supabase
         .from("itens_pedido")
@@ -578,18 +582,46 @@ export default function RelatoriosPage() {
                           </div>
                           {pessoas.map(([nome, itens]) => {
                             const subtotal = itens.reduce((s, i) => s + Number(i.preco_total), 0);
+
+                            // Aggregate payment for this person from their pedidos
+                            const pedidosDaPessoa = searchAllPedidos.filter(
+                              (p: any) => (p.nome_pessoa || "Cliente") === nome && p.status !== "cancelado"
+                            );
+                            const pagto = pedidosDaPessoa.reduce((acc: any, p: any) => {
+                              if (p.forma_pagamento) {
+                                acc.pix = (acc.pix || 0) + (p.forma_pagamento.pix || 0);
+                                acc.credito = (acc.credito || 0) + (p.forma_pagamento.credito || 0);
+                                acc.debito = (acc.debito || 0) + (p.forma_pagamento.debito || 0);
+                                acc.dinheiro = (acc.dinheiro || 0) + (p.forma_pagamento.dinheiro || 0);
+                              }
+                              return acc;
+                            }, {} as Record<string, number>);
+                            const totalPago = (pagto.pix || 0) + (pagto.credito || 0) + (pagto.debito || 0) + (pagto.dinheiro || 0);
+                            const pago = totalPago > 0;
+
                             return (
                               <div key={nome}>
-                                {/* Person header row — only show if multiple people */}
-                                {multiPessoa && (
-                                  <div className="flex items-center justify-between px-4 py-1.5 bg-muted/60 border-y border-border">
-                                    <span className="text-[10px] font-semibold text-foreground flex items-center gap-1.5">
-                                      <User className="h-3 w-3 text-muted-foreground" />
-                                      {nome}
-                                    </span>
-                                    <span className="text-[10px] font-semibold tabular-nums">R$ {subtotal.toFixed(2)}</span>
+                                {/* Person header row */}
+                                <div className={`flex items-center justify-between px-4 py-2 border-y border-border ${multiPessoa ? 'bg-muted/50' : 'bg-muted/20'}`}>
+                                  <span className="text-[11px] font-semibold text-foreground flex items-center gap-1.5">
+                                    <User className="h-3 w-3 text-muted-foreground" />
+                                    {nome}
+                                  </span>
+                                  <div className="flex items-center gap-3">
+                                    {/* Payment info per person */}
+                                    {pago ? (
+                                      <span className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                                        {pagto.pix > 0 && <span className="flex items-center gap-0.5"><Smartphone className="h-2.5 w-2.5" /> PIX <span className="font-medium text-foreground">R$ {pagto.pix.toFixed(2)}</span></span>}
+                                        {pagto.credito > 0 && <span className="flex items-center gap-0.5"><CreditCard className="h-2.5 w-2.5" /> Créd. <span className="font-medium text-foreground">R$ {pagto.credito.toFixed(2)}</span></span>}
+                                        {pagto.debito > 0 && <span className="flex items-center gap-0.5"><CreditCard className="h-2.5 w-2.5" /> Déb. <span className="font-medium text-foreground">R$ {pagto.debito.toFixed(2)}</span></span>}
+                                        {pagto.dinheiro > 0 && <span className="flex items-center gap-0.5"><Banknote className="h-2.5 w-2.5" /> Din. <span className="font-medium text-foreground">R$ {pagto.dinheiro.toFixed(2)}</span></span>}
+                                      </span>
+                                    ) : (
+                                      <span className="text-[10px] italic text-muted-foreground">Sem pagamento</span>
+                                    )}
+                                    <span className="text-[11px] font-semibold tabular-nums">R$ {subtotal.toFixed(2)}</span>
                                   </div>
-                                )}
+                                </div>
                                 <div className="divide-y divide-border">
                                   {itens.map(item => {
                                     const varDisplay = item.nome_variacao &&
@@ -616,30 +648,10 @@ export default function RelatoriosPage() {
                       );
                     })()}
 
-                    {/* ── Footer: payment + total ── */}
-                    <div className="border-t px-4 py-3 flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
-                        {searchResult.forma_pagamento ? (
-                          <>
-                            {searchResult.forma_pagamento.pix > 0 && (
-                              <span className="flex items-center gap-1"><Smartphone className="h-3 w-3" /> PIX <span className="font-medium text-foreground">R$ {searchResult.forma_pagamento.pix.toFixed(2)}</span></span>
-                            )}
-                            {searchResult.forma_pagamento.credito > 0 && (
-                              <span className="flex items-center gap-1"><CreditCard className="h-3 w-3" /> Crédito <span className="font-medium text-foreground">R$ {searchResult.forma_pagamento.credito.toFixed(2)}</span></span>
-                            )}
-                            {searchResult.forma_pagamento.debito > 0 && (
-                              <span className="flex items-center gap-1"><CreditCard className="h-3 w-3" /> Débito <span className="font-medium text-foreground">R$ {searchResult.forma_pagamento.debito.toFixed(2)}</span></span>
-                            )}
-                            {searchResult.forma_pagamento.dinheiro > 0 && (
-                              <span className="flex items-center gap-1"><Banknote className="h-3 w-3" /> Dinheiro <span className="font-medium text-foreground">R$ {searchResult.forma_pagamento.dinheiro.toFixed(2)}</span></span>
-                            )}
-                          </>
-                        ) : (
-                          <span className="italic">Sem pagamento registrado</span>
-                        )}
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-[10px] text-muted-foreground mb-0.5">Total</p>
+                    {/* ── Footer: grand total only (payment shown per person above) ── */}
+                    <div className="border-t px-4 py-3 flex items-center justify-end">
+                      <div className="text-right">
+                        <p className="text-[10px] text-muted-foreground mb-0.5">Total da Comanda</p>
                         <span className="text-base font-bold font-mono">R$ {Number(searchResult.total).toFixed(2)}</span>
                       </div>
                     </div>
