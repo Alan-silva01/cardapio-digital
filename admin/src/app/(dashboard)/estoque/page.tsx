@@ -1072,6 +1072,13 @@ function EstoqueContent() {
             };
         });
 
+        // Ordena de forma determinística por ordem alfabética do nome do produto
+        mapped.sort((a, b) => {
+            const nameCompare = a.produto_nome.localeCompare(b.produto_nome, 'pt-BR');
+            if (nameCompare !== 0) return nameCompare;
+            return a.variacao_nome.localeCompare(b.variacao_nome, 'pt-BR');
+        });
+
         setItems(mapped);
         setLoading(false);
     }, []);
