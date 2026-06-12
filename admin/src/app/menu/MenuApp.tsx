@@ -183,6 +183,71 @@ const OptimizedImage = ({ src, alt, style = {}, isUnavailable = false }: { src: 
 };
 
 
+const formatErrorMessage = (msg: string | null) => {
+    if (!msg) return { title: "Aviso", message: "", type: "generic" };
+
+    // Verifica se é erro de estoque
+    if (msg.includes("Estoque insuficiente")) {
+        try {
+            const regex = /Estoque insuficiente para "(.*)". Disponível: (\d+)/i;
+            const match = msg.match(regex);
+            if (match) {
+                const produtoVariacao = match[1]; // Ex: "Skol 600ml - 600ml"
+                const disponivel = match[2]; // Ex: "1"
+                
+                const partes = produtoVariacao.split(" - ");
+                const nomeProduto = partes[0];
+                const nomeVariacao = partes[1];
+                
+                let nomeFinal = nomeProduto;
+                if (
+                    nomeVariacao && 
+                    nomeVariacao !== "Única" && 
+                    !nomeProduto.toLowerCase().includes(nomeVariacao.toLowerCase())
+                ) {
+                    nomeFinal = `${nomeProduto} (${nomeVariacao})`;
+                }
+
+                const qtd = parseInt(disponivel, 10);
+                if (qtd === 0) {
+                    return {
+                        title: "Produto Esgotado",
+                        message: `Desculpe, mas o produto "${nomeFinal}" acabou no estoque no momento.`,
+                        type: "stock_zero"
+                    };
+                } else {
+                    return {
+                        title: "Estoque Limitado",
+                        message: `Desculpe, mas só temos ${qtd} ${qtd === 1 ? 'unidade' : 'unidades'} de "${nomeFinal}" em estoque no momento.`,
+                        type: "stock_limited"
+                    };
+                }
+            }
+        } catch (e) {
+            console.error("Erro ao formatar mensagem de estoque:", e);
+        }
+        return {
+            title: "Estoque Insuficiente",
+            message: msg,
+            type: "stock_generic"
+        };
+    }
+
+    if (msg.includes("estabelecimento está fechado")) {
+        return {
+            title: "Estabelecimento Fechado",
+            message: msg,
+            type: "closed"
+        };
+    }
+
+    return {
+        title: "Ops! Algo deu errado",
+        message: msg,
+        type: "generic"
+    };
+};
+
 const App = ({ filterCategories = null, filterSubcategoria = null, searchProductName = null, onBack = null, isActive = true, activeTab = 'menu', onTabChange = null, isClosed = false }) => {
     const [products, setProducts] = useState([]);
     const allProductsRef = useRef([]);
@@ -3041,97 +3106,102 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
 
             {/* Error Message Dashboard / Stock Modal */}
             <AnimatePresence>
-                {checkoutErrorMsg && (
-                    <motion.div
-                        className="modal-overlay"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        style={{
-                            position: 'fixed',
-                            top: 0, left: 0, right: 0, bottom: 0,
-                            backgroundColor: 'rgba(0,0,0,0.85)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            zIndex: 999999,
-                            backdropFilter: 'blur(10px)',
-                            padding: '24px'
-                        }}
-                    >
+                {checkoutErrorMsg && (() => {
+                    const errorDetails = formatErrorMessage(checkoutErrorMsg);
+                    const isStockError = errorDetails.type.startsWith("stock");
+                    
+                    return (
                         <motion.div
-                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                            className="modal-overlay"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
                             style={{
-                                background: '#111',
-                                border: '1px solid #333',
-                                borderRadius: '24px',
-                                padding: '32px 24px',
-                                width: '100%',
-                                maxWidth: '380px',
-                                textAlign: 'center',
-                                boxShadow: '0 20px 40px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.05)'
+                                position: 'fixed',
+                                top: 0, left: 0, right: 0, bottom: 0,
+                                backgroundColor: 'rgba(0,0,0,0.85)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                zIndex: 999999,
+                                backdropFilter: 'blur(10px)',
+                                padding: '24px'
                             }}
                         >
-                            <div style={{ 
-                                width: '70px', 
-                                height: '70px', 
-                                borderRadius: '50%', 
-                                backgroundColor: 'rgba(255,60,60,0.1)', 
-                                border: '1px solid rgba(255,60,60,0.2)',
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                justifyContent: 'center', 
-                                margin: '0 auto 24px auto',
-                                color: '#ff4444'
-                            }}>
-                                <AlertCircle size={32} />
-                            </div>
-                            
-                            <h3 style={{ 
-                                margin: '0 0 16px 0', 
-                                color: '#fff', 
-                                fontSize: '20px', 
-                                fontWeight: '600',
-                                letterSpacing: '-0.5px'
-                            }}>
-                                Ops! Algo deu errado.
-                            </h3>
-                            
-                            <p style={{ 
-                                margin: '0 0 32px 0', 
-                                color: '#aaa', 
-                                fontSize: '15px', 
-                                lineHeight: '1.5' 
-                            }}>
-                                {checkoutErrorMsg}
-                            </p>
-                            
-                            <button
-                                onClick={() => setCheckoutErrorMsg(null)}
+                            <motion.div
+                                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                                 style={{
+                                    background: '#111',
+                                    border: '1px solid rgba(255,255,255,0.08)',
+                                    borderRadius: '24px',
+                                    padding: '32px 24px',
                                     width: '100%',
-                                    padding: '16px',
-                                    borderRadius: '16px',
-                                    border: 'none',
-                                    background: 'var(--accent-gold)',
-                                    color: '#000',
-                                    fontWeight: '600',
-                                    fontSize: '16px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: '8px',
-                                    cursor: 'pointer'
+                                    maxWidth: '380px',
+                                    textAlign: 'center',
+                                    boxShadow: '0 20px 40px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.05)'
                                 }}
                             >
-                                Entendi
-                            </button>
+                                <div style={{ 
+                                    width: '70px', 
+                                    height: '70px', 
+                                    borderRadius: '50%', 
+                                    backgroundColor: isStockError ? 'rgba(255,179,0,0.1)' : 'rgba(255,60,60,0.1)', 
+                                    border: isStockError ? '1px solid rgba(255,179,0,0.2)' : '1px solid rgba(255,60,60,0.2)',
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center', 
+                                    margin: '0 auto 24px auto',
+                                    color: isStockError ? '#ffb300' : '#ff4444'
+                                }}>
+                                    <AlertCircle size={32} />
+                                </div>
+                                
+                                <h3 style={{ 
+                                    margin: '0 0 16px 0', 
+                                    color: '#fff', 
+                                    fontSize: '20px', 
+                                    fontWeight: '600',
+                                    letterSpacing: '-0.5px'
+                                }}>
+                                    {errorDetails.title}
+                                </h3>
+                                
+                                <p style={{ 
+                                    margin: '0 0 32px 0', 
+                                    color: '#aaa', 
+                                    fontSize: '15px', 
+                                    lineHeight: '1.5' 
+                                }}>
+                                    {errorDetails.message}
+                                </p>
+                                
+                                <button
+                                    onClick={() => setCheckoutErrorMsg(null)}
+                                    style={{
+                                        width: '100%',
+                                        padding: '16px',
+                                        borderRadius: '16px',
+                                        border: 'none',
+                                        background: isStockError ? '#ffb300' : 'var(--accent-gold)',
+                                        color: '#000',
+                                        fontWeight: '600',
+                                        fontSize: '16px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '8px',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Entendi
+                                </button>
+                            </motion.div>
                         </motion.div>
-                    </motion.div>
-                )}
+                    );
+                })()}
             </AnimatePresence>
         </motion.div>
     );
