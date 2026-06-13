@@ -145,6 +145,7 @@ export default function ProgramacaoSemanalPage() {
   // Promo editor state
   const [promoIndex, setPromoIndex] = useState(0);
   const [uploading, setUploading] = useState(false);
+  const [uploadingAtracaoIdx, setUploadingAtracaoIdx] = useState<number | null>(null);
   const [productSearch, setProductSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<DBProduct | null>(null);
@@ -382,6 +383,26 @@ export default function ProgramacaoSemanalPage() {
     }
   }
 
+  async function handleAtracaoImageUpload(e: React.ChangeEvent<HTMLInputElement>, idx: number) {
+    if (!e.target.files || e.target.files.length === 0) return;
+    setUploadingAtracaoIdx(idx);
+    const formData = new FormData();
+    formData.append("file", e.target.files[0]);
+    try {
+      const res = await uploadImageAction(formData);
+      if (res.url) {
+        updateAtracao(idx, res.url);
+        toast.success("Logo da atração anexada!");
+      } else {
+        toast.error("Erro no upload.");
+      }
+    } catch {
+      toast.error("Erro desconhecido.");
+    } finally {
+      setUploadingAtracaoIdx(null);
+    }
+  }
+
   // Week header
   const weekLabel = useMemo(() => {
     const first = weekDays[0];
@@ -549,9 +570,23 @@ export default function ProgramacaoSemanalPage() {
                     <Input
                       value={atracao}
                       onChange={(e) => updateAtracao(idx, e.target.value)}
-                      placeholder={`Ex: Banda, DJ, Karaokê...`}
+                      placeholder={`Ex: Banda, DJ ou link da imagem da logo...`}
                       className="h-9"
                     />
+                    <label className="flex items-center justify-center h-9 w-9 border border-input bg-background rounded-lg cursor-pointer hover:bg-muted text-muted-foreground shrink-0 relative transition-colors">
+                      {uploadingAtracaoIdx === idx ? (
+                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                      ) : (
+                        <Upload className="h-4 w-4" />
+                      )}
+                      <input 
+                        type="file" 
+                        className="hidden" 
+                        accept="image/*" 
+                        onChange={(e) => handleAtracaoImageUpload(e, idx)} 
+                        disabled={uploadingAtracaoIdx !== null} 
+                      />
+                    </label>
                     <Button
                       variant="ghost"
                       size="icon"
