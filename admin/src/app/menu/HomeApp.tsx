@@ -683,8 +683,8 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
             fontSize: '13px',
             fontWeight: '700',
             letterSpacing: '1px',
-            color: '#D4AF37',
-            textShadow: '0 0 8px rgba(212,175,55,0.2)',
+            color: '#FFFFFF',
+            textShadow: 'none',
             whiteSpace: 'nowrap' as const
           };
 
