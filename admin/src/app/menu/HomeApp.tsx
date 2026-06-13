@@ -688,6 +688,31 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
             whiteSpace: 'nowrap' as const
           };
 
+          const renderAtracaoItem = (atracao: string, key: string) => {
+            const cleanUrl = atracao.split('?')[0].toLowerCase();
+            const isImage = atracao.startsWith('/') || 
+                            ((atracao.startsWith('http://') || atracao.startsWith('https://')) && 
+                             (cleanUrl.endsWith('.png') || cleanUrl.endsWith('.jpg') || cleanUrl.endsWith('.jpeg') || cleanUrl.endsWith('.webp') || cleanUrl.endsWith('.svg') || cleanUrl.endsWith('.gif') || atracao.includes('/storage/v1/object/')));
+            
+            if (isImage) {
+              return (
+                <img
+                  key={key}
+                  src={atracao}
+                  alt="Logo Atração"
+                  style={{
+                    height: '24px',
+                    width: 'auto',
+                    objectFit: 'contain',
+                    display: 'inline-block',
+                    verticalAlign: 'middle'
+                  }}
+                />
+              );
+            }
+            return <span key={key} style={textStyle}>{atracao}</span>;
+          };
+
           return (
             <div style={{
               width: '100vw',
@@ -715,15 +740,11 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
                 width: 'max-content',
                 animation: 'marqueeSeamless 80s linear infinite',
               }}>
-                <div style={{ display: 'flex', gap: '40px', paddingRight: '40px' }}>
-                  {sequence.map((atracao, i) => (
-                    <span key={`a-${i}`} style={textStyle}>{atracao}</span>
-                  ))}
+                <div style={{ display: 'flex', gap: '40px', paddingRight: '40px', alignItems: 'center' }}>
+                  {sequence.map((atracao, i) => renderAtracaoItem(atracao, `a-${i}`))}
                 </div>
-                <div style={{ display: 'flex', gap: '40px', paddingRight: '40px' }} aria-hidden="true">
-                  {sequence.map((atracao, i) => (
-                    <span key={`b-${i}`} style={textStyle}>{atracao}</span>
-                  ))}
+                <div style={{ display: 'flex', gap: '40px', paddingRight: '40px', alignItems: 'center' }} aria-hidden="true">
+                  {sequence.map((atracao, i) => renderAtracaoItem(atracao, `b-${i}`))}
                 </div>
               </div>
             </div>
