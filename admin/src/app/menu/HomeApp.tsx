@@ -680,7 +680,7 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
           const sequence = Array(repeatCount).fill(atracoes).flat();
 
           const textStyle = {
-            fontSize: '12px',
+            fontSize: '13px',
             fontWeight: '700',
             letterSpacing: '1px',
             color: '#D4AF37',
@@ -701,7 +701,7 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
                   src={atracao}
                   alt="Logo Atração"
                   style={{
-                    height: '24px',
+                    height: '36px',
                     width: 'auto',
                     objectFit: 'contain',
                     display: 'inline-block',
@@ -717,16 +717,13 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
             <div style={{
               width: '100vw',
               marginLeft: '-16px',
-              background: 'linear-gradient(90deg, #111 0%, #000 50%, #111 100%)',
+              background: '#000000',
               overflow: 'hidden',
-              padding: '10px 0',
+              padding: '8px 0',
               display: 'flex',
               alignItems: 'center',
               position: 'relative',
               zIndex: 25,
-              boxShadow: '0 4px 12px rgba(0,0,0,0.8)',
-              borderTop: '1px solid rgba(212,175,55,0.1)',
-              borderBottom: '1px solid rgba(212,175,55,0.1)',
               marginBottom: '28px',
             }}>
               <style dangerouslySetInnerHTML={{__html: `
