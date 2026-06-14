@@ -260,6 +260,16 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
         setConfig(data);
         const nowSP = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
 
+        const getSaoPauloDateStr = (date: Date) => {
+          const formatter = new Intl.DateTimeFormat("en-ZA", {
+            timeZone: "America/Sao_Paulo",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit"
+          });
+          return formatter.format(date).replace(/\//g, "-");
+        };
+
         // ── NEW: Check programacao_semanal for today's entry ──
         let hasNewPromos = false;
         const progSemanal = data.programacao_semanal as unknown as Array<{
@@ -276,7 +286,7 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
         }>;
 
         if (Array.isArray(progSemanal) && progSemanal.length > 0) {
-          const todayStr = nowSP.toISOString().slice(0, 10);
+          const todayStr = getSaoPauloDateStr(new Date());
           const todayEntry = progSemanal.find((entry) => entry.data === todayStr);
 
           if (todayEntry) {
@@ -313,7 +323,7 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
           }
 
           // Auto-clean expired days
-          const todayClean = nowSP.toISOString().slice(0, 10);
+          const todayClean = getSaoPauloDateStr(new Date());
           const remaining = progSemanal.filter((entry) => entry.data >= todayClean);
           if (remaining.length < progSemanal.length) {
             // @ts-expect-error JSON compatibility from strictly typed array
