@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import type { RealtimeChannel } from "@supabase/supabase-js";
 import { type FormaPagamento } from "@/components/payment-modal";
 import {
   Clock,
@@ -207,7 +208,7 @@ function groupByStatus(comandas: ComandaAgrupada[]): ColumnsState {
 }
 
 export default function PedidosPage() { 
-    const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [columns, setColumns] = useState<ColumnsState>({
@@ -216,7 +217,7 @@ export default function PedidosPage() {
     pronto: [],
     entregue: [],
   });
-  const [mesasStatus, setMesasStatus] = useState<Record<number, { garcom: boolean, conta: boolean }>>({});
+  const [mesasStatus, setMesasStatus] = useState<Record<number, { garcom: boolean, conta: boolean }>>({})
   const [mesasLivres, setMesasLivres] = useState<{ id: string; numero: number }[]>([]);
   const [mesaIdMap, setMesaIdMap] = useState<Record<number, string>>({}); // numero → id
   const [searchQuery, setSearchQuery] = useState("");
@@ -225,8 +226,17 @@ export default function PedidosPage() {
   const { playSound, enabled: soundEnabled, toggleSound } = useNotificationSound();
   const [selectedComanda, setSelectedComanda] = useState<ComandaAgrupada | null>(null);
   const [config, setConfig] = useState<any>(null);
+  const [realtimeStatus, setRealtimeStatus] = useState<'connected' | 'disconnected' | 'reconnecting'>('disconnected');
   const skipNextFetchRef = useRef(false);
   const skipNextSoundRef = useRef(false);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // ── Stable refs — permite o useEffect de Realtime acessar
+  // as versões mais recentes sem precisar re-subscrever ──
+  const fetchPedidosRef = useRef<() => Promise<void>>(() => Promise.resolve());
+  const fetchMesasLivresRef = useRef<() => Promise<void>>(() => Promise.resolve());
+  const playSoundRef = useRef(playSound);
+  useEffect(() => { playSoundRef.current = playSound; }, [playSound]);
 
   useEffect(() => {
     supabase.from('configuracoes').select('*').limit(1).single().then(({ data }) => {
@@ -258,7 +268,10 @@ export default function PedidosPage() {
       mesasData.forEach(m => { idMap[m.numero] = m.id; });
       setMesaIdMap(idMap);
     }
-  }, []);
+  }, [supabase]);
+
+  // Sync ref
+  useEffect(() => { fetchMesasLivresRef.current = fetchMesasLivres; }, [fetchMesasLivres]);
 
   const fetchPedidos = useCallback(async () => {
     const now = new Date();
@@ -363,16 +376,28 @@ export default function PedidosPage() {
     }
 
     setLoading(false);
-  }, [dateFilter]);
+  }, [supabase, dateFilter]);
+
+  // Sync ref
+  useEffect(() => { fetchPedidosRef.current = fetchPedidos; }, [fetchPedidos]);
 
   // Initial fetch
   useEffect(() => {
     fetchPedidos();
   }, [fetchPedidos]);
 
-  // Realtime subscription
+  // ── Fetch com debounce — evita múltiplas queries simultâneas ──
+  const debouncedFetch = useCallback((withSound = false) => {
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = setTimeout(() => {
+      fetchPedidosRef.current();
+      if (withSound) playSoundRef.current();
+    }, 300);
+  }, []);
+
+  // ── Realtime subscription — deps estáveis, NUNCA re-subscreve ──
   useEffect(() => {
-    const channel = supabase
+    const channel: RealtimeChannel = supabase
       .channel("admin-vendas")
       .on(
         "postgres_changes",
@@ -380,9 +405,7 @@ export default function PedidosPage() {
         (payload) => {
           // Don't play sound for couvert or admin-added products
           const isCouvert = payload.new?.nome_pessoa === "Couvert";
-          if (!isCouvert && !skipNextSoundRef.current) {
-            playSound();
-          }
+          const shouldPlaySound = !isCouvert && !skipNextSoundRef.current;
           if (skipNextSoundRef.current) {
             skipNextSoundRef.current = false;
           }
@@ -390,7 +413,7 @@ export default function PedidosPage() {
           if (skipNextFetchRef.current) {
             skipNextFetchRef.current = false;
           } else {
-            fetchPedidos();
+            debouncedFetch(shouldPlaySound);
           }
         }
       )
@@ -398,7 +421,7 @@ export default function PedidosPage() {
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "pedidos" },
         () => {
-          fetchPedidos();
+          debouncedFetch(false);
         }
       )
       .on(
@@ -410,16 +433,51 @@ export default function PedidosPage() {
             ...prev,
             [newMesa.numero]: { garcom: newMesa.chamando_garcom, conta: newMesa.solicitando_conta }
           }));
-          // Keep free tables list in sync
-          fetchMesasLivres();
+          fetchMesasLivresRef.current();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          setRealtimeStatus('connected');
+        } else if (status === "CHANNEL_ERROR") {
+          setRealtimeStatus('disconnected');
+          // Pode ter perdido eventos — faz fetch de segurança
+          fetchPedidosRef.current();
+        } else if (status === "TIMED_OUT") {
+          setRealtimeStatus('reconnecting');
+        }
+      });
+
+    // ── Visibility API — fetch ao voltar para a aba/tela ──
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchPedidosRef.current();
+        fetchMesasLivresRef.current();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    // ── Network Recovery — fetch ao reconectar internet ──
+    const handleOnline = () => {
+      setRealtimeStatus('reconnecting');
+      fetchPedidosRef.current();
+    };
+    const handleOffline = () => {
+      setRealtimeStatus('disconnected');
+    };
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
 
     return () => {
       supabase.removeChannel(channel);
+      clearTimeout(debounceTimerRef.current);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
     };
-  }, [fetchPedidos, fetchMesasLivres, playSound]);
+  }, [supabase, debouncedFetch]);
+  // ↑ supabase (useMemo, estável) e debouncedFetch (useCallback sem deps, estável)
+  //   → este useEffect roda UMA VEZ e nunca re-subscreve
 
   useEffect(() => {
     setMounted(true);
@@ -1328,6 +1386,16 @@ export default function PedidosPage() {
           <span>Pedidos</span>
           <ChevronRight className="h-4 w-4" />
           <span className="text-foreground font-semibold">Kanban Live</span>
+          <div className="flex items-center gap-1 ml-1" title={
+            realtimeStatus === 'connected' ? 'Conexão ativa' :
+            realtimeStatus === 'reconnecting' ? 'Reconectando...' : 'Sem conexão'
+          }>
+            <div className={`h-1.5 w-1.5 rounded-full transition-colors ${
+              realtimeStatus === 'connected' ? 'bg-emerald-500 animate-pulse' :
+              realtimeStatus === 'reconnecting' ? 'bg-amber-500 animate-pulse' :
+              'bg-red-500'
+            }`} />
+          </div>
           {totalComandas > 0 && (
             <Badge variant="outline" className="ml-2 bg-muted border-none text-muted-foreground px-1.5 h-5 text-[10px]">
               {totalComandas} {searchQuery.trim() ? "encontrados" : dateFilter === 'hoje' ? 'hoje' : dateFilter === 'ontem' ? 'ontem' : '7 dias'}
