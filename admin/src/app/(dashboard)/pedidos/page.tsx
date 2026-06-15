@@ -230,6 +230,10 @@ export default function PedidosPage() {
   const skipNextFetchRef = useRef(false);
   const skipNextSoundRef = useRef(false);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const channelRef = useRef<RealtimeChannel | null>(null);
+  const lastHiddenAtRef = useRef<number>(0);
+  const healthCheckRef = useRef<ReturnType<typeof setInterval>>(undefined);
+  const reconnectTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // ── Stable refs — permite o useEffect de Realtime acessar
   // as versões mais recentes sem precisar re-subscrever ──
@@ -395,21 +399,34 @@ export default function PedidosPage() {
     }, 300);
   }, []);
 
-  // ── Realtime subscription — deps estáveis, NUNCA re-subscreve ──
-  useEffect(() => {
-    const channel: RealtimeChannel = supabase
+  // ── Cria (ou recria) o canal Realtime de forma robusta ──
+  // Pode ser chamada múltiplas vezes com segurança (idempotente)
+  const createRealtimeChannel = useCallback(() => {
+    // Cancela qualquer retry pendente
+    if (reconnectTimerRef.current) {
+      clearTimeout(reconnectTimerRef.current);
+      reconnectTimerRef.current = undefined;
+    }
+
+    // Remove canal anterior se existir
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+
+    setRealtimeStatus('reconnecting');
+
+    const channel = supabase
       .channel("admin-vendas")
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "pedidos" },
         (payload) => {
-          // Don't play sound for couvert or admin-added products
           const isCouvert = payload.new?.nome_pessoa === "Couvert";
           const shouldPlaySound = !isCouvert && !skipNextSoundRef.current;
           if (skipNextSoundRef.current) {
             skipNextSoundRef.current = false;
           }
-          // Skip fetch if couvert handler will do its own fetch after all inserts complete
           if (skipNextFetchRef.current) {
             skipNextFetchRef.current = false;
           } else {
@@ -441,26 +458,70 @@ export default function PedidosPage() {
           setRealtimeStatus('connected');
         } else if (status === "CHANNEL_ERROR") {
           setRealtimeStatus('disconnected');
-          // Pode ter perdido eventos — faz fetch de segurança
+          // Fetch de segurança — pode ter perdido eventos
           fetchPedidosRef.current();
+          // Auto-retry: reconecta após 3s
+          reconnectTimerRef.current = setTimeout(() => {
+            createRealtimeChannelRef.current();
+          }, 3000);
         } else if (status === "TIMED_OUT") {
           setRealtimeStatus('reconnecting');
+          // Auto-retry: reconecta após 5s
+          reconnectTimerRef.current = setTimeout(() => {
+            createRealtimeChannelRef.current();
+          }, 5000);
         }
       });
 
-    // ── Visibility API — fetch ao voltar para a aba/tela ──
+    channelRef.current = channel;
+  }, [supabase, debouncedFetch]);
+
+  // Ref estável para chamar de dentro de callbacks/timers sem dependência
+  const createRealtimeChannelRef = useRef(createRealtimeChannel);
+  useEffect(() => { createRealtimeChannelRef.current = createRealtimeChannel; }, [createRealtimeChannel]);
+
+  // ── Realtime subscription + Recovery robusta (à prova de falhas) ──
+  useEffect(() => {
+    // 1. Cria o canal na montagem inicial
+    createRealtimeChannel();
+
+    // 2. Visibility API — detecta canal morto ao voltar para a aba
     const handleVisibility = () => {
-      if (document.visibilityState === 'visible') {
-        fetchPedidosRef.current();
-        fetchMesasLivresRef.current();
+      if (document.visibilityState === 'hidden') {
+        // Marca o momento em que a aba ficou oculta
+        lastHiddenAtRef.current = Date.now();
+        return;
+      }
+
+      // ── Voltou para a aba ──
+      const hiddenDuration = Date.now() - lastHiddenAtRef.current;
+      const channel = channelRef.current;
+
+      // Sempre faz fetch de segurança ao voltar (pega pedidos perdidos)
+      fetchPedidosRef.current();
+      fetchMesasLivresRef.current();
+
+      // Verifica se o canal WebSocket ainda está realmente vivo
+      // channel.state é 'joined' quando saudável, qualquer outro valor = morto
+      const channelState = channel ? (channel as any).state : 'closed';
+      const isChannelDead = channelState !== 'joined';
+
+      // Se ficou oculta > 15s OU canal morreu → destrói e recria do zero
+      if (hiddenDuration > 15_000 || isChannelDead) {
+        console.log(
+          `[Realtime] Reconectando — tab oculta por ${Math.round(hiddenDuration / 1000)}s, canal: ${channelState}`
+        );
+        createRealtimeChannelRef.current();
       }
     };
     document.addEventListener('visibilitychange', handleVisibility);
 
-    // ── Network Recovery — fetch ao reconectar internet ──
+    // 3. Network Recovery — reconecta canal ao recuperar internet
     const handleOnline = () => {
       setRealtimeStatus('reconnecting');
       fetchPedidosRef.current();
+      // Internet voltou → canal antigo está morto, recria
+      createRealtimeChannelRef.current();
     };
     const handleOffline = () => {
       setRealtimeStatus('disconnected');
@@ -468,16 +529,33 @@ export default function PedidosPage() {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
+    // 4. Health Check — verifica a cada 30s se o canal ainda está vivo
+    //    Detecta mortes silenciosas que não disparam nenhum callback
+    healthCheckRef.current = setInterval(() => {
+      const channel = channelRef.current;
+      const channelState = channel ? (channel as any).state : 'closed';
+
+      if (channelState !== 'joined') {
+        console.warn(`[Realtime] Health check: canal ${channelState}, reconectando...`);
+        setRealtimeStatus('reconnecting');
+        createRealtimeChannelRef.current();
+      }
+    }, 30_000);
+
     return () => {
-      supabase.removeChannel(channel);
+      // Cleanup completo
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+        channelRef.current = null;
+      }
+      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
       clearTimeout(debounceTimerRef.current);
+      clearInterval(healthCheckRef.current);
       document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [supabase, debouncedFetch]);
-  // ↑ supabase (useMemo, estável) e debouncedFetch (useCallback sem deps, estável)
-  //   → este useEffect roda UMA VEZ e nunca re-subscreve
+  }, [supabase, createRealtimeChannel]);
 
   useEffect(() => {
     setMounted(true);
