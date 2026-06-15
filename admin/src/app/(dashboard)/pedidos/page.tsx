@@ -422,15 +422,14 @@ export default function PedidosPage() {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "pedidos" },
         (payload) => {
-          const isCouvert = payload.new?.nome_pessoa === "Couvert";
-          const shouldPlaySound = !isCouvert && !skipNextSoundRef.current;
           if (skipNextSoundRef.current) {
             skipNextSoundRef.current = false;
           }
           if (skipNextFetchRef.current) {
             skipNextFetchRef.current = false;
           } else {
-            debouncedFetch(shouldPlaySound);
+            // Som é tocado pelo GlobalOrderNotifier (layout) — aqui só faz fetch dos dados
+            debouncedFetch(false);
           }
         }
       )
