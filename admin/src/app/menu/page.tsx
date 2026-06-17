@@ -55,6 +55,13 @@ const pageTransition = {
 
 export default function MenuPage() {
   const supabase = useMemo(() => createClient(), []);
+
+  // Pre-fetch config in parallel with HomeApp dynamic bundle load
+  const configPromiseRef = useRef<Promise<any> | null>(null);
+  if (!configPromiseRef.current) {
+    configPromiseRef.current = Promise.resolve(supabase.from("configuracoes").select("*").limit(1).single().then(r => r.data));
+  }
+
   const [view, setView] = useState<"home" | "menu">("home");
   const [activeTab, setActiveTab] = useState<"menu" | "sacola" | "pedidos">("menu");
   const [filterCategories, setFilterCategories] = useState<string[] | null>(null);
@@ -227,6 +234,7 @@ export default function MenuPage() {
           onProductSearch={handleProductSearch}
           activeTab={activeTab}
           onTabChange={handleTabChange}
+          configPromise={configPromiseRef.current}
         />
       </div>
 

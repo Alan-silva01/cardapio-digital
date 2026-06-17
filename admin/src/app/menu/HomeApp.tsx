@@ -217,6 +217,7 @@ interface HomeAppProps {
   onProductSearch?: (searchTerm: string) => void;
   activeTab?: "menu" | "sacola" | "pedidos";
   onTabChange?: (tab: "menu" | "sacola" | "pedidos") => void;
+  configPromise?: Promise<Record<string, any> | null> | null;
 }
 
 /* ─── Hero Carousel Images (Cloudinary optimized) ─── */
@@ -240,7 +241,7 @@ function shuffleArray<T>(arr: T[]): T[] {
   return a;
 }
 
-export default function HomeApp({ onCategorySelect, onProductSearch, activeTab = "menu", onTabChange }: HomeAppProps) { 
+export default function HomeApp({ onCategorySelect, onProductSearch, activeTab = "menu", onTabChange, configPromise }: HomeAppProps) { 
     const supabase = createClient();
   const [searchQuery, setSearchQuery] = useState("");
   const [openSheet, setOpenSheet] = useState<CategoryDef | null>(null);
@@ -255,7 +256,7 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
   // Fetch global settings (promo, singer, couvert)
   useEffect(() => {
     async function fetchConfig() {
-      const { data } = await supabase.from("configuracoes").select("*").limit(1).single();
+      const data = configPromise ? await configPromise : (await supabase.from("configuracoes").select("*").limit(1).single()).data;
       if (data) {
         setConfig(data);
         const nowSP = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
