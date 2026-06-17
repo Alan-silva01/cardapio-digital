@@ -214,7 +214,7 @@ const heroVariants = {
 /* ─── Component ─── */
 interface HomeAppProps {
   onCategorySelect?: (categoryId: string, dbCategories?: string[], subcategoria?: string) => void;
-  onProductSearch?: (searchTerm: string) => void;
+  onProductSearch?: (searchTerm: string, productId?: string) => void;
   activeTab?: "menu" | "sacola" | "pedidos";
   onTabChange?: (tab: "menu" | "sacola" | "pedidos") => void;
   configPromise?: Promise<Record<string, any> | null> | null;
@@ -532,7 +532,7 @@ export default function HomeApp({ onCategorySelect, onProductSearch, activeTab =
   const handleProductTap = (product: ProductResult) => {
     setSearchQuery("");
     setSearchResults([]);
-    onProductSearch?.(product.nome);
+    onProductSearch?.(product.nome, product.id);
   };
 
   const filteredCategories = searchQuery.trim().length >= 2

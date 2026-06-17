@@ -67,6 +67,7 @@ export default function MenuPage() {
   const [filterCategories, setFilterCategories] = useState<string[] | null>(null);
   const [filterSubcategoria, setFilterSubcategoria] = useState<string | string[] | null>(null);
   const [searchProductName, setSearchProductName] = useState<string | null>(null);
+  const [searchProductId, setSearchProductId] = useState<string | null>(null);
 
   // Reserva Welcome State
   const [reservaInfo, setReservaInfo] = useState<{ativa: boolean, nome: string} | null>(null);
@@ -191,8 +192,9 @@ export default function MenuPage() {
     setView("menu");
   };
 
-  const handleProductSearch = (productName: string) => {
+  const handleProductSearch = (productName: string, productId?: string) => {
     setSearchProductName(productName);
+    setSearchProductId(productId || null);
     setFilterCategories(null);
     setView("menu");
   };
@@ -253,6 +255,7 @@ export default function MenuPage() {
               filterCategories={filterCategories}
               filterSubcategoria={filterSubcategoria}
               searchProductName={searchProductName}
+              searchProductId={searchProductId}
               onBack={handleBackToHome}
               activeTab={activeTab}
               onTabChange={handleTabChange}

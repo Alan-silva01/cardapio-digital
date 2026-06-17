@@ -273,12 +273,12 @@ const formatErrorMessage = (msg: string | null, allProducts: any[]) => {
     };
 };
 
-const App = ({ filterCategories = null, filterSubcategoria = null, searchProductName = null, onBack = null, isActive = true, activeTab = 'menu', onTabChange = null, isClosed = false }) => {
+const App = ({ filterCategories = null, filterSubcategoria = null, searchProductName = null, searchProductId = null, onBack = null, isActive = true, activeTab = 'menu', onTabChange = null, isClosed = false }) => {
     const [products, setProducts] = useState([]);
     const allProductsRef = useRef([]);
     const [loading, setLoading] = useState(true);
     const [isFiltering, setIsFiltering] = useState(false);
-    const prevFilterRef = useRef({ filterCategories, filterSubcategoria, searchProductName });
+    const prevFilterRef = useRef({ filterCategories, filterSubcategoria, searchProductName, searchProductId });
     const [currentIndex, setCurrentIndex] = useState(0);
     const [direction, setDirection] = useState(0); // 1 = right, -1 = left
     const [isInternalSpin, setIsInternalSpin] = useState(false); // true when clicking a flavor button
@@ -801,6 +801,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                 const currentFilters = prevFilterRef.current.filterCategories;
                 const currentSubcat = prevFilterRef.current.filterSubcategoria;
                 const currentSearch = prevFilterRef.current.searchProductName;
+                const currentSearchId = prevFilterRef.current.searchProductId;
 
                 if (currentFilters && currentFilters.length > 0) {
                     const sanitizedFilters = currentFilters.map(f => f.normalize("NFC").toLowerCase().trim());
@@ -812,14 +813,20 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                         filtered = filtered.filter(p => p.subcategoria && targetSubs.includes(p.subcategoria.normalize("NFC").toLowerCase().trim()));
                     }
                     setProducts(filtered);
-                } else if (currentSearch) {
-                    const term = currentSearch.toLowerCase().trim();
-                    const termNoSpace = term.replace(/\s+/g, "");
-                    const matchedProduct = fullCache.enrichedProducts.find(p => {
-                        if (!p.name) return false;
-                        const n = p.name.toLowerCase();
-                        return n.includes(term) || n.replace(/\s+/g, "").includes(termNoSpace);
-                    });
+                } else if (currentSearch || currentSearchId) {
+                    let matchedProduct = null;
+                    if (currentSearchId) {
+                        matchedProduct = fullCache.enrichedProducts.find(p => p.id === currentSearchId);
+                    }
+                    if (!matchedProduct && currentSearch) {
+                        const term = currentSearch.toLowerCase().trim();
+                        const termNoSpace = term.replace(/\s+/g, "");
+                        matchedProduct = fullCache.enrichedProducts.find(p => {
+                            if (!p.name) return false;
+                            const n = p.name.toLowerCase();
+                            return n.includes(term) || n.replace(/\s+/g, "").includes(termNoSpace);
+                        });
+                    }
                     if (matchedProduct) {
                         const categoryProducts = fullCache.enrichedProducts.filter(p => p.category === matchedProduct.category);
                         setProducts(categoryProducts);
@@ -1053,6 +1060,7 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
             const currentFilters = prevFilterRef.current.filterCategories;
             const currentSubcat = prevFilterRef.current.filterSubcategoria;
             const currentSearch = prevFilterRef.current.searchProductName;
+            const currentSearchId = prevFilterRef.current.searchProductId;
             
             // Apply current filters if they exist (crucial for initial mount via AnimatePresence)
             if (currentFilters && currentFilters.length > 0) {
@@ -1069,20 +1077,28 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
                     );
                 }
                 setProducts(filtered);
-            } else if (currentSearch) {
-                const term = currentSearch.toLowerCase().trim();
-                const termNoSpace = term.replace(/\s+/g, "");
+            } else if (currentSearch || currentSearchId) {
+                let matchedProduct = null;
 
-                // Try exact match first to prevent selecting wrong variations like Combos instead of Garrafas
-                let matchedProduct = visibleProducts.find(p => p.name?.toLowerCase().trim() === term);
+                if (currentSearchId) {
+                    matchedProduct = visibleProducts.find(p => p.id === currentSearchId);
+                }
 
-                if (!matchedProduct) {
-                    matchedProduct = visibleProducts.find(p => {
-                        if (!p.name) return false;
-                        const n = p.name.toLowerCase();
-                        const nNoSpace = n.replace(/\s+/g, "");
-                        return n.includes(term) || nNoSpace.includes(termNoSpace);
-                    });
+                if (!matchedProduct && currentSearch) {
+                    const term = currentSearch.toLowerCase().trim();
+                    const termNoSpace = term.replace(/\s+/g, "");
+
+                    // Try exact match first to prevent selecting wrong variations like Combos instead of Garrafas
+                    matchedProduct = visibleProducts.find(p => p.name?.toLowerCase().trim() === term);
+
+                    if (!matchedProduct) {
+                        matchedProduct = visibleProducts.find(p => {
+                            if (!p.name) return false;
+                            const n = p.name.toLowerCase();
+                            const nNoSpace = n.replace(/\s+/g, "");
+                            return n.includes(term) || nNoSpace.includes(termNoSpace);
+                        });
+                    }
                 }
 
                 if (matchedProduct) {
@@ -1124,9 +1140,10 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
     if (
         prevFilterRef.current.filterCategories !== filterCategories ||
         prevFilterRef.current.filterSubcategoria !== filterSubcategoria ||
-        prevFilterRef.current.searchProductName !== searchProductName
+        prevFilterRef.current.searchProductName !== searchProductName ||
+        prevFilterRef.current.searchProductId !== searchProductId
     ) {
-        prevFilterRef.current = { filterCategories, filterSubcategoria, searchProductName };
+        prevFilterRef.current = { filterCategories, filterSubcategoria, searchProductName, searchProductId };
         if (!isFiltering && allProductsRef.current.length > 0) {
             setIsFiltering(true);
         }
@@ -1174,17 +1191,29 @@ const App = ({ filterCategories = null, filterSubcategoria = null, searchProduct
             setProducts(filtered);
             const firstMasterIdx = filtered.findIndex((p: Record<string, any>) => isValidMaster(p));
             setCurrentIndex(firstMasterIdx !== -1 ? firstMasterIdx : 0);
-        } else if (searchProductName) {
-            const term = searchProductName.toLowerCase().trim();
-            const termNoSpace = term.replace(/\s+/g, "");
+        } else if (searchProductName || searchProductId) {
+            let matchedProduct = null;
 
-            // 1. Find the first direct match in the DB
-            const matchedProduct = all.find(p => {
-                if (!p.name) return false;
-                const n = p.name.toLowerCase();
-                const nNoSpace = n.replace(/\s+/g, "");
-                return n.includes(term) || nNoSpace.includes(termNoSpace);
-            });
+            if (searchProductId) {
+                matchedProduct = all.find(p => p.id === searchProductId);
+            }
+
+            if (!matchedProduct && searchProductName) {
+                const term = searchProductName.toLowerCase().trim();
+                const termNoSpace = term.replace(/\s+/g, "");
+
+                // 1. Find the first direct match in the DB
+                matchedProduct = all.find(p => p.name?.toLowerCase().trim() === term);
+
+                if (!matchedProduct) {
+                    matchedProduct = all.find(p => {
+                        if (!p.name) return false;
+                        const n = p.name.toLowerCase();
+                        const nNoSpace = n.replace(/\s+/g, "");
+                        return n.includes(term) || nNoSpace.includes(termNoSpace);
+                    });
+                }
+            }
 
             if (matchedProduct) {
                 // 2. Identify the category
