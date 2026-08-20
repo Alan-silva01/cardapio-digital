@@ -30,17 +30,22 @@ A arquitetura atende a quatro pilares estratégicos de engenharia:
 
 <div align="center">
 
-| Tela Inicial do Cardápio | Categorias e Navegação | Seleção de Itens |
-|:---:|:---:|:---:|
-| <img src="https://res.cloudinary.com/ddhlqymvf/image/upload/v1787245530/IMG_4049_fqundb.jpg" width="260" alt="Cardápio Inicial" /> | <img src="https://res.cloudinary.com/ddhlqymvf/image/upload/v1787245528/IMG_4050_uqgbes.jpg" width="260" alt="Navegação Categorias" /> | <img src="https://res.cloudinary.com/ddhlqymvf/image/upload/v1787245427/IMG_4060_ngr6xp.jpg" width="260" alt="Seleção de Itens" /> |
+<img src="https://res.cloudinary.com/ddhlqymvf/image/upload/v1787245530/IMG_4049_fqundb.jpg" width="220" alt="Cardápio Mobile" /> &nbsp;
+<img src="https://res.cloudinary.com/ddhlqymvf/image/upload/v1787245528/IMG_4050_uqgbes.jpg" width="220" alt="Cardápio Mobile" /> &nbsp;
+<img src="https://res.cloudinary.com/ddhlqymvf/image/upload/v1787245427/IMG_4060_ngr6xp.jpg" width="220" alt="Cardápio Mobile" /> &nbsp;
+<img src="https://res.cloudinary.com/ddhlqymvf/image/upload/v1787245427/IMG_4051_lym8xs.jpg" width="220" alt="Cardápio Mobile" />
 
-| Detalhes do Produto | Variações e Adicionais | Adicionais Obrigatórios |
-|:---:|:---:|:---:|
-| <img src="https://res.cloudinary.com/ddhlqymvf/image/upload/v1787245427/IMG_4051_lym8xs.jpg" width="260" alt="Detalhe Produto" /> | <img src="https://res.cloudinary.com/ddhlqymvf/image/upload/v1787245449/IMG_4054_w9iy7e.jpg" width="260" alt="Adicionais Produto" /> | <img src="https://res.cloudinary.com/ddhlqymvf/image/upload/v1787245443/IMG_4052_ys1ajx.jpg" width="260" alt="Adicionais Obrigatórios" /> |
+<br><br>
 
-| Carrinho de Compras | Revisão e Observações | Checkout e Pagamento Pix | Acompanhamento do Pedido |
-|:---:|:---:|:---:|:---:|
-| <img src="https://res.cloudinary.com/ddhlqymvf/image/upload/v1787245451/IMG_4053_gnrb5o.jpg" width="200" alt="Carrinho de Compras" /> | <img src="https://res.cloudinary.com/ddhlqymvf/image/upload/v1787245452/IMG_4058_gbqoae.jpg" width="200" alt="Revisão Pedido" /> | <img src="https://res.cloudinary.com/ddhlqymvf/image/upload/v1787245453/IMG_4055_dwpvyj.jpg" width="200" alt="Checkout Pix" /> | <img src="https://res.cloudinary.com/ddhlqymvf/image/upload/v1787245453/IMG_4059_xq4wc5.jpg" width="200" alt="Status Pedido" /> |
+<img src="https://res.cloudinary.com/ddhlqymvf/image/upload/v1787245449/IMG_4054_w9iy7e.jpg" width="220" alt="Cardápio Mobile" /> &nbsp;
+<img src="https://res.cloudinary.com/ddhlqymvf/image/upload/v1787245443/IMG_4052_ys1ajx.jpg" width="220" alt="Cardápio Mobile" /> &nbsp;
+<img src="https://res.cloudinary.com/ddhlqymvf/image/upload/v1787245451/IMG_4053_gnrb5o.jpg" width="220" alt="Cardápio Mobile" /> &nbsp;
+<img src="https://res.cloudinary.com/ddhlqymvf/image/upload/v1787245452/IMG_4058_gbqoae.jpg" width="220" alt="Cardápio Mobile" />
+
+<br><br>
+
+<img src="https://res.cloudinary.com/ddhlqymvf/image/upload/v1787245453/IMG_4055_dwpvyj.jpg" width="220" alt="Cardápio Mobile" /> &nbsp;
+<img src="https://res.cloudinary.com/ddhlqymvf/image/upload/v1787245453/IMG_4059_xq4wc5.jpg" width="220" alt="Cardápio Mobile" />
 
 </div>
 
